@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SmartTotur.DataAccess/SmartTutor.DataAccess.csproj" />
+  <Project Path="SmartTutor.API/SmartTutor.API.csproj" />
+  <Project Path="SmartTutor.BusinessLogic/SmartTutor.BusinessLogic.csproj" />
+  <Project Path="SmartTutor.Domain/SmartTutor.Domain.csproj" />
+</Solution>

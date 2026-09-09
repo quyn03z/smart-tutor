@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+    <Folder Include="Middleware\" />
+    <Folder Include="Filter\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartTotur.DataAccess\SmartTutor.DataAccess.csproj" />
+    <ProjectReference Include="..\SmartTutor.BusinessLogic\SmartTutor.BusinessLogic.csproj" />
+    <ProjectReference Include="..\SmartTutor.Domain\SmartTutor.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

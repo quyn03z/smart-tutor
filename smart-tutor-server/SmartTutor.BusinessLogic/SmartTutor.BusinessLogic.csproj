@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartTotur.DataAccess\SmartTutor.DataAccess.csproj" />
+    <ProjectReference Include="..\SmartTutor.Domain\SmartTutor.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="Exceptions\" />
+    <Folder Include="Helpers\" />
+    <Folder Include="Jobs\" />
+    <Folder Include="Services\Impl\" />
+    <Folder Include="Services\Serv\" />
+  </ItemGroup>
+
+</Project>
