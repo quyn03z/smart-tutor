@@ -1,6 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using SmartTutor.DataAccess.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["Database:ConnectionString"];
+
+builder.Services.AddDbContext<SmartTutorContext>(options =>
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
