@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SmartTutor.BusinessLogic.Services.Impl;
 
 namespace SmartTutor.API.Controllers
 {
@@ -7,5 +8,11 @@ namespace SmartTutor.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly IUserService _userService;
+
+        public AuthController(IUserService userService)
+        {
+            _userService = userService;
+        }
     }
 }

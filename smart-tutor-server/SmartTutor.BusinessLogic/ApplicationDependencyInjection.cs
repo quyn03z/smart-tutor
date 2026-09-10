@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SmartTutor.BusinessLogic.Services.Impl;
+using SmartTutor.BusinessLogic.Services.Serv;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,7 +18,9 @@ namespace SmartTutor.BusinessLogic
         }
 
         private static void AddServices(this IServiceCollection services, IHostEnvironment env)
-        { 
+        {
+            services.AddScoped<IUserService, UserService>();
+            
         }
     }
 }

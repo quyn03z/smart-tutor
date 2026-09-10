@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SmartTutor.DataAccess.Persistence;
+using SmartTutor.DataAccess.Repositories.Impl;
+using SmartTutor.DataAccess.Repositories.Repo;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -21,6 +23,8 @@ namespace SmartTutor.DataAccess
 
         private static void AddRepositories(this IServiceCollection services)
         {
+            services.AddScoped<IUserRepository, UserRepository>();
+
         }
 
         private static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
