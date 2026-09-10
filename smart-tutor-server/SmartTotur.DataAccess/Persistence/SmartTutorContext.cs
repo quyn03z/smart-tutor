@@ -15,6 +15,7 @@ namespace SmartTutor.DataAccess.Persistence
         public virtual DbSet<Class> Classes { get; set; } = null!;
         public virtual DbSet<MonthlyReport> MonthlyReports { get; set; } = null!;
         public virtual DbSet<PaymentTransaction> PaymentTransactions { get; set; } = null!;
+        public virtual DbSet<Role> Roles { get; set; } = null!;
         public virtual DbSet<Session> Sessions { get; set; } = null!;
         public virtual DbSet<Student> Students { get; set; } = null!;
         public virtual DbSet<User> Users { get; set; } = null!;
@@ -22,6 +23,24 @@ namespace SmartTutor.DataAccess.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Role
+            modelBuilder.Entity<Role>(entity =>
+            {
+                entity.ToTable("Roles");
+
+                entity.Property(e => e.RoleName)
+                    .IsUnicode(false)
+                    .HasMaxLength(50);
+
+                entity.HasIndex(e => e.RoleName)
+                    .IsUnique();
+
+                entity.HasData(
+                    new Role { Id = 1, RoleName = "Admin" },
+                    new Role { Id = 2, RoleName = "User" }
+                );
+            });
 
             // AttendanceLog
             modelBuilder.Entity<AttendanceLog>(entity =>
@@ -256,6 +275,11 @@ namespace SmartTutor.DataAccess.Persistence
                 entity.Property(e => e.WebhookToken)
                     .IsUnicode(false)
                     .HasMaxLength(100);
+
+                entity.HasOne(e => e.Role)
+                    .WithMany(e => e.Users)
+                    .HasForeignKey(e => e.RoleId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

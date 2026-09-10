@@ -9,6 +9,8 @@ namespace SmartTutor.Domain.Models
     {
         public int Id { get; set; }
 
+        public int RoleId { get; set; } = 1;
+
         [Required]
         [StringLength(100)]
         public string FullName { get; set; } = string.Empty;
@@ -44,6 +46,8 @@ namespace SmartTutor.Domain.Models
 
         [Column(TypeName = "datetime2")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public virtual Role? Role { get; set; }
 
         public virtual ICollection<Class> Classes { get; set; } = new List<Class>();
 
