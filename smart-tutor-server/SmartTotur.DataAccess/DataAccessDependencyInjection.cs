@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SmartTutor.DataAccess.Claims;
 using SmartTutor.DataAccess.Persistence;
 using SmartTutor.DataAccess.Repositories.Impl;
 using SmartTutor.DataAccess.Repositories.Repo;
@@ -14,9 +15,9 @@ namespace SmartTutor.DataAccess
     {
         public static IServiceCollection AddDataAccess(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDatabase(configuration); // 1. Gọi hàm cấu hình DB
+            services.AddDatabase(configuration); // 1. Cấu hình DB
 
-            services.AddRepositories();          // 2. Gọi hàm đăng ký Repository
+            services.AddRepositories();          // 2. Đăng ký Repositories & Services
 
             return services;
         }
@@ -24,7 +25,8 @@ namespace SmartTutor.DataAccess
         private static void AddRepositories(this IServiceCollection services)
         {
             services.AddScoped<IUserRepository, UserRepository>();
-
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IClaimService, ClaimService>();
         }
 
         private static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
@@ -49,7 +51,5 @@ namespace SmartTutor.DataAccess
             public bool UseInMemoryDatabase { get; set; }
             public string? ConnectionString { get; set; }
         }
-
-
     }
 }

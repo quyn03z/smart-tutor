@@ -15,6 +15,7 @@ namespace SmartTutor.DataAccess.Persistence
         public virtual DbSet<Class> Classes { get; set; } = null!;
         public virtual DbSet<MonthlyReport> MonthlyReports { get; set; } = null!;
         public virtual DbSet<PaymentTransaction> PaymentTransactions { get; set; } = null!;
+        public virtual DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
         public virtual DbSet<Role> Roles { get; set; } = null!;
         public virtual DbSet<Session> Sessions { get; set; } = null!;
         public virtual DbSet<Student> Students { get; set; } = null!;
@@ -40,6 +41,23 @@ namespace SmartTutor.DataAccess.Persistence
                     new Role { Id = 1, RoleName = "Admin" },
                     new Role { Id = 2, RoleName = "User" }
                 );
+            });
+
+            // RefreshToken
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.ToTable("RefreshTokens");
+
+                entity.Property(e => e.Token)
+                    .IsUnicode(false)
+                    .HasMaxLength(255);
+
+                entity.HasIndex(e => e.Token);
+
+                entity.HasOne(e => e.User)
+                    .WithMany(e => e.RefreshTokens)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // AttendanceLog
