@@ -11,5 +11,7 @@ namespace SmartTutor.BusinessLogic.Services.Impl
 
         Task<CreateUserResponseModel> CreateUserAsync(CreateUserModel createUserModel);
 
+        Task LogoutAsync();
+
     }
 }

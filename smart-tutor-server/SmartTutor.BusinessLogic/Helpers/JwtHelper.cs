@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using SmartTutor.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace SmartTutor.BusinessLogic.Helpers
@@ -24,14 +25,14 @@ namespace SmartTutor.BusinessLogic.Helpers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role.RoleName),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User"),
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(1),
+                Expires = DateTime.UtcNow.AddMinutes(30),
                 Issuer = issuer,
                 Audience = audience,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -42,9 +43,15 @@ namespace SmartTutor.BusinessLogic.Helpers
             return tokenHandler.WriteToken(token);
         }
 
+        public static string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
 
-
-        public static ClaimsPrincipal ValidateToken(string token, IConfiguration configuration)
+        public static ClaimsPrincipal? ValidateToken(string token, IConfiguration configuration)
         {
             var secretKey = configuration.GetValue<string>("JwtConfiguration:SecretKey");
             var key = Encoding.ASCII.GetBytes(secretKey ?? string.Empty);
@@ -70,6 +77,5 @@ namespace SmartTutor.BusinessLogic.Helpers
                 return null;
             }
         }
-
     }
 }

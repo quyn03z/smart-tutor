@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
@@ -34,6 +35,14 @@ namespace SmartTutor.API.Controllers
                 return ValidationError();
             return Ok(ApiResult<LoginResponseModel>
                 .Success(await _userService.LoginAsync(loginUserModel)));
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> LogoutAsync()
+        {
+            await _userService.LogoutAsync();
+            return Ok(ApiResult<object>.Success(new { message = "Đã đăng xuất thành công" }));
         }
 
     }
