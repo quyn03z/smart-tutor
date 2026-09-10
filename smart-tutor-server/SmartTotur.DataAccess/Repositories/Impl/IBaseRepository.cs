@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace SmartTutor.DataAccess.Repositories.Impl
 {
     public interface IBaseRepository<T> where T : class
     {
         IQueryable<T> Query();
-        Task<T?> GetByIdAsync(Guid id);
+        Task<T?> GetByIdAsync(object id);
         Task<IEnumerable<T>> GetAllAsync();
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
         Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
@@ -20,5 +20,6 @@ namespace SmartTutor.DataAccess.Repositories.Impl
         Task DeleteRangeAsync(IEnumerable<T> entities);
         Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
         Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null);
+        Task<int> SaveChangesAsync();
     }
 }

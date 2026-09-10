@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartTutor.DataAccess.Persistence;
 using SmartTutor.DataAccess.Repositories.Impl;
 using SmartTutor.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SmartTutor.DataAccess.Repositories.Repo
 {
@@ -13,12 +14,12 @@ namespace SmartTutor.DataAccess.Repositories.Repo
         public UserRepository(SmartTutorContext context) : base(context)
         {
         }
-         
+
         public async Task<User?> GetUserByEmailAsync(string email)
         {
-            return await _dbSet.FirstOrDefaultAsync(x => x.Email == email); 
+            return await _dbSet.Include(x => x.Role).FirstOrDefaultAsync(x => x.Email == email);
         }
-           
+
         public async Task<bool> IsEmailExistAsync(string email)
         {
             return await _dbSet.AnyAsync(x => x.Email == email);

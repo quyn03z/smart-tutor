@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartTutor.DataAccess.Persistence;
 using SmartTutor.DataAccess.Repositories.Impl;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace SmartTutor.DataAccess.Repositories.Repo
 {
@@ -24,7 +25,7 @@ namespace SmartTutor.DataAccess.Repositories.Repo
             return _dbSet;
         }
 
-        public virtual async Task<T?> GetByIdAsync(Guid id)
+        public virtual async Task<T?> GetByIdAsync(object id)
         {
             return await _dbSet.FindAsync(id);
         }
@@ -47,36 +48,38 @@ namespace SmartTutor.DataAccess.Repositories.Repo
         public virtual async Task<T> AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
+            await _context.SaveChangesAsync();
             return entity;
         }
 
         public virtual async Task AddRangeAsync(IEnumerable<T> entities)
         {
             await _dbSet.AddRangeAsync(entities);
+            await _context.SaveChangesAsync();
         }
 
-        public virtual Task UpdateAsync(T entity)
+        public virtual async Task UpdateAsync(T entity)
         {
             _dbSet.Update(entity);
-            return Task.CompletedTask;
+            await _context.SaveChangesAsync();
         }
 
-        public virtual Task UpdateRangeAsync(IEnumerable<T> entities)
+        public virtual async Task UpdateRangeAsync(IEnumerable<T> entities)
         {
             _dbSet.UpdateRange(entities);
-            return Task.CompletedTask;
+            await _context.SaveChangesAsync();
         }
 
-        public virtual Task DeleteAsync(T entity)
+        public virtual async Task DeleteAsync(T entity)
         {
             _dbSet.Remove(entity);
-            return Task.CompletedTask;
+            await _context.SaveChangesAsync();
         }
 
-        public virtual Task DeleteRangeAsync(IEnumerable<T> entities)
+        public virtual async Task DeleteRangeAsync(IEnumerable<T> entities)
         {
             _dbSet.RemoveRange(entities);
-            return Task.CompletedTask;
+            await _context.SaveChangesAsync();
         }
 
         public virtual async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
@@ -90,6 +93,11 @@ namespace SmartTutor.DataAccess.Repositories.Repo
                 return await _dbSet.CountAsync();
 
             return await _dbSet.CountAsync(predicate);
+        }
+
+        public virtual async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
         }
     }
 }
