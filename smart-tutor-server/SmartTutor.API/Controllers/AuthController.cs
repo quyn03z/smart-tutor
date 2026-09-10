@@ -27,6 +27,14 @@ namespace SmartTutor.API.Controllers
                 .Success(await _userService.CreateUserAsync(createUserModel)));
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> LoginAsync(LoginUserModel loginUserModel)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+            return Ok(ApiResult<LoginResponseModel>
+                .Success(await _userService.LoginAsync(loginUserModel)));
+        }
 
     }
 }

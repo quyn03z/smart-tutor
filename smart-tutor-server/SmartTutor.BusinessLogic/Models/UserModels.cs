@@ -30,5 +30,24 @@ namespace SmartTutor.BusinessLogic.Models
             [Compare("Password", ErrorMessage = "Mật khẩu xác nhận không khớp.")]
             public string ConfirmPassword { get; set; } = string.Empty;
         }
+
+
+        public class LoginUserModel
+        {
+            [Required(ErrorMessage = "Email đăng nhập là bắt buộc.")]
+            public string Email { get; set; }
+            [Required(ErrorMessage = "Mật khẩu là bắt buộc.")]
+            public string Password { get; set; }
+        }
+
+        public class LoginResponseModel
+        {
+
+            public string Token { get; set; }
+            public string RefreshToken { get; set; }
+            public string Role { get; set; }
+            public List<string> Permissions { get; set; }
+        }
+
     }
 }

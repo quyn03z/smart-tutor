@@ -1,6 +1,7 @@
 using BCrypt.Net;
 using Microsoft.Extensions.Configuration;
 using SmartTutor.BusinessLogic.Exceptions;
+using SmartTutor.BusinessLogic.Helpers;
 using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
 using SmartTutor.DataAccess.Repositories.Impl;
@@ -17,10 +18,12 @@ namespace SmartTutor.BusinessLogic.Services.Serv
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IConfiguration _configuration;
 
-        public UserService(IUserRepository userRepository)
+        public UserService(IUserRepository userRepository, IConfiguration configuration)
         {
             _userRepository = userRepository;
+            _configuration = configuration;
         }
 
         public async Task<CreateUserResponseModel> CreateUserAsync(CreateUserModel createUserModel)
@@ -45,24 +48,25 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             };
         }
 
-        public Task<LoginResponseModel> LoginAsync(LoginUserModel loginUserModel)
+
+        public async Task<LoginResponseModel> LoginAsync(LoginUserModel loginUserModel)
         {
-            throw new NotImplementedException();
+            var user = await _userRepository.GetUserByEmailAsync(loginUserModel.Email);
+            if (user == null) throw new BadRequestException("Email đăng nhập không chính xác.");
+
+            if (!BCrypt.Net.BCrypt.Verify(loginUserModel.Password, user.PasswordHash))
+            {
+                throw new BadRequestException("Mật khẩu nhập không chính xác.");
+            }
+
+            var accessToken = JwtHelper.GenerateToken(user, _configuration);
+
+            return new LoginResponseModel
+            {
+                Role = user.Role.RoleName,
+                Token = accessToken,
+            };
         }
 
-        //public async Task<LoginResponseModel> LoginAsync(LoginUserModel loginUserModel)
-        //{
-        //    var user = await _userRepository.GetUserByEmailAsync(loginUserModel.Email);
-        //    if (user == null) throw new BadRequestException("Email đăng nhập không chính xác.");
-
-        //    if (!BCrypt.Net.BCrypt.Verify(loginUserModel.Password, user.PasswordHash))
-        //    {
-        //        throw new BadRequestException("Mật khẩu nhập không chính xác.");
-        //    }
-
-        //    var accessToken = JwtHelper.GenerateToken(user, _configuration, permissions);
-
-
-        //}
     }
 }
