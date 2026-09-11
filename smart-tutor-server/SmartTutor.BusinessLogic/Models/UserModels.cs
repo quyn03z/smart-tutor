@@ -73,7 +73,7 @@ namespace SmartTutor.BusinessLogic.Models
 
         public class UserResponseProfile
         {
-            public string? FullName { get; set; }
+            public string? FullName { get; set; } 
             public string Email { get; set; } = string.Empty;
             public string? Phone { get; set; }
             public string? BankCode { get; set; }
@@ -110,6 +110,15 @@ namespace SmartTutor.BusinessLogic.Models
 
             [Compare("NewPassword", ErrorMessage = "Mật khẩu xác nhận không khớp.")]
             public string ConfirmNewPassword { get; set; } = string.Empty;
+        }
+
+        public class TokenRequestModel
+        {
+            [Required(ErrorMessage = "Access Token là bắt buộc.")]
+            public string AccessToken { get; set; } = string.Empty;
+
+            [Required(ErrorMessage = "Refresh Token là bắt buộc.")]
+            public string RefreshToken { get; set; } = string.Empty;
         }
     }
 }

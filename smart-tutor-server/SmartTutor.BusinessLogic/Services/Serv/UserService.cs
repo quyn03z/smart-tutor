@@ -9,6 +9,7 @@ using SmartTutor.DataAccess.Repositories.Impl;
 using SmartTutor.Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using static SmartTutor.BusinessLogic.Models.UserModels;
@@ -184,6 +185,64 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 Role = user.Role?.RoleName ?? "User",
                 Token = accessToken,
                 RefreshToken = refreshTokenString
+            };
+        }
+
+        public async Task<LoginResponseModel> RefreshTokenAsync(TokenRequestModel tokenRequestModel)
+        {
+            var principal = JwtHelper.GetPrincipalFromExpiredToken(tokenRequestModel.AccessToken, _configuration);
+            if (principal == null)
+            {
+                throw new BadRequestException("Access Token không hợp lệ.");
+            }
+
+            var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                throw new BadRequestException("Token không chứa thông tin người dùng hợp lệ.");
+            }
+
+            var storedRefreshToken = await _refreshTokenRepository.GetByTokenAsync(tokenRequestModel.RefreshToken);
+            if (storedRefreshToken == null || storedRefreshToken.UserId != userId || storedRefreshToken.IsRevoked)
+            {
+                throw new BadRequestException("Refresh Token không hợp lệ hoặc đã bị thu hồi.");
+            }
+
+            if (storedRefreshToken.ExpiresAt < DateTime.UtcNow)
+            {
+                throw new BadRequestException("Refresh Token đã hết hạn. Vui lòng đăng nhập lại.");
+            }
+
+            var user = storedRefreshToken.User;
+            if (user == null)
+            {
+                throw new NotFoundException("Không tìm thấy thông tin người dùng.");
+            }
+
+            // Thu hồi refresh token cũ (Token rotation)
+            storedRefreshToken.IsRevoked = true;
+            storedRefreshToken.RevokedAt = DateTime.UtcNow;
+            await _refreshTokenRepository.UpdateAsync(storedRefreshToken);
+
+            // Tạo cặp token mới
+            var newAccessToken = JwtHelper.GenerateToken(user, _configuration);
+            var newRefreshTokenString = JwtHelper.GenerateRefreshToken();
+
+            var newRefreshTokenEntity = new RefreshToken
+            {
+                UserId = user.Id,
+                Token = newRefreshTokenString,
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                IsRevoked = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _refreshTokenRepository.AddAsync(newRefreshTokenEntity);
+
+            return new LoginResponseModel
+            {
+                Token = newAccessToken,
+                RefreshToken = newRefreshTokenString,
+                Role = user.Role?.RoleName ?? "User"
             };
         }
 

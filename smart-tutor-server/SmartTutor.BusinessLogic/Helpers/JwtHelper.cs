@@ -77,5 +77,38 @@ namespace SmartTutor.BusinessLogic.Helpers
                 return null;
             }
         }
+
+        public static ClaimsPrincipal? GetPrincipalFromExpiredToken(string token, IConfiguration configuration)
+        {
+            var secretKey = configuration["JwtConfiguration:SecretKey"];
+            var key = Encoding.ASCII.GetBytes(secretKey ?? string.Empty);
+
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateLifetime = false // Bỏ qua hạn dùng vì token có thể đã expired
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+                if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                    (!jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256Signature, StringComparison.InvariantCultureIgnoreCase) &&
+                     !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    return null;
+                }
+
+                return principal;
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

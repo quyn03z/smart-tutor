@@ -62,5 +62,15 @@ namespace SmartTutor.API.Controllers
             return Ok(ApiResult<string>
                 .Success(await _userService.ResetPasswordAsync(request)));
         }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshTokenAsync(TokenRequestModel tokenRequestModel)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+            return Ok(ApiResult<LoginResponseModel>
+                .Success(await _userService.RefreshTokenAsync(tokenRequestModel)));
+        }
+
     }
 }

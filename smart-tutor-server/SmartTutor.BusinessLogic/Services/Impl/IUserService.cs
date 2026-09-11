@@ -24,5 +24,7 @@ namespace SmartTutor.BusinessLogic.Services.Impl
         Task<ForgotPassWordModel> ForgotPasswordAsync(EmailRequest email);
 
         Task<string> ResetPasswordAsync(ResetPassWordRequestModel request);
+
+        Task<LoginResponseModel> RefreshTokenAsync(TokenRequestModel tokenRequestModel);
     }
 }
