@@ -36,5 +36,13 @@ namespace SmartTutor.API.Controllers
             return Ok(ApiResult<UserResponseProfile>.Success(await _userService.UpdateProfileAsync(updateProfileRequestModel)));
         }
 
+        [Authorize]
+        [HttpGet("user-profile")]
+        public async Task<IActionResult> GetUserByIdAsync()
+        {
+            return Ok(ApiResult<UserResponseProfile>.Success(await _userService.GetUserByIdAsync()));
+        }
+
+
     }
 }
