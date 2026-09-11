@@ -16,6 +16,7 @@ namespace SmartTutor.DataAccess.Persistence
         public virtual DbSet<MonthlyReport> MonthlyReports { get; set; } = null!;
         public virtual DbSet<PaymentTransaction> PaymentTransactions { get; set; } = null!;
         public virtual DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+        public virtual DbSet<ResetPasswordToken> ResetPasswordTokens { get; set; } = null!;
         public virtual DbSet<Role> Roles { get; set; } = null!;
         public virtual DbSet<Session> Sessions { get; set; } = null!;
         public virtual DbSet<Student> Students { get; set; } = null!;
@@ -56,6 +57,23 @@ namespace SmartTutor.DataAccess.Persistence
 
                 entity.HasOne(e => e.User)
                     .WithMany(e => e.RefreshTokens)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ResetPasswordToken
+            modelBuilder.Entity<ResetPasswordToken>(entity =>
+            {
+                entity.ToTable("ResetPasswordTokens");
+
+                entity.Property(e => e.ResetToken)
+                    .IsUnicode(false)
+                    .HasMaxLength(256);
+
+                entity.HasIndex(e => e.ResetToken);
+
+                entity.HasOne(e => e.User)
+                    .WithMany(e => e.ResetPasswordTokens)
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
