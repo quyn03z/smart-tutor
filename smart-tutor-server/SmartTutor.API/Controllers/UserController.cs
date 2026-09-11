@@ -27,6 +27,14 @@ namespace SmartTutor.API.Controllers
             return Ok(ApiResult<string>.Success(await _userService.ChangePassWordAsync(changePassWordModel)));
         }
 
+        [Authorize]
+        [HttpPut("update-profile")]
+        public async Task<IActionResult> UpdateProfileAsync(UpdateProfileRequestModel updateProfileRequestModel)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+            return Ok(ApiResult<UserResponseProfile>.Success(await _userService.UpdateProfileAsync(updateProfileRequestModel)));
+        }
 
     }
 }

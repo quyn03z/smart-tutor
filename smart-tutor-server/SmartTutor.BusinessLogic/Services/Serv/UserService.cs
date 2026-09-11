@@ -111,12 +111,37 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             if (userId == null)
                 throw new UnauthorizedException("Người dùng chưa xác thực.");
 
-            var user = await _userRepository.GetByIdAsync(userId.Value);
+            var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
                 throw new NotFoundException("Không tìm thấy người dùng trong hệ thống.");
 
             // Thu hồi tất cả Refresh Token đang hoạt động của người dùng
             await _refreshTokenRepository.RevokeTokensByUserIdAsync(userId.Value);
+        }
+
+        public async Task<UserResponseProfile> UpdateProfileAsync(UpdateProfileRequestModel updateProfileRequestModel)
+        {
+            var userId = _claimService.GetUserId();
+            if (userId == null)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            user.FullName = updateProfileRequestModel.FullName;
+            user.Phone = updateProfileRequestModel.Phone;
+            user.BankCode = updateProfileRequestModel.BankCode;
+            user.BankAccountNumber = updateProfileRequestModel.BankAccountNumber;
+            user.BankAccountName = updateProfileRequestModel.BankAccountName;
+
+            await _userRepository.UpdateAsync(user);
+
+            return new UserResponseProfile
+            {
+                FullName = user.FullName,
+                Phone = user.Phone,
+                BankCode = user.BankCode,
+                BankAccountNumber = user.BankAccountNumber,
+                BankAccountName = user.BankAccountName,
+            };
         }
     }
 }
