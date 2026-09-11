@@ -28,6 +28,8 @@ namespace SmartTutor.DataAccess
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IResetPasswordTokenRepository, ResetPasswordTokenRepository>();
             services.AddScoped<IClaimService, ClaimService>();
+
+            services.AddScoped<IStudentRepository, StudentRepository>();
         }
 
         private static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
