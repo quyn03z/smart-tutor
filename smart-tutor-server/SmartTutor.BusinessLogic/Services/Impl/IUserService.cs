@@ -13,5 +13,6 @@ namespace SmartTutor.BusinessLogic.Services.Impl
 
         Task LogoutAsync();
 
+        Task<string> ChangePassWordAsync(ChangePassWordModel changePassWordModel);
     }
 }

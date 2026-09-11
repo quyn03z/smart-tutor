@@ -33,6 +33,22 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             _claimService = claimService;
         }
 
+        public async Task<string> ChangePassWordAsync(ChangePassWordModel changePassWordModel)
+        {
+            var userId = _claimService.GetUserId();
+            if (userId == null)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (!BCrypt.Net.BCrypt.Verify(changePassWordModel.OldPassword, user.PasswordHash))
+                throw new BadRequestException("Mật khẩu cũ không chính xác");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePassWordModel.NewPassword);
+
+            await _userRepository.UpdateAsync(user);
+
+            return "Change Password Thành Công.";
+        }
+
         public async Task<CreateUserResponseModel> CreateUserAsync(CreateUserModel createUserModel)
         {
             if (await _userRepository.IsEmailExistAsync(createUserModel.Email))
