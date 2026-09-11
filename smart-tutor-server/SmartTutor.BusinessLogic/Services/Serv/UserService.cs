@@ -71,6 +71,22 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             };
         }
 
+        public async Task<UserResponseProfile> GetUserByIdAsync()
+        {
+            var userId = _claimService.GetUserId();
+            if (userId == null)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+            var user = await _userRepository.GetByIdAsync(userId);
+            return new UserResponseProfile
+            {
+                FullName = user.FullName,
+                Phone = user.Phone,
+                BankCode = user.BankCode,
+                BankAccountNumber = user.BankAccountNumber,
+                BankAccountName = user.BankAccountName,
+            };
+        }
+
         public async Task<LoginResponseModel> LoginAsync(LoginUserModel loginUserModel)
         {
             var user = await _userRepository.GetUserByEmailAsync(loginUserModel.Email);

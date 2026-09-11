@@ -16,5 +16,8 @@ namespace SmartTutor.BusinessLogic.Services.Impl
         Task<string> ChangePassWordAsync(ChangePassWordModel changePassWordModel);
 
         Task<UserResponseProfile> UpdateProfileAsync(UpdateProfileRequestModel updateProfileRequestModel);
+
+        Task<UserResponseProfile> GetUserByIdAsync();
+
     }
 }
