@@ -45,5 +45,22 @@ namespace SmartTutor.API.Controllers
             return Ok(ApiResult<object>.Success(new { message = "Đã đăng xuất thành công" }));
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPasswordAsync(EmailRequest email)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+            return Ok(ApiResult<ForgotPassWordModel>
+                .Success(await _userService.ForgotPasswordAsync(email)));
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPasswordAsync(ResetPassWordRequestModel request)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+            return Ok(ApiResult<string>
+                .Success(await _userService.ResetPasswordAsync(request)));
+        }
     }
 }

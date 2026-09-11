@@ -9,6 +9,7 @@ using SmartTutor.DataAccess.Repositories.Impl;
 using SmartTutor.Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using static SmartTutor.BusinessLogic.Models.UserModels;
 
@@ -18,17 +19,20 @@ namespace SmartTutor.BusinessLogic.Services.Serv
     {
         private readonly IUserRepository _userRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly IResetPasswordTokenRepository _resetPasswordTokenRepository;
         private readonly IConfiguration _configuration;
         private readonly IClaimService _claimService;
 
         public UserService(
             IUserRepository userRepository,
             IRefreshTokenRepository refreshTokenRepository,
+            IResetPasswordTokenRepository resetPasswordTokenRepository,
             IConfiguration configuration,
             IClaimService claimService)
         {
             _userRepository = userRepository;
             _refreshTokenRepository = refreshTokenRepository;
+            _resetPasswordTokenRepository = resetPasswordTokenRepository;
             _configuration = configuration;
             _claimService = claimService;
         }
@@ -39,14 +43,18 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             if (userId == null)
                 throw new UnauthorizedException("Người dùng chưa xác thực.");
             var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new NotFoundException("Không tìm thấy người dùng.");
+
             if (!BCrypt.Net.BCrypt.Verify(changePassWordModel.OldPassword, user.PasswordHash))
-                throw new BadRequestException("Mật khẩu cũ không chính xác");
+                throw new BadRequestException("Mật khẩu cũ không chính xác.");
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePassWordModel.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user);
 
-            return "Change Password Thành Công.";
+            return "Đổi mật khẩu thành công.";
         }
 
         public async Task<CreateUserResponseModel> CreateUserAsync(CreateUserModel createUserModel)
@@ -71,15 +79,73 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             };
         }
 
+        public async Task<ForgotPassWordModel> ForgotPasswordAsync(EmailRequest email)
+        {
+            var user = await _userRepository.GetUserByEmailAsync(email.Email);
+            if (user == null)
+                throw new BadRequestException("Email không tồn tại trong hệ thống.");
+
+            // Vô hiệu hóa các reset token cũ chưa sử dụng của user
+            await _resetPasswordTokenRepository.InvalidateTokensByUserIdAsync(user.Id);
+
+            // Sinh reset token ngẫu nhiên và an toàn
+            var resetToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            var resetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+
+            var resetPasswordTokenEntity = new ResetPasswordToken
+            {
+                UserId = user.Id,
+                ResetToken = resetToken,
+                ExpiredAt = resetTokenExpiry,
+                isUsed = false,
+                CreateAt = DateTime.UtcNow
+            };
+
+            await _resetPasswordTokenRepository.AddAsync(resetPasswordTokenEntity);
+
+            return new ForgotPassWordModel
+            {
+                ResetToken = resetToken,
+                ExpiredAt = resetTokenExpiry
+            };
+        }
+
+        public async Task<string> ResetPasswordAsync(ResetPassWordRequestModel request)
+        {
+            var tokenEntity = await _resetPasswordTokenRepository.GetValidTokenAsync(request.ResetToken);
+            if (tokenEntity == null || tokenEntity.User?.Email != request.Email)
+            {
+                throw new BadRequestException("Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.");
+            }
+
+            var user = tokenEntity.User;
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+
+            // Đánh dấu token đã sử dụng
+            tokenEntity.isUsed = true;
+            await _resetPasswordTokenRepository.UpdateAsync(tokenEntity);
+
+            // Thu hồi tất cả Refresh Token (đăng xuất khỏi các thiết bị)
+            await _refreshTokenRepository.RevokeTokensByUserIdAsync(user.Id);
+
+            return "Đặt lại mật khẩu thành công.";
+        }
+
         public async Task<UserResponseProfile> GetUserByIdAsync()
         {
             var userId = _claimService.GetUserId();
             if (userId == null)
                 throw new UnauthorizedException("Người dùng chưa xác thực.");
             var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new NotFoundException("Không tìm thấy người dùng.");
+
             return new UserResponseProfile
             {
                 FullName = user.FullName,
+                Email = user.Email ?? string.Empty,
                 Phone = user.Phone,
                 BankCode = user.BankCode,
                 BankAccountNumber = user.BankAccountNumber,
@@ -141,18 +207,22 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             if (userId == null)
                 throw new UnauthorizedException("Người dùng chưa xác thực.");
             var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new NotFoundException("Không tìm thấy người dùng.");
 
             user.FullName = updateProfileRequestModel.FullName;
-            user.Phone = updateProfileRequestModel.Phone;
-            user.BankCode = updateProfileRequestModel.BankCode;
-            user.BankAccountNumber = updateProfileRequestModel.BankAccountNumber;
-            user.BankAccountName = updateProfileRequestModel.BankAccountName;
+            user.Phone = updateProfileRequestModel.Phone ?? string.Empty;
+            user.BankCode = updateProfileRequestModel.BankCode ?? string.Empty;
+            user.BankAccountNumber = updateProfileRequestModel.BankAccountNumber ?? string.Empty;
+            user.BankAccountName = updateProfileRequestModel.BankAccountName ?? string.Empty;
+            user.UpdatedAt = DateTime.UtcNow;
 
             await _userRepository.UpdateAsync(user);
 
             return new UserResponseProfile
             {
                 FullName = user.FullName,
+                Email = user.Email ?? string.Empty,
                 Phone = user.Phone,
                 BankCode = user.BankCode,
                 BankAccountNumber = user.BankAccountNumber,

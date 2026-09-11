@@ -1,6 +1,8 @@
-﻿using System;
+using SmartTutor.BusinessLogic.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using static SmartTutor.BusinessLogic.Models.UserModels;
 
 namespace SmartTutor.BusinessLogic.Services.Impl
@@ -19,5 +21,8 @@ namespace SmartTutor.BusinessLogic.Services.Impl
 
         Task<UserResponseProfile> GetUserByIdAsync();
 
+        Task<ForgotPassWordModel> ForgotPasswordAsync(EmailRequest email);
+
+        Task<string> ResetPasswordAsync(ResetPassWordRequestModel request);
     }
 }

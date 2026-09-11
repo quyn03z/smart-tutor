@@ -54,5 +54,7 @@ namespace SmartTutor.Domain.Models
         public virtual ICollection<Student> Students { get; set; } = new List<Student>();
 
         public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
+        public virtual ICollection<ResetPasswordToken> ResetPasswordTokens { get; set; } = new List<ResetPasswordToken>();
     }
 }
