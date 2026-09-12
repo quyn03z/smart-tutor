@@ -10,7 +10,7 @@ namespace SmartTutor.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class StudentController : ControllerBase
+    public class StudentController : BaseController
     {
         private readonly IStudentService _studentService;
 
@@ -24,6 +24,16 @@ namespace SmartTutor.API.Controllers
         {
             return Ok(ApiResult<IEnumerable<StudentsResponseModel>>
                 .Success(await _studentService.GetStudentsByCurrentUserAsync()));
+        }
+
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateStudentAsync(CreateStudentModel createStudentModel)
+        {
+
+            if (!ModelState.IsValid)
+                return ValidationError();
+            return Ok(ApiResult<StudentsResponseModel>
+                .Success(await _studentService.CreateStudentAsync(createStudentModel)));
         }
 
 
