@@ -7,5 +7,7 @@ namespace SmartTutor.DataAccess.Repositories.Impl
 {
     public interface IStudentRepository : IBaseRepository<Student>
     {
+        Task<IEnumerable<Student>> GetAllStudentByUserId(int userId);
+        Task<Student> GetStudentByStudentId(int studentId);
     }
 }
