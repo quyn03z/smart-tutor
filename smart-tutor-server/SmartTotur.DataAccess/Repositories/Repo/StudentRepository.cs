@@ -16,7 +16,10 @@ namespace SmartTutor.DataAccess.Repositories.Repo
 
         public async Task<IEnumerable<Student>> GetAllStudentByUserId(int userId)
         {
-            return await _dbSet.Include(c => c.ClassEnrollments).Where(s => s.UserId == userId).ToListAsync();
+            return await _dbSet.Include(c => c.ClassEnrollments)
+                                .ThenInclude(c => c.Class)
+                                .Where(s => s.UserId == userId)
+                                .ToListAsync();
         }
 
         public async Task<Student> GetStudentByStudentId(int studentId)
