@@ -21,5 +21,24 @@ namespace SmartTutor.BusinessLogic.Models
         }
 
 
+        public class CreateStudentModel
+        {
+            [Required(ErrorMessage = "Họ tên học sinh không được để trống")]
+            [StringLength(100)]
+            public string FullName { get; set; }
+            public string? ClassName { get; set; }
+            public string? ClassType { get; set; }
+            public string? GradeLevel { get; set; }
+            public string? ParentName { get; set; }
+            [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
+            public string? ParentPhone { get; set; }
+            public decimal? FeePerSession { get; set; }
+            public int? ClassId { get; set; }
+            public decimal? CustomFee { get; set; }
+
+        }
+
+
+
     }
 }
