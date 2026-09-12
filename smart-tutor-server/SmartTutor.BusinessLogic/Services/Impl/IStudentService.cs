@@ -9,7 +9,7 @@ namespace SmartTutor.BusinessLogic.Services.Impl
     public interface IStudentService
     {
         Task<IEnumerable<StudentsResponseModel>> GetStudentsByCurrentUserAsync();
-        Task<StudentsResponseModel> CreateStudentAsync(CreateStudentModel createStudentModel);
+        Task<StudentsResponseModel> CreateStudentAsync(RequestStudentModel createStudentModel);
 
     }
 }

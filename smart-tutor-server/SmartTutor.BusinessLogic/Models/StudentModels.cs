@@ -21,7 +21,7 @@ namespace SmartTutor.BusinessLogic.Models
         }
 
 
-        public class CreateStudentModel
+        public class RequestStudentModel
         {
             [Required(ErrorMessage = "Họ tên học sinh không được để trống")]
             [StringLength(100)]

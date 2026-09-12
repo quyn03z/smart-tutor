@@ -21,7 +21,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             _claimService = claimService;
         }
 
-        public async Task<StudentsResponseModel> CreateStudentAsync(CreateStudentModel createStudentModel)
+        public async Task<StudentsResponseModel> CreateStudentAsync(RequestStudentModel createStudentModel)
         {
             var userId = _claimService.GetUserId();
             if (!userId.HasValue)

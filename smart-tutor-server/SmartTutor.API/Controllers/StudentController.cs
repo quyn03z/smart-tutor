@@ -27,7 +27,7 @@ namespace SmartTutor.API.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateStudentAsync(CreateStudentModel createStudentModel)
+        public async Task<IActionResult> CreateStudentAsync(RequestStudentModel createStudentModel)
         {
 
             if (!ModelState.IsValid)
@@ -36,6 +36,8 @@ namespace SmartTutor.API.Controllers
                 .Success(await _studentService.CreateStudentAsync(createStudentModel)));
         }
 
+
+       
 
     }
 }
