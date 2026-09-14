@@ -37,7 +37,14 @@ namespace SmartTutor.API.Controllers
         }
 
 
-       
+        [HttpPut("edit")]
+        public async Task<IActionResult> EditStudentAsync(RequestStudentModel editStudentModel)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+            return Ok(ApiResult<StudentsResponseModel>
+                .Success(await _studentService.EditStudentAsync(editStudentModel)));
+        }
 
     }
 }
