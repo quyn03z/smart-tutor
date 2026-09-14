@@ -24,6 +24,9 @@ namespace SmartTutor.BusinessLogic
             services.AddScoped<IStudentService, StudentService>();
 
             services.AddScoped<IStudentService, StudentService>();
+            
+            services.AddScoped<IClassService, ClassService>();
+
         }
     }
 }

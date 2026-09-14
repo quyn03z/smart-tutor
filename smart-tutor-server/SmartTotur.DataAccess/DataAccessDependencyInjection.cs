@@ -29,6 +29,8 @@ namespace SmartTutor.DataAccess
             services.AddScoped<IResetPasswordTokenRepository, ResetPasswordTokenRepository>();
             services.AddScoped<IClaimService, ClaimService>();
 
+            services.AddScoped<IClassRepository, ClassRepository>();
+
             services.AddScoped<IStudentRepository, StudentRepository>();
         }
 
