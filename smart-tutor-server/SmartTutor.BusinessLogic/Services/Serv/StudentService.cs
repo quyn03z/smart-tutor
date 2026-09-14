@@ -3,6 +3,7 @@ using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
 using SmartTutor.DataAccess.Claims;
 using SmartTutor.DataAccess.Repositories.Impl;
+using SmartTutor.Domain.Enums;
 using SmartTutor.Domain.Models;
 using System;
 using System.Collections.Generic;
@@ -36,7 +37,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 ParentName = createStudentModel.ParentName,
                 ParentPhone = createStudentModel.ParentPhone,
                 CreditBalance = 0,
-                Status = "Active",
+                Status = AppEnums.StudentStatus.Active.ToString(),
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -50,7 +51,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                     ClassId = createStudentModel.ClassId.Value,
                     CustomFee = createStudentModel.CustomFee ?? createStudentModel.FeePerSession,
                     JoinedDate = DateTime.UtcNow,
-                    Status = "Active"
+                    Status = AppEnums.EnrollmentStatus.Active.ToString()
                 };
                 student.ClassEnrollments.Add(enrollment);
             }
@@ -62,7 +63,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 {
                     UserId = userId.Value,
                     ClassName = createStudentModel.ClassName,
-                    ClassType = createStudentModel.ClassType ?? "Individual",
+                    ClassType = createStudentModel.ClassType ?? AppEnums.ClassType.Individual.ToString(),
                     DefaultFeePerSession = createStudentModel.FeePerSession ?? 0,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -71,7 +72,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                     Class = newClass,
                     CustomFee = createStudentModel.FeePerSession,
                     JoinedDate = DateTime.UtcNow,
-                    Status = "Active"
+                    Status = AppEnums.StudentStatus.Active.ToString()
                 };
                 student.ClassEnrollments.Add(enrollment);
             }
@@ -176,10 +177,10 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             if (student == null || student.UserId != userId.Value)
                 throw new NotFoundException("Không tìm thấy học sinh hoặc bạn không có quyền xóa.");
                 
-            student.Status = "Delete";
+            student.Status = AppEnums.StudentStatus.Deleted.ToString();
             foreach (var enrollment in student.ClassEnrollments)
             {
-                enrollment.Status = "Dropped";
+                enrollment.Status = AppEnums.StudentStatus.Deleted.ToString();
             }
             await _studentRepository.UpdateAsync(student);
             return "Xóa học sinh thành công.";
