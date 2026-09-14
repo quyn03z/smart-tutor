@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SmartTutor.Domain.Enums
 {
-    public class AppEnums
+    public static class AppEnums
     {
         public enum ClassType
         {
