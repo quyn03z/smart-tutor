@@ -18,7 +18,7 @@ namespace SmartTutor.DataAccess.Repositories.Repo
         {
             return await _dbSet.Include(c => c.ClassEnrollments)
                                 .ThenInclude(c => c.Class)
-                                .Where(s => s.UserId == userId)
+                                .Where(s => s.UserId == userId & s.Status != "Deleted")
                                 .ToListAsync();
         }
 
