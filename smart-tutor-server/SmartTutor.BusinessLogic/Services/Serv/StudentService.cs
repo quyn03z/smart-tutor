@@ -166,8 +166,25 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             
         }
 
+        public async Task<string> DeleteStudentAsync(int studentId)
+        {
+            var userId = _claimService.GetUserId();
+            if (userId == null)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
 
+            var student = await _studentRepository.GetStudentByStudentId(studentId);
+            if (student == null || student.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy học sinh hoặc bạn không có quyền xóa.");
+                
+            student.Status = "Delete";
+            foreach (var enrollment in student.ClassEnrollments)
+            {
+                enrollment.Status = "Dropped";
+            }
+            await _studentRepository.UpdateAsync(student);
+            return "Xóa học sinh thành công.";
+        }
 
-
+        
     }
 }
