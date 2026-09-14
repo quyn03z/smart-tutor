@@ -28,5 +28,12 @@ namespace SmartTutor.API.Controllers
                 .Success(await _classService.CreateClassAsync(classRequestModel)));
         }
 
+        [HttpGet("userId")]
+        public async Task<IActionResult> GetMyClassAsync(int userId)
+        {
+            return Ok(ApiResult<IEnumerable<ClassResponseModel>>
+                .Success(await _classService.GetMyClassAsync()));
+        }
+
     }
 }

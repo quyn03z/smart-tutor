@@ -1,4 +1,5 @@
-﻿using SmartTutor.BusinessLogic.Models;
+﻿using SmartTutor.BusinessLogic.Exceptions;
+using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
 using SmartTutor.DataAccess.Claims;
 using SmartTutor.DataAccess.Repositories.Impl;
@@ -50,6 +51,23 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 DefaultFeePerSession = newClass.DefaultFeePerSession,
                 SchedulePattern = newClass.SchedulePattern
             };
+        }
+
+        public async Task<IEnumerable<ClassResponseModel>> GetMyClassAsync()
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+            var classes = await _classRepository.FindAsync(c => c.UserId == userId.Value);
+            return classes.Select(c => new ClassResponseModel
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                ClassName = c.ClassName,
+                ClassType = c.ClassType,
+                DefaultFeePerSession = c.DefaultFeePerSession,
+                SchedulePattern = c.SchedulePattern
+            });
         }
 
     }

@@ -7,7 +7,7 @@ namespace SmartTutor.BusinessLogic.Services.Impl
 {
     public interface IClassService
     {
-        Task<ClassResponseModel> AddClassAsync(ClassRequestModel classRequestModel);
-
+        Task<ClassResponseModel> CreateClassAsync(ClassRequestModel classRequestModel);
+        Task<IEnumerable<ClassResponseModel>> GetMyClassAsync();
     }
 }
