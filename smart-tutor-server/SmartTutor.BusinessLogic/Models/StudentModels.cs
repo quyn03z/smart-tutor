@@ -10,6 +10,7 @@ namespace SmartTutor.BusinessLogic.Models
 
         public class StudentsResponseModel
         {
+            public string Id { get; set; }
             public string FullName { get; set; } = string.Empty;
             public string? ClassName { get; set; }
             public string? ClassType { get; set; }
@@ -23,6 +24,7 @@ namespace SmartTutor.BusinessLogic.Models
 
         public class RequestStudentModel
         {
+            public int Id { get; set; }
             [Required(ErrorMessage = "Họ tên học sinh không được để trống")]
             [StringLength(100)]
             public string FullName { get; set; }
