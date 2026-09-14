@@ -53,6 +53,22 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             };
         }
 
+        public async Task<string> DeleteClassAsync(int classId)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+            // 1. Tìm lớp học theo classId
+            var @class = await _classRepository.GetByIdAsync(classId);
+
+            // 2. Kiểm tra tồn tại và quyền sở hữu của User
+            if (@class == null || @class.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy lớp học hoặc bạn không có quyền xóa.");
+            // 3. Xóa lớp học khỏi Database
+            await _classRepository.DeleteAsync(@class);
+            return "Xóa lớp học thành công.";
+        }
+
         public async Task<IEnumerable<ClassResponseModel>> GetMyClassAsync()
         {
             var userId = _claimService.GetUserId();

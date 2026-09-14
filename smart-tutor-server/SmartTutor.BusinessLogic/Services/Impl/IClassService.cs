@@ -9,5 +9,7 @@ namespace SmartTutor.BusinessLogic.Services.Impl
     {
         Task<ClassResponseModel> CreateClassAsync(ClassRequestModel classRequestModel);
         Task<IEnumerable<ClassResponseModel>> GetMyClassAsync();
+        Task<string> DeleteClassAsync(int classId);
+
     }
 }
