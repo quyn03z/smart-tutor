@@ -186,6 +186,53 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             return "Xóa học sinh thành công.";
         }
 
-        
+        public async Task<StudentDetailResponseModel> GetStudentDetailAsync(int studentId)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            var student = await _studentRepository.GetStudentDetailAsync(studentId);
+            if (student == null || student.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy thông tin học sinh hoặc bạn không có quyền truy cập.");
+
+            return new StudentDetailResponseModel
+            {
+                Id = student.Id,
+                FullName = student.FullName,
+                GradeLevel = student.GradeLevel,
+                ParentName = student.ParentName,
+                ParentPhone = student.ParentPhone,
+                CreditBalance = student.CreditBalance,
+                Status = student.Status,
+                CreatedAt = student.CreatedAt,
+
+                // Map danh sách lớp học
+                Classes = student.ClassEnrollments.Select(ce => new StudentClassEnrollmentModel
+                {
+                    ClassId = ce.ClassId,
+                    ClassName = ce.Class?.ClassName ?? string.Empty,
+                    ClassType = ce.Class?.ClassType ?? string.Empty,
+                    FeePerSession = ce.CustomFee ?? ce.Class?.DefaultFeePerSession,
+                    Status = ce.Status,
+                    JoinedDate = ce.JoinedDate
+                }).ToList(),
+
+                // Map lịch sử học tập từng buổi (sắp xếp buổi mới nhất lên đầu)
+                AttendanceHistory = student.AttendanceLogs
+                    .OrderByDescending(al => al.Session?.SessionDate)
+                    .Select(al => new StudentAttendanceHistoryModel
+                    {
+                        SessionId = al.SessionId,
+                        SessionDate = al.Session?.SessionDate ?? DateTime.MinValue,
+                        LessonContent = al.Session?.LessonContent,
+                        AttendanceStatus = al.AttendanceStatus,
+                        HomeworkScore = al.HomeworkScore,
+                        Attitude = al.Attitude,
+                        IndividualNote = al.IndividualNote
+                    }).ToList()
+            };
+        }
+
     }
 }
