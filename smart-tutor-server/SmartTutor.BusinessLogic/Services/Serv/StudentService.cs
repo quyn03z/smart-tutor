@@ -1,4 +1,5 @@
-﻿using SmartTutor.BusinessLogic.Models;
+﻿using SmartTutor.BusinessLogic.Exceptions;
+using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
 using SmartTutor.DataAccess.Claims;
 using SmartTutor.DataAccess.Repositories.Impl;
@@ -81,6 +82,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
 
             return new StudentsResponseModel
             {
+                Id = createdStudent.Status,
                 FullName = createdStudent.FullName,
                 GradeLevel = createdStudent.GradeLevel,
                 ParentName = createdStudent.ParentName,
@@ -88,6 +90,55 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 ClassName = currentEnrollment?.Class?.ClassName,
                 ClassType = currentEnrollment?.Class?.ClassType,
                 FeePerSession = currentEnrollment?.CustomFee
+            };
+
+
+        }
+
+        public async Task<StudentsResponseModel> EditStudentAsync(RequestStudentModel requestStudentModel)
+        {
+            var userId = _claimService.GetUserId();
+            if (userId == null)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            var student = await _studentRepository.GetStudentByStudentId(requestStudentModel.Id);
+
+            if (student == null || student.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy học sinh hoặc bạn không có quyền chỉnh sửa.");
+
+            student.FullName = requestStudentModel.FullName;
+            student.ParentPhone = requestStudentModel.ParentPhone;
+            student.ParentName= requestStudentModel.ParentName;
+            student.GradeLevel = requestStudentModel.GradeLevel;
+            
+            var enrollment = student.ClassEnrollments.FirstOrDefault();
+
+            if(enrollment?.Class != null){
+                if (!string.IsNullOrWhiteSpace(requestStudentModel.ClassName))
+                    enrollment.Class.ClassName = requestStudentModel.ClassName;
+                if (!string.IsNullOrWhiteSpace(requestStudentModel.ClassType))
+                    enrollment.Class.ClassType = requestStudentModel.ClassType;
+                if (requestStudentModel.FeePerSession.HasValue)
+                    enrollment.Class.DefaultFeePerSession = requestStudentModel.FeePerSession.Value;    
+            }
+
+            // Case 2: Chuyển sang lớp có sẵn từ danh sách
+            if(requestStudentModel.ClassId.HasValue && requestStudentModel.ClassId.Value > 0
+             && enrollment?.ClassId != requestStudentModel.ClassId.Value){
+                    enrollment?.ClassId = requestStudentModel.ClassId.Value;
+            }
+
+            await _studentRepository.UpdateAsync(student);
+            return new StudentsResponseModel
+            {
+                Id = student.Status,
+                FullName = student.FullName,
+                GradeLevel = student.GradeLevel,
+                ParentName = student.ParentName,
+                ParentPhone = student.ParentPhone,
+                ClassName = enrollment?.Class?.ClassName,
+                ClassType = enrollment?.Class?.ClassType,
+                FeePerSession = enrollment?.CustomFee
             };
 
 
@@ -114,6 +165,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             });
             
         }
+
 
 
 

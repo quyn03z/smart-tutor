@@ -10,6 +10,6 @@ namespace SmartTutor.BusinessLogic.Services.Impl
     {
         Task<IEnumerable<StudentsResponseModel>> GetStudentsByCurrentUserAsync();
         Task<StudentsResponseModel> CreateStudentAsync(RequestStudentModel createStudentModel);
-
+        Task<StudentsResponseModel> EditStudentAsync(RequestStudentModel studentResponseModel);
     }
 }
