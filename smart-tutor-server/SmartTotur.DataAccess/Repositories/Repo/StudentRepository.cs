@@ -26,5 +26,15 @@ namespace SmartTutor.DataAccess.Repositories.Repo
         {
             return await _dbSet.FirstOrDefaultAsync(s => s.Id == studentId);
         }
+
+        public async Task<Student> GetStudentDetailAsync(int studentId)
+        {
+            return await _dbSet
+                        .Include(s => s.ClassEnrollments)
+                            .ThenInclude(ce => ce.Class)
+                        .Include(s => s.AttendanceLogs)
+                            .ThenInclude(al => al.Session)
+                        .FirstOrDefaultAsync(s => s.Id == studentId);
+        }
     }
 }

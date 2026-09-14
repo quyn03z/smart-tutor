@@ -9,5 +9,8 @@ namespace SmartTutor.DataAccess.Repositories.Impl
     {
         Task<IEnumerable<Student>> GetAllStudentByUserId(int userId);
         Task<Student> GetStudentByStudentId(int studentId);
+        Task<Student> GetStudentDetailAsync(int studentId);
+
+
     }
 }
