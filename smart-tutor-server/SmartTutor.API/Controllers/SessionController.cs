@@ -1,12 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
 using SmartTutor.BusinessLogic.Services.Serv;
-using static SmartTutor.BusinessLogic.Models.StudentModels;
+using static SmartTutor.BusinessLogic.Models.SessionModels;
 
 namespace SmartTutor.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class SessionController : BaseController
@@ -19,10 +21,10 @@ namespace SmartTutor.API.Controllers
         }
 
         [HttpGet("teaching")]
-        public async Task<IActionResult> GetMyTeacherSessionsAsync (DateOnly fromDate, DateOnly toDate)
+        public async Task<IActionResult> GetMyTeacherSessionsAsync([FromQuery] DateOnly? fromDate, [FromQuery] DateOnly? toDate)
         {
-            return Ok(ApiResult<StudentCreditHistoryResponseModel>
-                .Success(await _studentService.GetStudentCreditHistoryAsync(id)));
+            return Ok(ApiResult<IEnumerable<SessionRespondModel>>
+                .Success(await _sessionService.GetMyTeacherSessionsAsync(fromDate, toDate)));
         }
 
     }

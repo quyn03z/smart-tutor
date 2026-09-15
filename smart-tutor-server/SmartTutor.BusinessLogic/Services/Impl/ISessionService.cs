@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using static SmartTutor.BusinessLogic.Models.SessionModels;
 
 namespace SmartTutor.BusinessLogic.Services.Impl
 {
     public interface ISessionService
     {
+        Task<IEnumerable<SessionRespondModel>> GetMyTeacherSessionsAsync(DateOnly? fromDate, DateOnly? toDate);
     }
 }

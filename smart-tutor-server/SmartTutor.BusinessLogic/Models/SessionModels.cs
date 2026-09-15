@@ -40,6 +40,7 @@ namespace SmartTutor.BusinessLogic.Models
         {
             public int Id { get; set; }
             public int ClassId { get; set; }
+            public string? ClassName { get; set; }
             public DateTime SessionDate { get; set; }
             public TimeSpan StartTime { get; set; }
             public TimeSpan EndTime { get; set; }
