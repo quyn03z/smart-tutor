@@ -86,5 +86,32 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             });
         }
 
+        public async Task<ClassResponseModel> UpdateClassAsync(ClassRequestModel classRequestModel)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            var @class = await _classRepository.GetByIdAsync(classRequestModel.Id);
+            if (@class == null || @class.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy lớp học hoặc bạn không có quyền chỉnh sửa.");
+                
+            @class.ClassName = classRequestModel.ClassName;
+            @class.ClassType = classRequestModel.ClassType;
+            @class.DefaultFeePerSession = classRequestModel.DefaultFeePerSession;
+            @class.SchedulePattern = classRequestModel.SchedulePattern;
+
+            await _classRepository.UpdateAsync(@class);
+
+            return new ClassResponseModel
+            {
+                Id = @class.Id,
+                UserId = @class.UserId,
+                ClassName = @class.ClassName,
+                ClassType = @class.ClassType,
+                DefaultFeePerSession = @class.DefaultFeePerSession,
+                SchedulePattern = @class.SchedulePattern
+            };
+        }
     }
 }
