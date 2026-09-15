@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartTutor.DataAccess.Persistence;
 using SmartTutor.DataAccess.Repositories.Impl;
 using SmartTutor.Domain.Models;
@@ -35,6 +35,17 @@ namespace SmartTutor.DataAccess.Repositories.Repo
                         .Include(s => s.AttendanceLogs)
                             .ThenInclude(al => al.Session)
                         .FirstOrDefaultAsync(s => s.Id == studentId);
+        }
+
+        public async Task<Student?> GetStudentWithCreditHistoryAsync(int studentId)
+        {
+            return await _dbSet
+                .Include(s => s.MonthlyReports)
+                    .ThenInclude(mr => mr.Class)
+                .Include(s => s.MonthlyReports)
+                    .ThenInclude(mr => mr.PaymentTransactions)
+                .Include(s => s.PaymentTransactions)
+                .FirstOrDefaultAsync(s => s.Id == studentId);
         }
     }
 }

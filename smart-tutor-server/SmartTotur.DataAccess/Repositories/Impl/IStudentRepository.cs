@@ -1,4 +1,4 @@
-﻿using SmartTutor.Domain.Models;
+using SmartTutor.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,7 +10,6 @@ namespace SmartTutor.DataAccess.Repositories.Impl
         Task<IEnumerable<Student>> GetAllStudentByUserId(int userId);
         Task<Student> GetStudentByStudentId(int studentId);
         Task<Student> GetStudentDetailAsync(int studentId);
-
-
+        Task<Student?> GetStudentWithCreditHistoryAsync(int studentId);
     }
 }
