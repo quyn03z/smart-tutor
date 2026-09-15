@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
@@ -9,6 +10,7 @@ using static SmartTutor.BusinessLogic.Models.UserModels;
 namespace SmartTutor.API.Controllers
 {
     [Route("api/[controller]")]
+    [Route("api/students")]
     [ApiController]
     public class StudentController : BaseController
     {
@@ -61,6 +63,13 @@ namespace SmartTutor.API.Controllers
                 .Success(await _studentService.GetStudentDetailAsync(id)));
         }
 
+        [Authorize]
+        [HttpGet("{id}/credit-history")]
+        public async Task<IActionResult> GetStudentCreditHistoryAsync(int id)
+        {
+            return Ok(ApiResult<StudentCreditHistoryResponseModel>
+                .Success(await _studentService.GetStudentCreditHistoryAsync(id)));
+        }
 
     }
 }
