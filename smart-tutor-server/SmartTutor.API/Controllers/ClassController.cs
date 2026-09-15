@@ -42,5 +42,14 @@ namespace SmartTutor.API.Controllers
                 .Success(await _classService.DeleteClassAsync(classId)));
         }
 
+        [HttpPut("classId")]
+        public async Task<IActionResult> UpdateClassAsnyc(ClassRequestModel classRequestModel)
+        {
+            return Ok(ApiResult<ClassResponseModel>
+                .Success(await _classService.UpdateClassAsync(classRequestModel)));
+        }
+
+
+
     }
 }
