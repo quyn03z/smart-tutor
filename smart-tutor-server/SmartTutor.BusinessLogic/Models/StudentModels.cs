@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -80,6 +80,31 @@ namespace SmartTutor.BusinessLogic.Models
             public string? IndividualNote { get; set; }   // Nhận xét riêng của giáo viên
         }
 
+        // Lịch sử cộng/trừ số dư trả trước của học sinh
+        public class StudentCreditHistoryResponseModel
+        {
+            public int StudentId { get; set; }
+            public string FullName { get; set; } = string.Empty;
+            public decimal CurrentCreditBalance { get; set; }
+            public List<CreditHistoryItemModel> History { get; set; } = new();
+        }
+
+        public class CreditHistoryItemModel
+        {
+            public string Id { get; set; } = string.Empty;
+            public string TransactionType { get; set; } = string.Empty; // PLUS (Cộng) | MINUS (Trừ)
+            public string Action { get; set; } = string.Empty;          // OVERPAID | DEDUCTION | TOPUP
+            public string Title { get; set; } = string.Empty;           // Tiêu đề ngắn gọn
+            public string? Description { get; set; }                   // Mô tả chi tiết biến động số dư
+            public decimal Amount { get; set; }                        // Số tiền giao dịch (dương)
+            public decimal BalanceChange { get; set; }                 // Biến động số dư (+Amount hoặc -Amount)
+            public DateTime TransactionDate { get; set; }              // Thời gian phát sinh giao dịch / khấu trừ
+            public string? ReferenceCode { get; set; }                 // Mã giao dịch / mã chuyển khoản
+            public string? Gateway { get; set; }                       // Cổng thanh toán (VietQR, Cash, Momo...)
+            public int? ReportId { get; set; }                         // ID báo cáo tháng liên quan (nếu có)
+            public string? ReportMonth { get; set; }                   // Tháng báo cáo (YYYY-MM)
+            public string? ClassName { get; set; }                     // Tên lớp học liên quan
+        }
 
     }
 }
