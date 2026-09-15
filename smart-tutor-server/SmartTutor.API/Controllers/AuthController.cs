@@ -8,7 +8,7 @@ using static SmartTutor.BusinessLogic.Models.UserModels;
 
 namespace SmartTutor.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : BaseController
     {

@@ -21,6 +21,11 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             _claimService = claimService;
         }
 
+        public  Task<SessionRespondModel> CreateSessionsAsync(SessionRequestModel sessionRequestModel)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IEnumerable<SessionRespondModel>> GetMyTeacherSessionsAsync(DateOnly? fromDate, DateOnly? toDate)
         {
             var userId = _claimService.GetUserId();

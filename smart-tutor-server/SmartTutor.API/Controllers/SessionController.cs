@@ -9,7 +9,7 @@ using static SmartTutor.BusinessLogic.Models.SessionModels;
 namespace SmartTutor.API.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/session")]
     [ApiController]
     public class SessionController : BaseController
     {
@@ -25,6 +25,15 @@ namespace SmartTutor.API.Controllers
         {
             return Ok(ApiResult<IEnumerable<SessionRespondModel>>
                 .Success(await _sessionService.GetMyTeacherSessionsAsync(fromDate, toDate)));
+        }
+
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateSessionsAsync(SessionRequestModel sessionRequestModel)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+            return Ok(ApiResult<SessionRespondModel>
+                .Success(await _sessionService.CreateSessionsAsync(sessionRequestModel)));
         }
 
     }

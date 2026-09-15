@@ -7,7 +7,7 @@ using static SmartTutor.BusinessLogic.Models.UserModels;
 
 namespace SmartTutor.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/user")]
     [ApiController]
     public class UserController : BaseController
     {

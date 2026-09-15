@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SmartTutor.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/public")]
     [ApiController]
     public class PublicController : BaseController
     {

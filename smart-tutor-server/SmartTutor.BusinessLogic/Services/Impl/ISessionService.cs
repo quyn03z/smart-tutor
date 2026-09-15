@@ -8,5 +8,7 @@ namespace SmartTutor.BusinessLogic.Services.Impl
     public interface ISessionService
     {
         Task<IEnumerable<SessionRespondModel>> GetMyTeacherSessionsAsync(DateOnly? fromDate, DateOnly? toDate);
+        Task<SessionRespondModel> CreateSessionsAsync(SessionRequestModel sessionRequestModel);
+
     }
 }
