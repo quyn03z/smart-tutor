@@ -1,4 +1,4 @@
-﻿using SmartTutor.BusinessLogic.Exceptions;
+using SmartTutor.BusinessLogic.Exceptions;
 using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
 using SmartTutor.DataAccess.Claims;
@@ -231,6 +231,103 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                         Attitude = al.Attitude,
                         IndividualNote = al.IndividualNote
                     }).ToList()
+            };
+        }
+
+        public async Task<StudentCreditHistoryResponseModel> GetStudentCreditHistoryAsync(int studentId)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            var student = await _studentRepository.GetStudentWithCreditHistoryAsync(studentId);
+            if (student == null || student.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy thông tin học sinh hoặc bạn không có quyền truy cập.");
+
+            var history = new List<CreditHistoryItemModel>();
+
+            // 1. Giao dịch nạp tiền trực tiếp vào số dư (PaymentTransactions không qua báo cáo tháng)
+            if (student.PaymentTransactions != null)
+            {
+                foreach (var tx in student.PaymentTransactions.Where(t => t.ReportId == null))
+                {
+                    history.Add(new CreditHistoryItemModel
+                    {
+                        Id = $"tx-{tx.Id}",
+                        TransactionType = "PLUS",
+                        Action = "TOPUP",
+                        Title = $"Nạp tiền trả trước ({tx.Gateway})",
+                        Description = $"Nạp tiền trả trước vào tài khoản qua cổng {tx.Gateway}",
+                        Amount = tx.AmountIn,
+                        BalanceChange = tx.AmountIn,
+                        TransactionDate = tx.TransactionTime != default ? tx.TransactionTime : tx.CreatedAt,
+                        ReferenceCode = tx.TransactionId,
+                        Gateway = tx.Gateway
+                    });
+                }
+            }
+
+            // 2. Lịch sử khấu trừ học phí & cộng tiền thừa từ Báo cáo tháng (MonthlyReports)
+            if (student.MonthlyReports != null)
+            {
+                foreach (var report in student.MonthlyReports)
+                {
+                    var className = report.Class?.ClassName;
+
+                    // Khấu trừ số dư trả trước vào học phí tháng (CreditDeducted > 0)
+                    if (report.CreditDeducted > 0)
+                    {
+                        history.Add(new CreditHistoryItemModel
+                        {
+                            Id = $"deduct-report-{report.Id}",
+                            TransactionType = "MINUS",
+                            Action = "DEDUCTION",
+                            Title = $"Khấu trừ học phí tháng {report.ReportMonth}",
+                            Description = string.IsNullOrEmpty(className)
+                                ? $"Khấu trừ số dư trả trước vào học phí tháng {report.ReportMonth}"
+                                : $"Khấu trừ số dư trả trước vào học phí tháng {report.ReportMonth} (Lớp {className})",
+                            Amount = report.CreditDeducted,
+                            BalanceChange = -report.CreditDeducted,
+                            TransactionDate = report.CreatedAt,
+                            ReferenceCode = report.TransferCode,
+                            ReportId = report.Id,
+                            ReportMonth = report.ReportMonth,
+                            ClassName = className
+                        });
+                    }
+
+                    // Cộng số dư khi phụ huynh đóng thừa tiền học phí tháng (OverpaidAmount > 0)
+                    if (report.OverpaidAmount > 0)
+                    {
+                        var latestTx = report.PaymentTransactions?.OrderByDescending(p => p.TransactionTime).FirstOrDefault();
+                        history.Add(new CreditHistoryItemModel
+                        {
+                            Id = $"overpaid-report-{report.Id}",
+                            TransactionType = "PLUS",
+                            Action = "OVERPAID",
+                            Title = $"Cộng số dư thừa tháng {report.ReportMonth}",
+                            Description = string.IsNullOrEmpty(className)
+                                ? $"Cộng tiền thanh toán thừa sau quyết toán học phí tháng {report.ReportMonth} vào số dư"
+                                : $"Cộng tiền thanh toán thừa sau quyết toán học phí tháng {report.ReportMonth} (Lớp {className}) vào số dư",
+                            Amount = report.OverpaidAmount,
+                            BalanceChange = report.OverpaidAmount,
+                            TransactionDate = latestTx?.TransactionTime ?? report.CreatedAt,
+                            ReferenceCode = latestTx?.TransactionId ?? report.TransferCode,
+                            Gateway = latestTx?.Gateway,
+                            ReportId = report.Id,
+                            ReportMonth = report.ReportMonth,
+                            ClassName = className
+                        });
+                    }
+                }
+            }
+
+            return new StudentCreditHistoryResponseModel
+            {
+                StudentId = student.Id,
+                FullName = student.FullName,
+                CurrentCreditBalance = student.CreditBalance,
+                History = history.OrderByDescending(h => h.TransactionDate).ToList()
             };
         }
 

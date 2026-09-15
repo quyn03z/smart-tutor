@@ -1,4 +1,4 @@
-﻿using SmartTutor.DataAccess.Repositories.Impl;
+using SmartTutor.DataAccess.Repositories.Impl;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,5 +13,6 @@ namespace SmartTutor.BusinessLogic.Services.Impl
         Task<StudentsResponseModel> EditStudentAsync(RequestStudentModel studentResponseModel);
         Task<StudentDetailResponseModel> GetStudentDetailAsync(int studentId);
         Task<string> DeleteStudentAsync(int studentId);
+        Task<StudentCreditHistoryResponseModel> GetStudentCreditHistoryAsync(int studentId);
     }
 }
