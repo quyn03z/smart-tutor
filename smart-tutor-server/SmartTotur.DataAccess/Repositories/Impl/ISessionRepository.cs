@@ -7,5 +7,6 @@ namespace SmartTutor.DataAccess.Repositories.Impl
 {
     public interface ISessionRepository : IBaseRepository<Session>
     {
+        Task<>
     }
 }

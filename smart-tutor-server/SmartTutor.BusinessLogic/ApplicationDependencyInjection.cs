@@ -31,6 +31,8 @@ namespace SmartTutor.BusinessLogic
 
             services.AddScoped<IPublicService, PublicService>();
 
+            services.AddScoped<ISessionService, SessionService>();
+
         }
     }
 }
