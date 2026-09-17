@@ -36,5 +36,14 @@ namespace SmartTutor.API.Controllers
                 .Success(await _sessionService.CreateSessionsAsync(sessionRequestModel)));
         }
 
+        [HttpPut("edit")]
+        public async Task<IActionResult> EditSessionAsync(SessionRequestModel sessionRequestModel)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+            return Ok(ApiResult<SessionRespondModel>
+                .Success(await _sessionService.EditSessionsAsync(sessionRequestModel)));
+        }
+
     }
 }
