@@ -45,5 +45,12 @@ namespace SmartTutor.API.Controllers
                 .Success(await _sessionService.EditSessionsAsync(sessionRequestModel)));
         }
 
+        [HttpDelete("sessionId")]
+        public async Task<IActionResult> DeleteSessionAsync(int sessionId)
+        {
+            return Ok(ApiResult<string>
+                .Success(await _sessionService.DeleteSessionAsync(sessionId)));
+        }
+
     }
 }

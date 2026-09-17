@@ -163,6 +163,27 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             });
         }
 
+        public async Task<string> DeleteSessionAsync(int sessionId)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            // 1. Tìm ca học theo sessionId
+            var session = await _sessionRepository.GetByIdAsync(sessionId);
+            if (session == null)
+                throw new NotFoundException("Không tìm thấy thông tin ca học.");
+
+            // 2. Kiểm tra quyền sở hữu của giáo viên đối với lớp học
+            var @class = await _classRepository.GetByIdAsync(session.ClassId);
+            if (@class == null || @class.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy ca học hoặc bạn không có quyền xóa.");
+
+            // 3. Xóa ca học khỏi cơ sở dữ liệu
+            await _sessionRepository.DeleteAsync(session);
+
+            return "Xóa ca học thành công.";
+        }
 
     }
 }
