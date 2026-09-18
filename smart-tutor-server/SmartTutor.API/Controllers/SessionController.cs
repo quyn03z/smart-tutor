@@ -10,6 +10,7 @@ namespace SmartTutor.API.Controllers
 {
     [Authorize]
     [Route("api/session")]
+    [Route("api/sessions")]
     [ApiController]
     public class SessionController : BaseController
     {
@@ -50,6 +51,13 @@ namespace SmartTutor.API.Controllers
         {
             return Ok(ApiResult<string>
                 .Success(await _sessionService.DeleteSessionAsync(sessionId)));
+        }
+
+        [HttpGet("{id}/attendance")]
+        public async Task<IActionResult> GetSessionAttendanceAsync(int id)
+        {
+            return Ok(ApiResult<SessionAttendanceDetailResponseModel>
+                .Success(await _sessionService.GetSessionAttendanceAsync(id)));
         }
 
     }

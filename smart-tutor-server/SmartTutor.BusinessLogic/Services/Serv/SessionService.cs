@@ -185,5 +185,100 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             return "Xóa ca học thành công.";
         }
 
+        public async Task<SessionAttendanceDetailResponseModel> GetSessionAttendanceAsync(int sessionId)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            // 1. Lấy thông tin Session cùng với Lớp học, danh sách học sinh ghi danh và dữ liệu điểm danh
+            var session = await _sessionRepository.GetSessionWithAttendanceAsync(sessionId);
+            if (session == null || session.Class == null || session.Class.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy ca học hoặc bạn không có quyền truy cập.");
+
+            // 2. Tạo Dictionary các bản ghi điểm danh đã lưu
+            var attendanceDict = session.AttendanceLogs
+                .ToDictionary(a => a.StudentId, a => a);
+
+            // 3. Lấy danh sách học sinh đang theo học trong lớp
+            var enrolledStudents = session.Class.ClassEnrollments
+                .Where(ce => ce.Status != AppEnums.StudentStatus.Deleted.ToString() 
+                          && ce.Student != null 
+                          && ce.Student.Status != AppEnums.StudentStatus.Deleted.ToString())
+                .Select(ce => ce.Student!)
+                .ToList();
+
+            var allStudentsDict = new Dictionary<int, Student>();
+            foreach (var student in enrolledStudents)
+            {
+                allStudentsDict[student.Id] = student;
+            }
+            foreach (var log in session.AttendanceLogs)
+            {
+                if (log.Student != null && !allStudentsDict.ContainsKey(log.StudentId))
+                {
+                    allStudentsDict[log.StudentId] = log.Student;
+                }
+            }
+
+            // 4. Map danh sách học sinh và trạng thái điểm danh
+            var studentAttendanceList = new List<StudentAttendanceItemModel>();
+            foreach (var student in allStudentsDict.Values.OrderBy(s => s.FullName))
+            {
+                if (attendanceDict.TryGetValue(student.Id, out var log))
+                {
+                    studentAttendanceList.Add(new StudentAttendanceItemModel
+                    {
+                        StudentId = student.Id,
+                        StudentName = student.FullName,
+                        ParentPhone = student.ParentPhone,
+                        AttendanceLogId = log.Id,
+                        AttendanceStatus = log.AttendanceStatus,
+                        HomeworkScore = log.HomeworkScore,
+                        Attitude = log.Attitude,
+                        IndividualNote = log.IndividualNote
+                    });
+                }
+                else
+                {
+                    studentAttendanceList.Add(new StudentAttendanceItemModel
+                    {
+                        StudentId = student.Id,
+                        StudentName = student.FullName,
+                        ParentPhone = student.ParentPhone,
+                        AttendanceLogId = null,
+                        AttendanceStatus = string.Empty,
+                        HomeworkScore = 0,
+                        Attitude = string.Empty,
+                        IndividualNote = null
+                    });
+                }
+            }
+
+            // 5. Thống kê chuyên cần
+            var presentCount = studentAttendanceList.Count(s => s.AttendanceStatus == AppEnums.AttendanceStatus.Present.ToString());
+            var absentCount = studentAttendanceList.Count(s => 
+                s.AttendanceStatus == AppEnums.AttendanceStatus.Absent.ToString() || 
+                s.AttendanceStatus == AppEnums.AttendanceStatus.Excused.ToString());
+
+            return new SessionAttendanceDetailResponseModel
+            {
+                SessionId = session.Id,
+                ClassId = session.ClassId,
+                ClassName = session.Class.ClassName,
+                ClassType = session.Class.ClassType,
+                SessionDate = session.SessionDate,
+                StartTime = session.StartTime,
+                EndTime = session.EndTime,
+                DurationHours = session.DurationHours,
+                LessonContent = session.LessonContent,
+                Status = session.Status,
+                TotalStudents = studentAttendanceList.Count,
+                PresentCount = presentCount,
+                AbsentCount = absentCount,
+                Students = studentAttendanceList
+            };
+        }
+
     }
 }

@@ -49,5 +49,36 @@ namespace SmartTutor.BusinessLogic.Models
             public string Status { get; set; } = string.Empty;
         }
 
+        // Chi tiết điểm danh của ca dạy
+        public class SessionAttendanceDetailResponseModel
+        {
+            public int SessionId { get; set; }
+            public int ClassId { get; set; }
+            public string ClassName { get; set; } = string.Empty;
+            public string ClassType { get; set; } = string.Empty;
+            public DateTime SessionDate { get; set; }
+            public TimeSpan StartTime { get; set; }
+            public TimeSpan EndTime { get; set; }
+            public decimal DurationHours { get; set; }
+            public string? LessonContent { get; set; }
+            public string Status { get; set; } = string.Empty;
+            public int TotalStudents { get; set; }
+            public int PresentCount { get; set; }
+            public int AbsentCount { get; set; }
+            public List<StudentAttendanceItemModel> Students { get; set; } = new();
+        }
+
+        public class StudentAttendanceItemModel
+        {
+            public int StudentId { get; set; }
+            public string StudentName { get; set; } = string.Empty;
+            public string? ParentPhone { get; set; }
+            public int? AttendanceLogId { get; set; }
+            public string AttendanceStatus { get; set; } = string.Empty; // Present, Absent, Excused, Late
+            public int HomeworkScore { get; set; }
+            public string Attitude { get; set; } = string.Empty;
+            public string? IndividualNote { get; set; }
+        }
+
     }
 }

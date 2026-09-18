@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartTutor.DataAccess.Persistence;
 using SmartTutor.DataAccess.Repositories.Impl;
 using SmartTutor.Domain.Models;
@@ -33,6 +33,17 @@ namespace SmartTutor.DataAccess.Repositories.Repo
                         .OrderBy(s => s.SessionDate)
                         .ThenBy(s => s.StartTime)
                         .ToListAsync();
+        }
+
+        public async Task<Session?> GetSessionWithAttendanceAsync(int sessionId)
+        {
+            return await _dbSet
+                .Include(s => s.Class)
+                    .ThenInclude(c => c!.ClassEnrollments)
+                        .ThenInclude(ce => ce.Student)
+                .Include(s => s.AttendanceLogs)
+                    .ThenInclude(al => al.Student)
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
         }
     }
 }
