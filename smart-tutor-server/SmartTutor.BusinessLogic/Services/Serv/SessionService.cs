@@ -190,7 +190,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             var userId = _claimService.GetUserId();
             if (!userId.HasValue)
                 throw new UnauthorizedException("Người dùng chưa xác thực.");
-
+ 
             // 1. Lấy thông tin Session cùng với Lớp học, danh sách học sinh ghi danh và dữ liệu điểm danh
             var session = await _sessionRepository.GetSessionWithAttendanceAsync(sessionId);
             if (session == null || session.Class == null || session.Class.UserId != userId.Value)

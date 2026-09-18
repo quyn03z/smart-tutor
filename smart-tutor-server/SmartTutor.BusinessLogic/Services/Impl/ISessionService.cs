@@ -12,5 +12,6 @@ namespace SmartTutor.BusinessLogic.Services.Impl
         Task<SessionRespondModel> EditSessionsAsync(SessionRequestModel sessionRequestModel);
         Task<string> DeleteSessionAsync(int sessionId);
         Task<SessionAttendanceDetailResponseModel> GetSessionAttendanceAsync(int sessionId);
+        Task<string> SaveBulkAttendanceAsync(int sessionId, BulkAttendanceRequestModel request);
     }
 }

@@ -80,5 +80,31 @@ namespace SmartTutor.BusinessLogic.Models
             public string? IndividualNote { get; set; }
         }
 
+        // Dữ liệu gửi lên khi điểm danh hàng loạt cả lớp
+        public class BulkAttendanceRequestModel
+        {
+            [Required(ErrorMessage = "Danh sách điểm danh không được để trống.")]
+            public List<StudentAttendanceUpdateItemModel> Attendances { get; set; } = new();
+        }
+
+        public class StudentAttendanceUpdateItemModel
+        {
+            [Required(ErrorMessage = "Mã học sinh không được để trống.")]
+            [Range(1, int.MaxValue, ErrorMessage = "Mã học sinh không hợp lệ.")]
+            public int StudentId { get; set; }
+
+            [Required(ErrorMessage = "Trạng thái điểm danh không được để trống.")]
+            public string AttendanceStatus { get; set; } = string.Empty; // Present, Absent, Excused, Late
+
+            [Range(0, 100, ErrorMessage = "Điểm bài tập phải từ 0 đến 100.")]
+            public int HomeworkScore { get; set; }
+
+            [StringLength(100, ErrorMessage = "Thái độ không được vượt quá 100 ký tự.")]
+            public string Attitude { get; set; } = string.Empty;
+
+            [StringLength(1000, ErrorMessage = "Nhận xét không được vượt quá 1000 ký tự.")]
+            public string? IndividualNote { get; set; }
+        }
+
     }
 }

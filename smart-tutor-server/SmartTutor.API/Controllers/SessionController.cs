@@ -60,5 +60,15 @@ namespace SmartTutor.API.Controllers
                 .Success(await _sessionService.GetSessionAttendanceAsync(id)));
         }
 
+        [HttpPost("{id}/attendance/bulk")]
+        public async Task<IActionResult> SaveBulkAttendanceAsync(int id, [FromBody] BulkAttendanceRequestModel request)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+
+            return Ok(ApiResult<string>
+                .Success(await _sessionService.SaveBulkAttendanceAsync(id, request)));
+        }
+
     }
 }
