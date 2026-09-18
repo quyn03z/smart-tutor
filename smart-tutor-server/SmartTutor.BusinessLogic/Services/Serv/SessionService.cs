@@ -280,5 +280,58 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             };
         }
 
+        public async Task<string> SaveBulkAttendanceAsync(int sessionId, BulkAttendanceRequestModel request)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            // 1. Lấy thông tin ca học kèm danh sách AttendanceLogs hiện có
+            var session = await _sessionRepository.GetSessionWithAttendanceAsync(sessionId);
+            if (session == null || session.Class == null || session.Class.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy ca học hoặc bạn không có quyền điểm danh cho ca này.");
+
+            // 2. Duyệt qua danh sách học sinh được gửi lên và thực hiện Upsert (Cập nhật hoặc Thêm mới)
+            foreach (var item in request.Attendances)
+            {
+                var existingLog = session.AttendanceLogs.FirstOrDefault(a => a.StudentId == item.StudentId);
+
+                if (existingLog != null)
+                {
+                    // Cập nhật bản ghi điểm danh đã tồn tại
+                    existingLog.AttendanceStatus = item.AttendanceStatus;
+                    existingLog.HomeworkScore = item.HomeworkScore;
+                    existingLog.Attitude = item.Attitude;
+                    existingLog.IndividualNote = item.IndividualNote;
+                }
+                else
+                {
+                    // Thêm bản ghi điểm danh mới cho học sinh này
+                    session.AttendanceLogs.Add(new AttendanceLog
+                    {
+                        SessionId = session.Id,
+                        StudentId = item.StudentId,
+                        AttendanceStatus = item.AttendanceStatus,
+                        HomeworkScore = item.HomeworkScore,
+                        Attitude = item.Attitude,
+                        IndividualNote = item.IndividualNote,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            // 3. Tự động chuyển ca học sang trạng thái Completed nếu trước đó đang Scheduled
+            if (session.Status == AppEnums.SessionStatus.Scheduled.ToString())
+            {
+                session.Status = AppEnums.SessionStatus.Completed.ToString();
+            }
+
+            // 4. Lưu toàn bộ thay đổi xuống Database
+            await _sessionRepository.UpdateAsync(session);
+
+            return "Lưu điểm danh cả lớp thành công.";
+        }
+
+
     }
 }
