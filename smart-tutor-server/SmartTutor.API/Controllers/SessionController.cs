@@ -9,7 +9,6 @@ using static SmartTutor.BusinessLogic.Models.SessionModels;
 namespace SmartTutor.API.Controllers
 {
     [Authorize]
-    [Route("api/session")]
     [Route("api/sessions")]
     [ApiController]
     public class SessionController : BaseController
