@@ -20,13 +20,8 @@ namespace SmartTutor.API.Controllers
         }
 
         [HttpPut]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAttendanceRecordAsync([FromBody] UpdateAttendanceRequestDto updateAttendanceRequestDto, int? id)
+        public async Task<IActionResult> UpdateAttendanceRecordAsync([FromBody] UpdateAttendanceRequestDto updateAttendanceRequestDto)
         {
-            if (id.HasValue && id.Value > 0 && updateAttendanceRequestDto.AttendanceId <= 0)
-            {
-                updateAttendanceRequestDto.AttendanceId = id.Value;
-            }
 
             if (!ModelState.IsValid)
                 return ValidationError();
