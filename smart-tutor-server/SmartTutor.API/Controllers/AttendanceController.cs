@@ -22,10 +22,8 @@ namespace SmartTutor.API.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateAttendanceRecordAsync([FromBody] UpdateAttendanceRequestDto updateAttendanceRequestDto)
         {
-
             if (!ModelState.IsValid)
                 return ValidationError();
-
             return Ok(ApiResult<UpdateAttendanceResponseDto>
                 .Success(await _attendanceService.UpdateAttendanceAsync(updateAttendanceRequestDto)));
         }
