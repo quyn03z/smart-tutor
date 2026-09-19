@@ -33,6 +33,7 @@ namespace SmartTutor.BusinessLogic
 
             services.AddScoped<ISessionService, SessionService>();
 
+            services.AddScoped<IAttendanceService, AttendanceService>();
         }
     }
 }
