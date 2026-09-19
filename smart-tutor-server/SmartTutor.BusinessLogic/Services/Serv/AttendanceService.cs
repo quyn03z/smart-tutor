@@ -54,7 +54,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             attendance.IndividualNote = updateAttendanceRequestDto.IndividualNote;
 
             await _attendanceRepository.UpdateAsync(attendance);
-
+             
             // 4. Trả về kết quả
             return new UpdateAttendanceResponseDto
             {
