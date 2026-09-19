@@ -18,14 +18,14 @@ namespace SmartTutor.API.Controllers
             _repoortService = repoortService;
         }
 
-        [HttpPost("generate")]
-        public async Task<IActionResult> GenerateMonthlyReports([FromBody] GenerateReportRequestDto dto)
-        {
-            if (!ModelState.IsValid)
-                return ValidationError();
-            return Ok(ApiResult<CreateUserResponseModel>
-                .Success(await _repoortService.CreateUserAsync(createUserModel)));
-        }
+        //[HttpPost("generate")]
+        //public async Task<IActionResult> GenerateMonthlyReports([FromBody] GenerateReportRequestDto dto)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return ValidationError();
+        //    return Ok(ApiResult<CreateUserResponseModel>
+        //        .Success(await _repoortService.CreateUserAsync(createUserModel)));
+        //}
 
     }
 }

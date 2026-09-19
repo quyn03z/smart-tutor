@@ -10,8 +10,6 @@ namespace SmartTutor.BusinessLogic.Models
         public class UpdateAttendanceRequestDto
         {
             public int AttendanceId { get; set; }
-            public int SessionId { get; set; }
-            public int StudentId { get; set; }
             // Giá trị hợp lệ: "Present", "Excused", "Unexcused", "Compensate"
             [Required(ErrorMessage = "Trạng thái điểm danh không được để trống.")]
             [RegularExpression("^(Present|Absent|Excused|Late)$",
