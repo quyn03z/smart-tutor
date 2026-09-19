@@ -37,6 +37,7 @@ namespace SmartTutor.DataAccess
 
             services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 
+            services.AddScoped<IMonthlyReportRepository, MonthlyReportRepository>();
         }
 
         private static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
