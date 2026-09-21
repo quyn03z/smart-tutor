@@ -21,9 +21,7 @@ namespace SmartTutor.API.Controllers
             _repoortService = repoortService;
         }
 
-        /// <summary>
         /// Lấy danh sách báo cáo tháng của các học sinh (hỗ trợ lọc theo ReportMonth, trạng thái Unpaid/Paid, ClassId).
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetMonthlyReports(
             [FromQuery] string? reportMonth,
@@ -34,9 +32,7 @@ namespace SmartTutor.API.Controllers
             return Ok(ApiResult<IEnumerable<MonthlyReportResponseDto>>.Success(result));
         }
 
-        /// <summary>
         /// Chốt công và sinh báo cáo tháng cho lớp học / học sinh.
-        /// </summary>
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateMonthlyReports([FromBody] GenerateReportRequestDto dto)
         {
@@ -46,5 +42,14 @@ namespace SmartTutor.API.Controllers
             var result = await _repoortService.GenerateMonthlyReportsAsync(dto);
             return Ok(ApiResult<IEnumerable<MonthlyReportResponseDto>>.Success(result));
         }
+
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetMonthlyReportDetail([FromRoute] int id)
+        {
+            var result = await _repoortService.GetMonthlyReportDetailAsync(id);
+            return Ok(ApiResult<MonthlyReportDetailResponseDto>.Success(result));
+        }
+
     }
 }
