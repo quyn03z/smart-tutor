@@ -385,5 +385,82 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 Sessions = sessionDetails
             };
         }
+
+        public async Task<MonthlyReportResponseDto> UpdateMonthlyReportAsync(int reportId, UpdateMonthlyReportRequestDto dto)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            var monthlyReport = await _monthlyReportRepository.GetMonthlyReportDetailAsync(reportId);
+            if (monthlyReport == null || monthlyReport.Class == null || monthlyReport.Student == null)
+            {
+                throw new NotFoundException("Không tìm thấy báo cáo hoặc báo cáo không hợp lệ.");
+            }
+
+            if (monthlyReport.Class.UserId != userId.Value)
+            {
+                throw new NotFoundException("Không tìm thấy báo cáo hoặc bạn không có quyền chỉnh sửa.");
+            }
+
+            // 1. Cập nhật nhận xét sư phạm và lộ trình
+            if (dto.TeacherComment != null)
+                monthlyReport.TeacherComment = dto.TeacherComment;
+
+            if (dto.Roadmap != null)
+                monthlyReport.Roadmap = dto.Roadmap;
+
+            // 2. Cập nhật số tiền thanh toán nếu có điều chỉnh
+            if (dto.FinalAmount.HasValue)
+            {
+                if (dto.FinalAmount.Value < 0)
+                    throw new BadRequestException("Số tiền thanh toán không hợp lệ.");
+
+                monthlyReport.FinalAmount = dto.FinalAmount.Value;
+                if (monthlyReport.FinalAmount == 0)
+                {
+                    monthlyReport.PaymentStatus = AppEnums.PaymentStatus.Paid.ToString();
+                }
+                else if (monthlyReport.AmountPaid >= monthlyReport.FinalAmount)
+                {
+                    monthlyReport.PaymentStatus = monthlyReport.AmountPaid > monthlyReport.FinalAmount
+                        ? AppEnums.PaymentStatus.Overpaid.ToString()
+                        : AppEnums.PaymentStatus.Paid.ToString();
+                }
+                else if (monthlyReport.AmountPaid > 0)
+                {
+                    monthlyReport.PaymentStatus = AppEnums.PaymentStatus.PartiallyPaid.ToString();
+                }
+                else
+                {
+                    monthlyReport.PaymentStatus = AppEnums.PaymentStatus.Pending.ToString();
+                }
+            }
+
+            await _monthlyReportRepository.UpdateAsync(monthlyReport);
+
+            return new MonthlyReportResponseDto
+            {
+                Id = monthlyReport.Id,
+                StudentId = monthlyReport.StudentId,
+                StudentName = monthlyReport.Student.FullName,
+                ClassId = monthlyReport.ClassId,
+                ClassName = monthlyReport.Class.ClassName,
+                ReportMonth = monthlyReport.ReportMonth,
+                TotalSessions = monthlyReport.TotalSessions,
+                TotalHours = monthlyReport.TotalHours,
+                GrossAmount = monthlyReport.GrossAmount,
+                CreditDeducted = monthlyReport.CreditDeducted,
+                FinalAmount = monthlyReport.FinalAmount,
+                AmountPaid = monthlyReport.AmountPaid,
+                OverpaidAmount = monthlyReport.OverpaidAmount,
+                TransferCode = monthlyReport.TransferCode,
+                MagicToken = monthlyReport.MagicToken,
+                TeacherComment = monthlyReport.TeacherComment,
+                Roadmap = monthlyReport.Roadmap,
+                PaymentStatus = monthlyReport.PaymentStatus,
+                CreatedAt = monthlyReport.CreatedAt
+            };
+        }
     }
 }

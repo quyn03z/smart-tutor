@@ -72,5 +72,13 @@ namespace SmartTutor.BusinessLogic.Models
             public string? GradeLevel { get; set; }
             public List<ReportSessionDetailDto> Sessions { get; set; } = new List<ReportSessionDetailDto>();
         }
+        // Request DTO cập nhật thủ công nhận xét, lộ trình hoặc số tiền của báo cáo
+        public class UpdateMonthlyReportRequestDto
+        {
+            public string? TeacherComment { get; set; }
+            public string? Roadmap { get; set; }
+            [Range(0, double.MaxValue, ErrorMessage = "Số tiền thanh toán phải lớn hơn hoặc bằng 0.")]
+            public decimal? FinalAmount { get; set; }
+        }
     }
 }
