@@ -21,7 +21,7 @@ namespace SmartTutor.API.Controllers
             _repoortService = repoortService;
         }
 
-        /// Lấy danh sách báo cáo tháng của các học sinh (hỗ trợ lọc theo ReportMonth, trạng thái Unpaid/Paid, ClassId).
+        // Lấy danh sách báo cáo tháng của các học sinh (hỗ trợ lọc theo ReportMonth, trạng thái Unpaid/Paid, ClassId).
         [HttpGet]
         public async Task<IActionResult> GetMonthlyReports(
             [FromQuery] string? reportMonth,
@@ -32,7 +32,7 @@ namespace SmartTutor.API.Controllers
             return Ok(ApiResult<IEnumerable<MonthlyReportResponseDto>>.Success(result));
         }
 
-        /// Chốt công và sinh báo cáo tháng cho lớp học / học sinh.
+        // Chốt công và sinh báo cáo tháng cho lớp học / học sinh.
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateMonthlyReports([FromBody] GenerateReportRequestDto dto)
         {
@@ -44,11 +44,25 @@ namespace SmartTutor.API.Controllers
         }
 
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetMonthlyReportDetail([FromRoute] int id)
+        // Lấy chi tiết phiếu báo cáo tháng để Live Preview (kèm danh sách chi tiết các buổi học)
+        [HttpGet("{reportId}")]
+        public async Task<IActionResult> GetMonthlyReportDetail([FromRoute] int reportId)
         {
-            var result = await _repoortService.GetMonthlyReportDetailAsync(id);
+            var result = await _repoortService.GetMonthlyReportDetailAsync(reportId);
             return Ok(ApiResult<MonthlyReportDetailResponseDto>.Success(result));
+        }
+
+        // Cập nhật nhận xét sư phạm, lộ trình hoặc số tiền của báo cáo tháng
+        [HttpPut("{reportId}")]
+        public async Task<IActionResult> UpdateMonthlyReport(
+            [FromRoute] int reportId, 
+            [FromBody] UpdateMonthlyReportRequestDto updateMonthlyReportRequestDto)
+        {
+            if (!ModelState.IsValid)
+                return ValidationError();
+
+            var result = await _repoortService.UpdateMonthlyReportAsync(reportId, updateMonthlyReportRequestDto);
+            return Ok(ApiResult<MonthlyReportResponseDto>.Success(result));
         }
 
     }
