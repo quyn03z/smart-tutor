@@ -35,6 +35,18 @@ namespace SmartTutor.DataAccess.Repositories.Repo
                         .ToListAsync();
         }
 
+        public async Task<IEnumerable<Session>> GetSessionStudentInMonthAsync(DateTime startDate, DateTime endDate, int classId)
+        {
+           return await _dbSet
+                .Include(s => s.AttendanceLogs)
+                .Where(s => s.ClassId == classId
+                         && s.SessionDate >= startDate
+                         && s.SessionDate <= endDate)
+                .OrderBy(s => s.SessionDate)
+                .ThenBy(s => s.StartTime)
+                .ToListAsync();
+        }
+
         public async Task<Session?> GetSessionWithAttendanceAsync(int sessionId)
         {
             return await _dbSet

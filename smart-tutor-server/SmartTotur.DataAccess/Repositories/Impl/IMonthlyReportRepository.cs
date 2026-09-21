@@ -7,5 +7,6 @@ namespace SmartTutor.DataAccess.Repositories.Impl
 {
     public interface IMonthlyReportRepository : IBaseRepository<MonthlyReport>
     {
+        Task<MonthlyReport> GetMonthlyReportDetailAsync(int reportId);
     }
 }

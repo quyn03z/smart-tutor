@@ -9,5 +9,6 @@ namespace SmartTutor.DataAccess.Repositories.Impl
     {
         Task<IEnumerable<Session>> GetMyTeacherSessionsAsync(DateOnly? fromDate, DateOnly? toDate, int? userId);
         Task<Session?> GetSessionWithAttendanceAsync(int sessionId);
+        Task<IEnumerable<Session>> GetSessionStudentInMonthAsync(DateTime startDate, DateTime endDate, int classId);
     }
 }
