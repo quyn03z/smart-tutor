@@ -11,5 +11,6 @@ namespace SmartTutor.BusinessLogic.Services.Impl
     {
         Task<IEnumerable<MonthlyReportResponseDto>> GenerateMonthlyReportsAsync(GenerateReportRequestDto dto);
         Task<IEnumerable<MonthlyReportResponseDto>> GetMonthlyReportsAsync(string? reportMonth, string? paymentStatus, int? classId);
+        Task<MonthlyReportDetailResponseDto> GetMonthlyReportDetailAsync(int reportId);
     }
 }

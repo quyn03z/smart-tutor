@@ -306,5 +306,84 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 CreatedAt = report.CreatedAt
             });
         }
+
+        public async Task<MonthlyReportDetailResponseDto> GetMonthlyReportDetailAsync(int reportId)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            var monthlyReport = await _monthlyReportRepository.GetMonthlyReportDetailAsync(reportId);
+            if (monthlyReport == null || monthlyReport.Class == null || monthlyReport.Student == null)
+            {
+                throw new NotFoundException("Không tìm thấy báo cáo hoặc báo cáo không hợp lệ.");
+            }
+
+            if (monthlyReport.Class.UserId != userId.Value)
+            {
+                throw new NotFoundException("Không tìm thấy báo cáo hoặc bạn không có quyền truy cập.");
+            }
+
+            // 1. Parse khoảng thời gian của tháng báo cáo
+            var parts = monthlyReport.ReportMonth.Split('-');
+            if (parts.Length != 2 || !int.TryParse(parts[0], out int year) || !int.TryParse(parts[1], out int month))
+            {
+                throw new BadRequestException("Định dạng tháng báo cáo không hợp lệ.");
+            }
+
+            var startDate = new DateTime(year, month, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            // 2. Lấy danh sách các ca học của lớp trong tháng đó
+            var sessions = await _sessionRepository.GetSessionStudentInMonthAsync(startDate, endDate, monthlyReport.ClassId);
+
+            // 3. Map danh sách buổi học kèm kết quả điểm danh của học sinh
+            var sessionDetails = sessions.Select(s =>
+            {
+                var log = s.AttendanceLogs.FirstOrDefault(a => a.StudentId == monthlyReport.StudentId);
+
+                return new ReportSessionDetailDto
+                {
+                    SessionId = s.Id,
+                    SessionDate = s.SessionDate,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime,
+                    DurationHours = s.DurationHours,
+                    LessonContent = s.LessonContent,
+                    AttendanceStatus = log?.AttendanceStatus ?? "Chưa điểm danh",
+                    HomeworkScore = log?.HomeworkScore ?? 0,
+                    Attitude = log?.Attitude ?? string.Empty,
+                    IndividualNote = log?.IndividualNote
+                };
+            }).ToList();
+
+            // 4. Trả về kết quả đầy đủ cho Live Preview
+            return new MonthlyReportDetailResponseDto
+            {
+                Id = monthlyReport.Id,
+                StudentId = monthlyReport.StudentId,
+                StudentName = monthlyReport.Student.FullName,
+                ParentName = monthlyReport.Student.ParentName,
+                ParentPhone = monthlyReport.Student.ParentPhone,
+                GradeLevel = monthlyReport.Student.GradeLevel,
+                ClassId = monthlyReport.ClassId,
+                ClassName = monthlyReport.Class.ClassName,
+                ReportMonth = monthlyReport.ReportMonth,
+                TotalSessions = monthlyReport.TotalSessions,
+                TotalHours = monthlyReport.TotalHours,
+                GrossAmount = monthlyReport.GrossAmount,
+                CreditDeducted = monthlyReport.CreditDeducted,
+                FinalAmount = monthlyReport.FinalAmount,
+                AmountPaid = monthlyReport.AmountPaid,
+                OverpaidAmount = monthlyReport.OverpaidAmount,
+                TransferCode = monthlyReport.TransferCode,
+                MagicToken = monthlyReport.MagicToken,
+                TeacherComment = monthlyReport.TeacherComment,
+                Roadmap = monthlyReport.Roadmap,
+                PaymentStatus = monthlyReport.PaymentStatus,
+                CreatedAt = monthlyReport.CreatedAt,
+                Sessions = sessionDetails
+            };
+        }
     }
 }
