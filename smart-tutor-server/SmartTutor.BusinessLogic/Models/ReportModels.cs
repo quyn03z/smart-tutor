@@ -25,7 +25,7 @@ namespace SmartTutor.BusinessLogic.Models
             public string? Roadmap { get; set; }
         }
 
-        // Response DTO trả về thông tin báo cáo tháng đã chốt
+        // Response DTO trả về thông tin tóm tắt báo cáo tháng
         public class MonthlyReportResponseDto
         {
             public int Id { get; set; }
@@ -47,6 +47,30 @@ namespace SmartTutor.BusinessLogic.Models
             public string? Roadmap { get; set; }
             public string PaymentStatus { get; set; } = string.Empty;
             public DateTime CreatedAt { get; set; }
+        }
+
+        // DTO chi tiết từng buổi học và điểm danh của học sinh trong tháng
+        public class ReportSessionDetailDto
+        {
+            public int SessionId { get; set; }
+            public DateTime SessionDate { get; set; }
+            public TimeSpan StartTime { get; set; }
+            public TimeSpan EndTime { get; set; }
+            public decimal DurationHours { get; set; }
+            public string? LessonContent { get; set; }
+            public string AttendanceStatus { get; set; } = string.Empty; // Present, Absent, Excused, Late
+            public int HomeworkScore { get; set; }
+            public string Attitude { get; set; } = string.Empty;
+            public string? IndividualNote { get; set; }
+        }
+
+        // Response DTO chi tiết phiếu báo cáo tháng (Live Preview) kèm danh sách các buổi học
+        public class MonthlyReportDetailResponseDto : MonthlyReportResponseDto
+        {
+            public string? ParentName { get; set; }
+            public string? ParentPhone { get; set; }
+            public string? GradeLevel { get; set; }
+            public List<ReportSessionDetailDto> Sessions { get; set; } = new List<ReportSessionDetailDto>();
         }
     }
 }
