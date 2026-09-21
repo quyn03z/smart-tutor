@@ -22,6 +22,19 @@ namespace SmartTutor.API.Controllers
         }
 
         /// <summary>
+        /// Lấy danh sách báo cáo tháng của các học sinh (hỗ trợ lọc theo ReportMonth, trạng thái Unpaid/Paid, ClassId).
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetMonthlyReports(
+            [FromQuery] string? reportMonth,
+            [FromQuery] string? paymentStatus,
+            [FromQuery] int? classId)
+        {
+            var result = await _repoortService.GetMonthlyReportsAsync(reportMonth, paymentStatus, classId);
+            return Ok(ApiResult<IEnumerable<MonthlyReportResponseDto>>.Success(result));
+        }
+
+        /// <summary>
         /// Chốt công và sinh báo cáo tháng cho lớp học / học sinh.
         /// </summary>
         [HttpPost("generate")]

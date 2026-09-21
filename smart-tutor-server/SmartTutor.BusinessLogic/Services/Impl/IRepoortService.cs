@@ -10,5 +10,6 @@ namespace SmartTutor.BusinessLogic.Services.Impl
     public interface IRepoortService
     {
         Task<IEnumerable<MonthlyReportResponseDto>> GenerateMonthlyReportsAsync(GenerateReportRequestDto dto);
+        Task<IEnumerable<MonthlyReportResponseDto>> GetMonthlyReportsAsync(string? reportMonth, string? paymentStatus, int? classId);
     }
 }

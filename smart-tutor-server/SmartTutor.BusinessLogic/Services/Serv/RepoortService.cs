@@ -140,7 +140,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                     report.GrossAmount = grossAmount;
                     report.CreditDeducted = creditDeducted;
                     report.FinalAmount = finalAmount;
-                    report.PaymentStatus = paymentStatus;
+                    report.PaymentStatus = paymentStatus; 
 
                     if (!string.IsNullOrWhiteSpace(dto.TeacherComment))
                         report.TeacherComment = dto.TeacherComment;
@@ -235,6 +235,76 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             } while (exists);
 
             return token;
+        }
+
+        public async Task<IEnumerable<MonthlyReportResponseDto>> GetMonthlyReportsAsync(string? reportMonth, string? paymentStatus, int? classId)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            var query = _monthlyReportRepository.Query()
+                .Include(r => r.Student)
+                .Include(r => r.Class)
+                .Where(r => r.Class != null && r.Class.UserId == userId.Value);
+
+            if (!string.IsNullOrWhiteSpace(reportMonth))
+            {
+                query = query.Where(r => r.ReportMonth == reportMonth);
+            }
+
+            if (classId.HasValue)
+            {
+                query = query.Where(r => r.ClassId == classId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(paymentStatus))
+            {
+                var status = paymentStatus.Trim();
+                if (string.Equals(status, "Unpaid", StringComparison.OrdinalIgnoreCase))
+                {
+                    var pending = AppEnums.PaymentStatus.Pending.ToString();
+                    var partiallyPaid = AppEnums.PaymentStatus.PartiallyPaid.ToString();
+                    query = query.Where(r => r.PaymentStatus == pending || r.PaymentStatus == partiallyPaid);
+                }
+                else if (string.Equals(status, "Paid", StringComparison.OrdinalIgnoreCase))
+                {
+                    var paid = AppEnums.PaymentStatus.Paid.ToString();
+                    var overpaid = AppEnums.PaymentStatus.Overpaid.ToString();
+                    query = query.Where(r => r.PaymentStatus == paid || r.PaymentStatus == overpaid);
+                }
+                else
+                {
+                    query = query.Where(r => r.PaymentStatus == status);
+                }
+            }
+
+            var reports = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return reports.Select(report => new MonthlyReportResponseDto
+            {
+                Id = report.Id,
+                StudentId = report.StudentId,
+                StudentName = report.Student?.FullName ?? string.Empty,
+                ClassId = report.ClassId,
+                ClassName = report.Class?.ClassName ?? string.Empty,
+                ReportMonth = report.ReportMonth,
+                TotalSessions = report.TotalSessions,
+                TotalHours = report.TotalHours,
+                GrossAmount = report.GrossAmount,
+                CreditDeducted = report.CreditDeducted,
+                FinalAmount = report.FinalAmount,
+                AmountPaid = report.AmountPaid,
+                OverpaidAmount = report.OverpaidAmount,
+                TransferCode = report.TransferCode,
+                MagicToken = report.MagicToken,
+                TeacherComment = report.TeacherComment,
+                Roadmap = report.Roadmap,
+                PaymentStatus = report.PaymentStatus,
+                CreatedAt = report.CreatedAt
+            });
         }
     }
 }
