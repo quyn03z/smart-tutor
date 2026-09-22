@@ -52,7 +52,7 @@ namespace SmartTutor.API.Controllers
                 return ValidationError();
             return Ok(ApiResult<ForgotPassWordModel>
                 .Success(await _userService.ForgotPasswordAsync(email)));
-        }
+        } 
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPasswordAsync(ResetPassWordRequestModel request)
