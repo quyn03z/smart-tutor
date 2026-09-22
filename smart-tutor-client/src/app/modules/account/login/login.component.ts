@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -18,12 +19,13 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
-      emailOrUsername: ['', [Validators.required]],
+      emailOrUsername: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       rememberMe: [true]
     });
@@ -44,21 +46,23 @@ export class LoginComponent implements OnInit {
 
     const { emailOrUsername, password, rememberMe } = this.loginForm.value;
 
-    // TODO: Tích hợp gọi Auth API backend khi sẵn sàng
-    setTimeout(() => {
-      this.isLoading = false;
-      // Giả lập đăng nhập thành công
-      console.log('Login payload:', { emailOrUsername, password, rememberMe });
-      this.router.navigate(['/']);
-    }, 1000);
+    this.authService.login({ email: emailOrUsername.trim(), password }, rememberMe).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        if (response.succeeded) {
+          this.router.navigate(['/home']);
+        } else {
+          this.errorMessage = response.message || response.errors?.[0] || 'Đăng nhập không thành công.';
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage =
+          err.error?.message ||
+          (err.error?.errors && err.error.errors[0]) ||
+          (err.status === 0 ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại backend!' : 'Email hoặc mật khẩu không chính xác.');
+      }
+    });
   }
 
-  fillDemo(accountType: 'teacher' | 'admin'): void {
-    if (accountType === 'teacher') {
-      this.loginForm.patchValue({
-        emailOrUsername: 'thaydinhquyen@smarttutor.vn',
-        password: 'Password123@'
-      });
-    }
-  }
 }
