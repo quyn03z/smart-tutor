@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SmartTutor.BusinessLogic.Services.Impl;
 using SmartTutor.BusinessLogic.Services.Serv;
@@ -34,6 +34,8 @@ namespace SmartTutor.BusinessLogic
             services.AddScoped<ISessionService, SessionService>();
 
             services.AddScoped<IAttendanceService, AttendanceService>();
+
+            services.AddScoped<IEmailService, EmailService>();
         }
     }
 }
