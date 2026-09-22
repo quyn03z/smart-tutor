@@ -1,1 +1,55 @@
-<p>header works!</p>
+<header class="main-header" [class.scrolled]="isScrolled">
+  <div class="header-container">
+    <!-- Logo -->
+    <a routerLink="/" class="brand-logo" (click)="closeMobileMenu()">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Smart<span class="highlight">Tutor</span></span>
+    </a>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="nav-links">
+      <a href="#features" class="nav-link">Tính Năng</a>
+      <a href="#how-it-works" class="nav-link">Cách Dùng</a>
+      <a href="#why-choose-us" class="nav-link">Tại Sao Chọn</a>
+      <a href="#testimonials" class="nav-link">Đánh Giá</a>
+      <a href="#faq" class="nav-link">Hỏi Đáp</a>
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <a routerLink="/login" class="btn btn-outline">Đăng Nhập</a>
+      <a routerLink="/login" class="btn btn-primary">Dùng Thử Miễn Phí</a>
+      
+      <!-- Mobile Menu Toggle Button -->
+      <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Toggle Navigation">
+        @if (isMobileMenuOpen) {
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        } @else {
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Dropdown Menu -->
+  @if (isMobileMenuOpen) {
+    <div class="mobile-menu">
+      <a href="#features" class="mobile-link" (click)="closeMobileMenu()">Tính Năng</a>
+      <a href="#how-it-works" class="mobile-link" (click)="closeMobileMenu()">Cách Dùng</a>
+      <a href="#why-choose-us" class="mobile-link" (click)="closeMobileMenu()">Tại Sao Chọn</a>
+      <a href="#testimonials" class="mobile-link" (click)="closeMobileMenu()">Đánh Giá</a>
+      <a href="#faq" class="mobile-link" (click)="closeMobileMenu()">Hỏi Đáp</a>
+      <div class="mobile-buttons">
+        <a routerLink="/login" class="btn btn-outline btn-block" (click)="closeMobileMenu()">Đăng Nhập</a>
+        <a routerLink="/login" class="btn btn-primary btn-block" (click)="closeMobileMenu()">Dùng Thử Miễn Phí</a>
+      </div>
+    </div>
+  }
+</header>
