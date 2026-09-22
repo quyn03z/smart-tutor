@@ -28,6 +28,11 @@ export interface RegisterResponse {
   id: number;
 }
 
+export interface ForgotPasswordResponse {
+  resetToken: string;
+  expiredAt: string;
+}
+
 export interface UserSession {
   token: string;
   refreshToken: string;
