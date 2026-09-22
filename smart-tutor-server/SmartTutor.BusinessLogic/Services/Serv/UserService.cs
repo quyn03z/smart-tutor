@@ -23,19 +23,22 @@ namespace SmartTutor.BusinessLogic.Services.Serv
         private readonly IResetPasswordTokenRepository _resetPasswordTokenRepository;
         private readonly IConfiguration _configuration;
         private readonly IClaimService _claimService;
+        private readonly IEmailService _emailService;
 
         public UserService(
             IUserRepository userRepository,
             IRefreshTokenRepository refreshTokenRepository,
             IResetPasswordTokenRepository resetPasswordTokenRepository,
             IConfiguration configuration,
-            IClaimService claimService)
+            IClaimService claimService,
+            IEmailService emailService)
         {
             _userRepository = userRepository;
             _refreshTokenRepository = refreshTokenRepository;
             _resetPasswordTokenRepository = resetPasswordTokenRepository;
             _configuration = configuration;
             _claimService = claimService;
+            _emailService = emailService;
         }
 
         public async Task<string> ChangePassWordAsync(ChangePassWordModel changePassWordModel)
@@ -48,7 +51,9 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 throw new NotFoundException("Không tìm thấy người dùng.");
 
             if (!BCrypt.Net.BCrypt.Verify(changePassWordModel.OldPassword, user.PasswordHash))
+            {
                 throw new BadRequestException("Mật khẩu cũ không chính xác.");
+            }
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePassWordModel.NewPassword);
             user.UpdatedAt = DateTime.UtcNow;
@@ -69,7 +74,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 FullName = createUserModel.FullName,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(createUserModel.Password),
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                RoleId = 2,
             };
 
             await _userRepository.AddAsync(user);
@@ -103,6 +108,12 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             };
 
             await _resetPasswordTokenRepository.AddAsync(resetPasswordTokenEntity);
+
+            // Gửi email chứa đường dẫn đặt lại mật khẩu
+            var clientUrl = _configuration["ClientUrl"] ?? "http://localhost:4200";
+            var resetLink = $"{clientUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}&email={Uri.EscapeDataString(user.Email ?? email.Email)}";
+
+            await _emailService.SendResetPasswordEmailAsync(user.Email ?? email.Email, resetLink, user.FullName ?? "");
 
             return new ForgotPassWordModel
             {
