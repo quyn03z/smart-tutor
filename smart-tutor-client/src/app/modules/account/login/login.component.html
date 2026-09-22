@@ -132,6 +132,9 @@
           @if (loginForm.get('emailOrUsername')?.touched && loginForm.get('emailOrUsername')?.hasError('required')) {
             <span class="error-msg">Vui lòng nhập Email đăng nhập.</span>
           }
+          @if (loginForm.get('emailOrUsername')?.touched && loginForm.get('emailOrUsername')?.hasError('email')) {
+            <span class="error-msg">Định dạng email không hợp lệ.</span>
+          }
         </div>
 
         <!-- Password -->
