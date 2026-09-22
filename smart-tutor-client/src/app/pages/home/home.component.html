@@ -1,0 +1,591 @@
+<div class="home-page">
+  <!-- 1. HERO SECTION -->
+  <section class="hero-section">
+    <div class="hero-bg-glow glow-1"></div>
+    <div class="hero-bg-glow glow-2"></div>
+
+    <div class="container hero-container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-icon">✨</span>
+          <span class="badge-text">Nền tảng Quản lý Gia sư & Lớp học Thế hệ mới</span>
+          <span class="badge-tag">AI Powered</span>
+        </div>
+
+        <h1 class="hero-title">
+          Quản Lý Lớp Học & <br>
+          <span class="gradient-text">Tự Động Hóa Thu Phí</span> Thông Minh
+        </h1>
+
+        <p class="hero-description">
+          Chấm dứt hoàn toàn nỗi lo cộng trừ sổ sách, quên học phí hay ngại đòi tiền. 
+          SmartTutor tự động hóa <strong>điểm danh 1 chạm</strong>, <strong>gạch nợ VietQR tức thì 24/7</strong> và <strong>trợ lý AI sinh nhận xét sư phạm</strong> chuyên sâu cho từng học sinh.
+        </p>
+
+        <div class="hero-cta-group">
+          <a routerLink="/login" class="btn btn-hero-primary">
+            <span>Trải Nghiệm Miễn Phí Ngay</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+          <a href="#how-it-works" class="btn btn-hero-secondary">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <span>Xem Cách Hoạt Động</span>
+          </a>
+        </div>
+
+        <div class="hero-trust">
+          <div class="trust-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Miễn phí khởi tạo</span>
+          </div>
+          <div class="trust-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Không cần cài app phức tạp</span>
+          </div>
+          <div class="trust-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Hỗ trợ VietQR mọi ngân hàng</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Interactive Mockup -->
+      <div class="hero-visual">
+        <div class="app-mockup-card">
+          <!-- Mockup Top Bar -->
+          <div class="mockup-topbar">
+            <div class="mockup-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="mockup-title">SmartTutor Dashboard • Live Preview</div>
+            <div class="mockup-user">
+              <span class="user-avatar">DQ</span>
+              <span class="user-name">Thầy Đinh Quyền</span>
+            </div>
+          </div>
+
+          <!-- Mockup Main Content -->
+          <div class="mockup-body">
+            <!-- Webhook Banner -->
+            <div class="mockup-webhook-banner" [class.success]="isSimulatedSuccess">
+              <div class="banner-left">
+                <div class="webhook-pill">
+                  <span class="pulse-indicator"></span>
+                  <span>Webhook Ngân Hàng: Active</span>
+                  <span class="sep">|</span>
+                  <span class="bank">Techcombank (0978783058)</span>
+                </div>
+                <div class="banner-text">
+                  @if (isSimulatedSuccess) {
+                    <strong class="text-success">🎉 Tiền đã về! Tự động gạch nợ thành công 1.320.000 đ</strong>
+                  } @else {
+                    <strong>Tự động gạch nợ khi Phụ huynh chuyển khoản</strong>
+                    <span class="syntax">Cú pháp nhận diện: <code class="badge-code">DUYANH HOCPHI T8</code></span>
+                  }
+                </div>
+              </div>
+              <button type="button" class="btn-simulate" (click)="simulatePayment()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+                <span>{{ isSimulatedSuccess ? 'Đã gạch nợ' : 'Giả Lập Tiền Về' }}</span>
+              </button>
+            </div>
+
+            <div class="mockup-grid">
+              <!-- Left Column: Attendance & Homework Table -->
+              <div class="mockup-table-box">
+                <div class="box-header">
+                  <div>
+                    <h4 class="box-title">Nhật ký các ca học trong tháng</h4>
+                    <span class="box-desc">Học sinh: Duy Anh • Toán Lớp 9</span>
+                  </div>
+                  <span class="badge-count">6 buổi học</span>
+                </div>
+
+                <div class="mockup-table">
+                  <div class="table-header">
+                    <span class="col-b">Buổi</span>
+                    <span class="col-date">Ngày</span>
+                    <span class="col-lesson">Nội dung bài học</span>
+                    <span class="col-hw">BTVN</span>
+                    <span class="col-att">Ý thức</span>
+                  </div>
+                  <div class="table-row">
+                    <span class="col-b font-bold">Buổi 1</span>
+                    <span class="col-date">04/08</span>
+                    <span class="col-lesson">Giải bài toán bằng cách lập hệ phương trình</span>
+                    <span class="col-hw"><span class="badge-hw">70%</span></span>
+                    <span class="col-att"><span class="badge-status good">Tốt</span></span>
+                  </div>
+                  <div class="table-row">
+                    <span class="col-b font-bold">Buổi 2</span>
+                    <span class="col-date">07/08</span>
+                    <span class="col-lesson">Tỉ số lượng giác góc nhọn và hệ quả</span>
+                    <span class="col-hw"><span class="badge-hw">60%</span></span>
+                    <span class="col-att"><span class="badge-status lazy">Lười học</span></span>
+                  </div>
+                  <div class="table-row">
+                    <span class="col-b font-bold">Buổi 3</span>
+                    <span class="col-date">07/08</span>
+                    <span class="col-lesson">[Bổ trợ] Chữa bài tập hình học</span>
+                    <span class="col-hw"><span class="badge-hw muted">--</span></span>
+                    <span class="col-att"><span class="badge-status good">Tốt</span></span>
+                  </div>
+                  <div class="table-row">
+                    <span class="col-b font-bold">Buổi 4</span>
+                    <span class="col-date">09/08</span>
+                    <span class="col-lesson">Giải bài toán lập HPT (Bài toán chuyển động)</span>
+                    <span class="col-hw"><span class="badge-hw">70%</span></span>
+                    <span class="col-att"><span class="badge-status talk">Nói chuyện</span></span>
+                  </div>
+                  <div class="table-row">
+                    <span class="col-b font-bold">Buổi 5</span>
+                    <span class="col-date">12/08</span>
+                    <span class="col-lesson">Bài toán năng suất và làm chung làm riêng</span>
+                    <span class="col-hw"><span class="badge-hw high">100%</span></span>
+                    <span class="col-att"><span class="badge-status good">Tốt</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Invoice Card with VietQR -->
+              <div class="mockup-invoice-box">
+                <div class="invoice-header">
+                  <div class="invoice-title">HỌC PHÍ THÁNG 8/2026</div>
+                  <div class="invoice-subtitle">GV: Thầy Đinh Quyền • 0978.783.058</div>
+                </div>
+
+                <div class="invoice-price-box">
+                  <span class="price-label">TỔNG HỌC PHÍ</span>
+                  <span class="price-amount">1.320.000 đ</span>
+                </div>
+
+                <div class="qr-code-box">
+                  <div class="qr-mockup">
+                    <div class="qr-vietqr-header">VIETQR</div>
+                    <div class="qr-pixels"></div>
+                  </div>
+                  <div class="qr-bank-details">
+                    <span class="qr-bank-text">Techcombank: <strong>0978783058</strong></span>
+                    <span class="qr-owner">CTK: NGUYEN DINH QUYEN</span>
+                  </div>
+                </div>
+
+                <div class="payment-status-pill" [class.paid]="isSimulatedSuccess">
+                  @if (isSimulatedSuccess) {
+                    <span class="status-dot green"></span>
+                    <span>ĐÃ THANH TOÁN THÀNH CÔNG</span>
+                  } @else {
+                    <span class="status-dot orange"></span>
+                    <span>Chờ phụ huynh quét mã chuyển khoản</span>
+                  }
+                </div>
+
+                <!-- AI Pedagogical Comment Snippet -->
+                <div class="ai-comment-card">
+                  <div class="ai-header">
+                    <span class="ai-sparkle">✨</span>
+                    <span class="ai-title">NHẬN XÉT HỌC TẬP (TRỢ LÝ AI)</span>
+                  </div>
+                  <p class="ai-body">
+                    "Tư duy số học tốt, nắm được cách giải hệ phương trình. Thường xuyên sai các lỗi nhỏ vặt trong tính toán, cần rèn thêm tính cẩn thận."
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. STATS BAR -->
+  <section class="stats-section">
+    <div class="container stats-container">
+      <div class="stat-card">
+        <span class="stat-number">15.000+</span>
+        <span class="stat-title">Buổi dạy đã được quản lý</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-card">
+        <span class="stat-number">99.8%</span>
+        <span class="stat-title">Gạch nợ VietQR tự động chính xác</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-card">
+        <span class="stat-number">15 giờ</span>
+        <span class="stat-title">Tiết kiệm mỗi tháng cho Giáo viên</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-card">
+        <span class="stat-number">4.9 / 5 ⭐</span>
+        <span class="stat-title">Hài lòng từ Thầy Cô & Phụ huynh</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. CORE FEATURES SECTION -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-badge">TÍNH NĂNG ĐỘT PHÁ</span>
+        <h2 class="section-title">Mọi thứ bạn cần để vận hành lớp học chuyên nghiệp</h2>
+        <p class="section-subtitle">Thiết kế chuyên biệt cho Thầy Cô gia sư 1-1, nhóm nhỏ và lớp học thêm từ 10 - 20 học sinh.</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon-box blue">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">Điểm Danh 1 Chạm & Sổ Đầu Bài</h3>
+          <p class="feature-desc">
+            Bảng ma trận điểm danh siêu tốc cho cả lớp. Đánh dấu Có mặt, Vắng, Nghỉ phép, chấm % hoàn thành BTVN và ghi chú tiến độ bài học trong 30 giây.
+          </p>
+          <div class="feature-tag">Lớp 1-1 & Lớp 10-20 HS</div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card highlighted">
+          <div class="feature-icon-box green">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">Tự Động Gạch Nợ VietQR & Webhook</h3>
+          <p class="feature-desc">
+            Tự sinh mã chuyển khoản riêng. Khi phụ huynh quét QR chuyển tiền, hệ thống nhận diện Webhook và tự động chuyển trạng thái "Đã thanh toán" 24/7.
+          </p>
+          <div class="feature-tag hot">🔥 Tự động 100%</div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon-box purple">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">Trợ Lý AI Nhận Xét Sư Phạm</h3>
+          <p class="feature-desc">
+            AI phân tích dữ liệu toàn bộ ca học trong tháng để tạo ra đoạn nhận xét đánh giá sự tiến bộ, điểm cần cải thiện và gợi ý lộ trình tháng tiếp theo.
+          </p>
+          <div class="feature-tag">OpenAI & Gemini 1.5</div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="feature-icon-box amber">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">Tự Động Khấu Trừ Số Dư Tích Lũy</h3>
+          <p class="feature-desc">
+            Học sinh đóng dư tiền từ kỳ trước sẽ được tự động lưu vào số dư tích lũy. Khi chốt báo cáo mới, hệ thống tự cấn trừ trực tiếp vào số tiền cần nộp.
+          </p>
+          <div class="feature-tag">Chuẩn xác kế toán</div>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card">
+          <div class="feature-icon-box sky">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">Magic Link Tra Cứu Cho Phụ Huynh</h3>
+          <p class="feature-desc">
+            Gửi đường link bảo mật trực tiếp qua Zalo/SMS. Phụ huynh chỉ cần chạm nhẹ là xem được chi tiết từng buổi học, bảng điểm và quét mã VietQR đóng học phí.
+          </p>
+          <div class="feature-tag">Không cần đăng nhập</div>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card">
+          <div class="feature-icon-box emerald">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">Báo Cáo Tài Chính & Quản Lý Công Nợ</h3>
+          <p class="feature-desc">
+            Theo dõi danh sách ai chưa đóng (Unpaid), ai đã hoàn tất (Paid), tổng doanh thu theo tháng và hỗ trợ gửi tin nhắn nhắc nhở thanh toán lịch sự, tinh tế.
+          </p>
+          <div class="feature-tag">Minh bạch tài chính</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. HOW IT WORKS SECTION -->
+  <section id="how-it-works" class="how-section">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-badge">QUY TRÌNH TINH GỌN</span>
+        <h2 class="section-title">Cách dùng siêu đơn giản trong 3 bước</h2>
+        <p class="section-subtitle">Chỉ mất 2 phút thiết lập ban đầu để tự động hóa toàn bộ công việc giảng dạy cả năm.</p>
+      </div>
+
+      <div class="steps-grid">
+        <!-- Step 1 -->
+        <div class="step-card">
+          <div class="step-badge">Bước 1</div>
+          <div class="step-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <h3 class="step-title">Tạo Lớp Học & Thêm Học Sinh</h3>
+          <p class="step-desc">
+            Khai báo tên lớp, lịch học cố định trong tuần và mức học phí theo buổi (hoặc học phí riêng biệt theo từng học sinh).
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+          <div class="step-badge">Bước 2</div>
+          <div class="step-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <h3 class="step-title">Điểm Danh Nhanh Sau Mỗi Buổi</h3>
+          <p class="step-desc">
+            Sau mỗi ca dạy, giáo viên mở app tick chọn trạng thái có mặt/vắng, chấm % bài tập về nhà và ghi lại nội dung bài học.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card">
+          <div class="step-badge">Bước 3</div>
+          <div class="step-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </div>
+          <h3 class="step-title">Bấm 1 Nút: AI Sinh Báo Cáo & Thu Tiền</h3>
+          <p class="step-desc">
+            Cuối tháng, chỉ 1 cú click: Hệ thống tự nhân tiền học, trừ số dư, AI sinh nhận xét và xuất mã VietQR để phụ huynh quét chuyển khoản gạch nợ.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. WHY CHOOSE US SECTION -->
+  <section id="why-choose-us" class="why-section">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-badge">SO SÁNH THỰC TẾ</span>
+        <h2 class="section-title">Tại sao Thầy Cô giáo chọn SmartTutor?</h2>
+        <p class="section-subtitle">Sự khác biệt vượt trội giữa quản lý thủ công truyền thống và giải pháp tự động hóa thông minh.</p>
+      </div>
+
+      <div class="comparison-container">
+        <!-- Traditional Method -->
+        <div class="comparison-card traditional">
+          <div class="card-tag bad">❌ Cách Quản Lý Truyền Thống</div>
+          <h3 class="card-headline">Excel / Sổ tay / Ghi nhớ</h3>
+          <ul class="comparison-list">
+            <li>
+              <span class="icon-cross">✕</span>
+              <span>Mất 10 - 15 tiếng cuối tháng cộng trừ số buổi dạy thủ công.</span>
+            </li>
+            <li>
+              <span class="icon-cross">✕</span>
+              <span>Dễ nhầm lẫn khi học sinh nghỉ có phép, học bù, đổi ca.</span>
+            </li>
+            <li>
+              <span class="icon-cross">✕</span>
+              <span>Ngại nhắn tin nhắc học phí vì sợ mang tiếng đòi tiền.</span>
+            </li>
+            <li>
+              <span class="icon-cross">✕</span>
+              <span>Phải tự ngồi soi biến động số dư ngân hàng xem ai đã nộp ai chưa.</span>
+            </li>
+            <li>
+              <span class="icon-cross">✕</span>
+              <span>Viết nhận xét qua loa vì không nhớ hết chi tiết cả tháng của từng em.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- SmartTutor Solution -->
+        <div class="comparison-card modern">
+          <div class="card-tag good">✨ Nền Tảng SmartTutor</div>
+          <h3 class="card-headline">Tự Động Hóa Toàn Diện 100%</h3>
+          <ul class="comparison-list">
+            <li>
+              <span class="icon-check">✓</span>
+              <span><strong>0 giây tính toán:</strong> Hệ thống tự tổng hợp số buổi và nhân đơn giá tức thì.</span>
+            </li>
+            <li>
+              <span class="icon-check">✓</span>
+              <span><strong>Minh bạch tuyệt đối:</strong> Phụ huynh xem được nhật ký từng ngày học kèm điểm BTVN.</span>
+            </li>
+            <li>
+              <span class="icon-check">✓</span>
+              <span><strong>Tự động gạch nợ:</strong> Phụ huynh quét VietQR $\rightarrow$ Tiền về tài khoản là tự gạch nợ.</span>
+            </li>
+            <li>
+              <span class="icon-check">✓</span>
+              <span><strong>Nhắc học phí tinh tế:</strong> Phiếu báo cáo chuyên nghiệp, lịch sự, nâng cao uy tín gia sư.</span>
+            </li>
+            <li>
+              <span class="icon-check">✓</span>
+              <span><strong>Trợ lý AI sư phạm:</strong> Tự động viết nhận xét khách quan, chuẩn mực và chi tiết.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. TESTIMONIALS SECTION -->
+  <section id="testimonials" class="testimonials-section">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-badge">ĐÁNH GIÁ TỪ GIÁO VIÊN</span>
+        <h2 class="section-title">Hàng trăm Thầy Cô đã giải phóng sức lao động</h2>
+        <p class="section-subtitle">Lắng nghe chia sẻ thực tế từ các Thầy Cô gia sư và chủ lớp học thêm.</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <!-- Review 1 -->
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">
+            "Từ ngày dùng SmartTutor, đến cuối tháng tôi chỉ cần bấm đúng 1 nút là toàn bộ phiếu báo cáo kèm mã QR VietQR của 4 lớp học thêm được gửi thẳng cho phụ huynh. Không còn cảnh ngồi cộng sổ hay kiểm tra sao kê ngân hàng từng dòng nữa!"
+          </p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">DQ</div>
+            <div class="reviewer-meta">
+              <span class="reviewer-name">Thầy Đinh Quyền</span>
+              <span class="reviewer-role">Giáo viên Toán Chuyên Cấp 2 - Cấp 3</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 2 -->
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">
+            "Tính năng AI viết nhận xét học tập làm phụ huynh bên mình rất bất ngờ vì quá chi tiết và chuẩn xác. Phụ huynh rất tin tưởng vì thấy giáo viên theo sát con từng buổi, tỷ lệ nộp học phí đúng hạn đạt gần 100%."
+          </p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar pink">MA</div>
+            <div class="reviewer-meta">
+              <span class="reviewer-name">Cô Mai Anh</span>
+              <span class="reviewer-role">Gia sư Tiếng Anh IELTS & Lớp Nhóm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 3 -->
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p class="review-text">
+            "Giao diện thiết kế rất đẹp và trực quan. Việc trừ số dư nộp trước tự động và gạch nợ qua Webhook Techcombank hoạt động cực kỳ mượt mà. Đáng giá từng xu!"
+          </p>
+          <div class="reviewer-info">
+            <div class="reviewer-avatar purple">LH</div>
+            <div class="reviewer-meta">
+              <span class="reviewer-name">Thầy Lê Hoàng</span>
+              <span class="reviewer-role">Trung tâm Bồi dưỡng Văn Hóa Hà Nội</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. FAQ SECTION -->
+  <section id="faq" class="faq-section">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-badge">HỎI ĐÁP THƯỜNG GẶP</span>
+        <h2 class="section-title">Câu hỏi thường gặp về SmartTutor</h2>
+        <p class="section-subtitle">Giải đáp mọi thắc mắc giúp Thầy Cô bắt đầu sử dụng nhanh chóng và dễ dàng.</p>
+      </div>
+
+      <div class="faq-accordion">
+        @for (faq of faqs; track $index) {
+          <div class="faq-item" [class.open]="activeFaqIndex === $index">
+            <button type="button" class="faq-question" (click)="toggleFaq($index)">
+              <span>{{ faq.question }}</span>
+              <span class="faq-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </button>
+            @if (activeFaqIndex === $index) {
+              <div class="faq-answer">
+                <p>{{ faq.answer }}</p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. FINAL CTA BANNER -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-banner">
+        <div class="cta-content">
+          <h2 class="cta-title">Sẵn sàng nâng tầm quản lý lớp học của bạn?</h2>
+          <p class="cta-desc">
+            Tham gia cùng hàng trăm Thầy Cô giáo hiện đại đang tiết kiệm hàng chục giờ làm việc mỗi tháng cùng SmartTutor.
+          </p>
+          <div class="cta-buttons">
+            <a routerLink="/login" class="btn btn-cta-primary">
+              <span>Đăng Ký Trải Nghiệm Miễn Phí</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+            <a routerLink="/login" class="btn btn-cta-outline">
+              <span>Đăng Nhập Ngay</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
