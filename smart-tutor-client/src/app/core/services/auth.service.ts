@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResult, LoginRequest, LoginResponse, UserSession } from '../models/auth.models';
+import { ApiResult, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, UserSession } from '../models/auth.models';
 
 const TOKEN_KEY = 'st_access_token';
 const REFRESH_TOKEN_KEY = 'st_refresh_token';
@@ -34,6 +34,10 @@ export class AuthService {
         }
       })
     );
+  }
+
+  register(data: RegisterRequest): Observable<ApiResult<RegisterResponse>> {
+    return this.http.post<ApiResult<RegisterResponse>>(`${this.apiUrl}/register`, data);
   }
 
   logout(): void {
