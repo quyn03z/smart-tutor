@@ -40,6 +40,11 @@ export class AuthService {
     return this.http.post<ApiResult<RegisterResponse>>(`${this.apiUrl}/register`, data);
   }
 
+  forgotPassword(email: string): Observable<ApiResult<string>> {
+    return this.http.post<ApiResult<string>>(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+
   logout(): void {
     // Optionally notify server
     this.http.post(`${this.apiUrl}/logout`, {}).subscribe({
