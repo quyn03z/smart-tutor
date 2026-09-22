@@ -1,0 +1,290 @@
+<div class="register-wrapper">
+  <!-- Left Side: Brand Showcase & Benefits Preview -->
+  <div class="showcase-panel">
+    <div class="showcase-content">
+      <!-- Logo -->
+      <div class="brand-header">
+        <div class="brand-icon">S</div>
+        <span class="brand-name">Smart<span class="highlight">Tutor</span></span>
+      </div>
+
+      <div class="showcase-hero">
+        <h1 class="hero-title">
+          Bắt đầu hành trình <br>
+          <span class="gradient-text">Giảng dạy & Quản lý thông minh</span>
+        </h1>
+        <p class="hero-subtitle">
+          Tham gia cùng hàng nghìn Gia sư & Trung tâm tối ưu hóa 90% thời gian điểm danh, đối soát học phí tự động.
+        </p>
+      </div>
+
+      <!-- Feature Highlight Card -->
+      <div class="preview-card">
+        <div class="preview-header">
+          <div class="badge-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            </svg>
+            <span>Dùng thử miễn phí 30 ngày</span>
+          </div>
+          <span class="tier-label">Gói Pro Giáo Viên</span>
+        </div>
+
+        <div class="benefits-list">
+          <div class="benefit-item">
+            <div class="check-icon">✓</div>
+            <div class="benefit-text">
+              <strong>Tự động gạch nợ VietQR:</strong> Không còn nỗi lo soát sao kê từng giao dịch chuyển khoản.
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="check-icon">✓</div>
+            <div class="benefit-text">
+              <strong>Trợ lý AI đánh giá sư phạm:</strong> Tự sinh báo cáo học tập gửi thẳng cho Phụ huynh.
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="check-icon">✓</div>
+            <div class="benefit-text">
+              <strong>Quản lý không giới hạn:</strong> Học sinh, lịch học, ca dạy và tài liệu bài giảng.
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-footer-stats">
+          <div class="stat-item">
+            <span class="stat-label">Thời gian thiết lập</span>
+            <span class="stat-val success">< 2 phút</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Thẻ tín dụng</span>
+            <span class="stat-val">Không yêu cầu</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Hỗ trợ 24/7</span>
+            <span class="stat-badge ready">Sẵn sàng</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust Badges -->
+      <div class="feature-pills">
+        <div class="pill">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Bảo mật mã hóa cấp ngân hàng
+        </div>
+        <div class="pill">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+          Sao lưu dữ liệu tức thời
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Register Form -->
+  <div class="form-panel">
+    <div class="register-card">
+      <div class="card-header">
+        <div class="mobile-brand">
+          <div class="brand-icon sm">S</div>
+          <span class="brand-name">Smart<span class="highlight">Tutor</span></span>
+        </div>
+        <h2 class="card-title">Tạo tài khoản mới</h2>
+        <p class="card-subtitle">Đăng ký để trải nghiệm trọn bộ giải pháp quản lý gia sư thông minh</p>
+      </div>
+
+      <!-- Success Alert -->
+      @if (successMessage) {
+        <div class="alert alert-success">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span>{{ successMessage }}</span>
+        </div>
+      }
+
+      <!-- Error Alert -->
+      @if (errorMessage) {
+        <div class="alert alert-danger">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+        <!-- Full Name -->
+        <div class="form-group">
+          <label for="fullName" class="form-label">Họ và tên <span class="required">*</span></label>
+          <div class="input-wrapper" [class.error]="registerForm.get('fullName')?.touched && registerForm.get('fullName')?.invalid">
+            <span class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <input 
+              id="fullName" 
+              type="text" 
+              formControlName="fullName" 
+              class="form-control" 
+              placeholder="VD: Thầy Đinh Quyền"
+              autocomplete="name"
+            />
+          </div>
+          @if (registerForm.get('fullName')?.touched && registerForm.get('fullName')?.hasError('required')) {
+            <span class="error-msg">Vui lòng nhập họ và tên của bạn.</span>
+          }
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email đăng ký <span class="required">*</span></label>
+          <div class="input-wrapper" [class.error]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+            <span class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </span>
+            <input 
+              id="email" 
+              type="email" 
+              formControlName="email" 
+              class="form-control" 
+              placeholder="name@example.com"
+              autocomplete="email"
+            />
+          </div>
+          @if (registerForm.get('email')?.touched && registerForm.get('email')?.hasError('required')) {
+            <span class="error-msg">Vui lòng nhập email đăng ký.</span>
+          }
+          @if (registerForm.get('email')?.touched && registerForm.get('email')?.hasError('email')) {
+            <span class="error-msg">Định dạng email không hợp lệ.</span>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password" class="form-label">Mật khẩu <span class="required">*</span></label>
+          <div class="input-wrapper" [class.error]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+            <span class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <input 
+              id="password" 
+              [type]="showPassword ? 'text' : 'password'" 
+              formControlName="password" 
+              class="form-control" 
+              placeholder="Tối thiểu 6 ký tự (có chữ hoa, thường & số)"
+              autocomplete="new-password"
+            />
+            <button type="button" class="eye-btn" (click)="togglePasswordVisibility()" tabindex="-1" [title]="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              @if (showPassword) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (registerForm.get('password')?.touched && registerForm.get('password')?.hasError('required')) {
+            <span class="error-msg">Vui lòng nhập mật khẩu.</span>
+          }
+          @if (registerForm.get('password')?.touched && (registerForm.get('password')?.hasError('minlength') || registerForm.get('password')?.hasError('pattern'))) {
+            <span class="error-msg">Mật khẩu phải có ít nhất 6 ký tự gồm chữ hoa, chữ thường và số.</span>
+          }
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label">Xác nhận mật khẩu <span class="required">*</span></label>
+          <div class="input-wrapper" [class.error]="(registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid) || (registerForm.touched && registerForm.hasError('passwordMismatch'))">
+            <span class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </span>
+            <input 
+              id="confirmPassword" 
+              [type]="showConfirmPassword ? 'text' : 'password'" 
+              formControlName="confirmPassword" 
+              class="form-control" 
+              placeholder="Nhập lại mật khẩu"
+              autocomplete="new-password"
+            />
+            <button type="button" class="eye-btn" (click)="toggleConfirmPasswordVisibility()" tabindex="-1" [title]="showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
+              @if (showConfirmPassword) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('required')) {
+            <span class="error-msg">Vui lòng xác nhận mật khẩu.</span>
+          }
+          @if (registerForm.get('confirmPassword')?.touched && registerForm.hasError('passwordMismatch')) {
+            <span class="error-msg">Mật khẩu xác nhận không khớp.</span>
+          }
+        </div>
+
+        <!-- Terms Agreement -->
+        <div class="form-check-row">
+          <label class="custom-checkbox">
+            <input type="checkbox" formControlName="agreeTerms" />
+            <span class="checkmark"></span>
+            <span class="check-text">
+              Tôi đồng ý với <a href="#" class="terms-link" (click)="$event.preventDefault()">Điều khoản dịch vụ</a> và <a href="#" class="terms-link" (click)="$event.preventDefault()">Chính sách bảo mật</a>
+            </span>
+          </label>
+        </div>
+        @if (registerForm.get('agreeTerms')?.touched && registerForm.get('agreeTerms')?.hasError('required')) {
+          <span class="error-msg terms-error">Bạn cần đồng ý với điều khoản sử dụng để tiếp tục.</span>
+        }
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-block" [disabled]="isLoading">
+          @if (isLoading) {
+            <span class="spinner"></span>
+            <span>Đang tạo tài khoản...</span>
+          } @else {
+            <span>Đăng ký ngay</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          }
+        </button>
+
+        <div class="card-footer">
+          <span>Đã có tài khoản SmartTutor?</span>
+          <a routerLink="/login" class="login-link">Đăng nhập ngay</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
