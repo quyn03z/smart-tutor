@@ -17,6 +17,17 @@ export interface LoginResponse {
   permissions?: string[];
 }
 
+export interface RegisterRequest {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface RegisterResponse {
+  id: number;
+}
+
 export interface UserSession {
   token: string;
   refreshToken: string;
