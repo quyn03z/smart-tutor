@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResult, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, UserSession } from '../models/auth.models';
+import { ApiResult, ForgotPasswordResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordRequest, UserSession } from '../models/auth.models';
 
 const TOKEN_KEY = 'st_access_token';
 const REFRESH_TOKEN_KEY = 'st_refresh_token';
@@ -40,8 +40,12 @@ export class AuthService {
     return this.http.post<ApiResult<RegisterResponse>>(`${this.apiUrl}/register`, data);
   }
 
-  forgotPassword(email: string): Observable<ApiResult<string>> {
-    return this.http.post<ApiResult<string>>(`${this.apiUrl}/forgot-password`, { email });
+  forgotPassword(email: string): Observable<ApiResult<ForgotPasswordResponse>> {
+    return this.http.post<ApiResult<ForgotPasswordResponse>>(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(data: ResetPasswordRequest): Observable<ApiResult<string>> {
+    return this.http.post<ApiResult<string>>(`${this.apiUrl}/reset-password`, data);
   }
 
 
