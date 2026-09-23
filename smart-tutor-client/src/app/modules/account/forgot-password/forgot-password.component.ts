@@ -14,7 +14,9 @@ import { AuthService } from '../../../core/services/auth.service';
 export class ForgotPasswordComponent implements OnInit {
   forgotPasswordForm!: FormGroup;
   isLoading = false;
+  isSubmitted = false;
   errorMessage = '';
+  successMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -35,13 +37,15 @@ export class ForgotPasswordComponent implements OnInit {
     
     this.isLoading = true;
     this.errorMessage = '';
+    this.successMessage = '';
     const { email } = this.forgotPasswordForm.value;
     
     this.authService.forgotPassword(email).subscribe({
       next: (response) => {
         this.isLoading = false;
         if (response.succeeded) {
-          this.router.navigate(['/verify-code']);
+          this.isSubmitted = true;
+          this.successMessage = `Hệ thống đã gửi email chứa đường dẫn đặt lại mật khẩu đến ${email}. Vui lòng kiểm tra hộp thư (bao gồm cả mục Spam) để tiếp tục.`;
         } else {
           this.errorMessage = response.message || response.errors?.[0] || 'Có lỗi xảy ra.';
         }
@@ -51,11 +55,8 @@ export class ForgotPasswordComponent implements OnInit {
         this.errorMessage =
           err.error?.message ||
           (err.error?.errors && err.error.errors[0]) ||
-          (err.status === 0 ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại backend!' : 'Email không tồn tại.');
+          (err.status === 0 ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại backend!' : 'Email không tồn tại trong hệ thống.');
       }
     });
-    
-
   }
-  
 }
