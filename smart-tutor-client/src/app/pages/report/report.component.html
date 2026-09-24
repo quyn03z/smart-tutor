@@ -1,0 +1,382 @@
+<div class="report-grid">
+  <!-- CỘT TRÁI: Dữ liệu điều khiển -->
+  <div class="report-left-col">
+    
+    <!-- Chọn đối tượng & Kỳ báo cáo -->
+    <div class="card selector-card">
+      <div class="selector-field flex-grow">
+        <label class="field-label">Đối tượng tra cứu</label>
+        <select 
+          class="form-select"
+          [(ngModel)]="selectedStudentId" 
+          (change)="onStudentChange()">
+          <optgroup label="Học sinh Gia sư 1-1">
+            <option value="duyanh">Duy Anh - Toán Lớp 9</option>
+            <option value="minhkhang">Minh Khang - Hình Lớp 11</option>
+            <option value="baotram">Bảo Trâm - Toán Lớp 8</option>
+          </optgroup>
+          <optgroup label="Học sinh trong Lớp Nhóm">
+            <option value="lop9a_hs1">Hoàng Yến (Lớp Toán 9A)</option>
+            <option value="lop9a_hs2">Đức Anh (Lớp Toán 9A)</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="selector-field w-period">
+        <label class="field-label">Kỳ Báo Cáo</label>
+        <select class="form-select" [(ngModel)]="selectedMonth">
+          <option>Tháng 8 / 2026</option>
+          <option>Tháng 7 / 2026</option>
+          <option>Tháng 9 / 2026</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TÍNH NĂNG: AUTO BANK SYNC WEBHOOK -->
+    <div class="card webhook-card">
+      <div class="webhook-info">
+        <div class="webhook-status-row">
+          <span class="status-chip-active">
+            <span class="pulse-dot"></span> Webhook Ngân Hàng: Active
+          </span>
+          <span class="sub-bank-info">| Techcombank ({{ teacherAccountNum }})</span>
+        </div>
+        <h4 class="webhook-title">Tự động gạch nợ khi Phụ huynh chuyển khoản</h4>
+        <p class="webhook-syntax-desc">
+          Cú pháp nhận diện: 
+          <strong class="code-badge">{{ currentStudent.transferSyntax }}</strong>
+        </p>
+      </div>
+      <button 
+        type="button" 
+        (click)="simulateBankWebhook()" 
+        class="btn-simulate-webhook"
+        [class.paid]="currentStudent.isPaid">
+        <span>⚡</span>
+        <span>{{ currentStudent.isPaid ? 'Hoàn Tác Tiền Về' : 'Giả Lập Tiền Về' }}</span>
+      </button>
+    </div>
+
+    <!-- Bảng nhật ký ca dạy trong tháng -->
+    <div class="card session-log-card">
+      <div class="card-header-flex">
+        <div>
+          <h3 class="section-title">Nhật ký các ca học trong tháng</h3>
+          <p class="section-subtitle">Tự động cộng dồn số buổi theo thực tế chuyên cần</p>
+        </div>
+        <button type="button" (click)="openAddSessionModal()" class="btn-add-session">
+          + Thêm buổi dạy
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="session-table">
+          <thead>
+            <tr>
+              <th class="col-center">Buổi</th>
+              <th>Ngày</th>
+              <th>Nội dung bài học</th>
+              <th class="col-center">BTVN</th>
+              <th>Ý thức</th>
+              <th class="col-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of currentStudent.sessions">
+              <td class="col-center font-bold text-slate-700">Buổi {{ item.sessionNumber }}</td>
+              <td class="font-semibold text-blue-700">{{ item.date }}</td>
+              <td class="font-medium text-slate-800">{{ item.topic }}</td>
+              <td class="col-center">
+                <span 
+                  class="hw-badge"
+                  [class.hw-100]="item.homework === '100%'"
+                  [class.hw-mid]="item.homework !== '100%' && item.homework !== '--'">
+                  {{ item.homework }}
+                </span>
+              </td>
+              <td>
+                <span 
+                  class="attitude-badge"
+                  [class.att-good]="item.attitude === 'Tốt' || item.attitude === 'Chăm chỉ'"
+                  [class.att-warn]="item.attitude === 'Lười học' || item.attitude === 'Nói chuyện' || item.attitude === 'Cần tập trung'">
+                  {{ item.attitude }}
+                </span>
+              </td>
+              <td class="col-right">
+                <button 
+                  type="button" 
+                  class="btn-delete-session" 
+                  (click)="deleteSession(item.id)" 
+                  title="Xóa buổi này">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+
+            <tr *ngIf="currentStudent.sessions.length === 0">
+              <td colspan="6" class="empty-sessions">
+                Chưa có buổi học nào được ghi nhận trong tháng này. Bấm <strong>+ Thêm buổi dạy</strong> để bắt đầu.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Nhận xét học tập & AI -->
+    <div class="card ai-card">
+      <div class="card-header-flex">
+        <h3 class="section-title">Đánh giá chung & Lộ trình</h3>
+        <button type="button" (click)="triggerAI()" class="btn-ai-generate">
+          <span>✨</span> AI Tự Viết Nhận Xét Sư Phạm
+        </button>
+      </div>
+      <div>
+        <textarea 
+          rows="3" 
+          [(ngModel)]="currentStudent.aiFeedback"
+          class="form-textarea" 
+          placeholder="Nhập nhận xét sư phạm dành cho học sinh..."></textarea>
+      </div>
+    </div>
+
+    <!-- 2-Way Parent Feedback -->
+    <div class="card parent-feedback-card">
+      <div class="card-header-flex">
+        <h3 class="section-title flex-center gap-2">
+          <span>💬</span> Phản Hồi Từ Phụ Huynh (2 Chiều)
+        </h3>
+        <span class="badge-notif">1 lời nhắn mới</span>
+      </div>
+      
+      <div class="parent-message-box">
+        <div class="parent-header-row">
+          <strong class="parent-sender">Phụ huynh ({{ currentStudent.parentPhone }})</strong>
+          <span class="parent-time">{{ currentStudent.parentNoteTime || 'Hôm qua 21:15' }}</span>
+        </div>
+        <p class="parent-quote">
+          "{{ currentStudent.parentNote || 'Cảm ơn thầy. Dạo này cháu có tập trung làm bài ở nhà hơn, nhờ thầy đôn đốc thêm phần hình học giúp gia đình nhé ạ.' }}"
+        </p>
+        <div class="parent-tags-row">
+          <span *ngIf="currentStudent.parentAcknowledged" class="tag-ack">
+            ✓ Đã xác nhận xem báo cáo
+          </span>
+          <span *ngIf="!currentStudent.parentAcknowledged" class="tag-pending-ack">
+            Chưa mở xem báo cáo
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CỘT PHẢI: Live Preview Thẻ Học Phí -->
+  <div class="report-right-col">
+    <div class="live-card-wrapper" [class.paid-card]="currentStudent.isPaid">
+      
+      <!-- Teacher header bar -->
+      <div class="card-header-meta">
+        <span class="gv-name">GV: {{ teacherName }}</span>
+        <span class="gv-phone">SĐT: 0978.783.058</span>
+      </div>
+
+      <!-- Title -->
+      <div class="card-title-box">
+        <h2 class="card-report-title">HỌC PHÍ {{ selectedMonth | uppercase }}</h2>
+      </div>
+
+      <!-- 2 Cột: Thông tin HS & Tổng tiền VietQR -->
+      <div class="card-content-grid">
+        <!-- Sub-card HS -->
+        <div class="sub-card info-sub-card">
+          <div>
+            <span class="sub-card-label">THÔNG TIN HỌC SINH</span>
+            <div class="student-name-val">{{ currentStudent.name }}</div>
+            <div class="student-grade-val">{{ currentStudent.grade }} ({{ currentStudent.subject }})</div>
+          </div>
+          <div class="sub-card-stats">
+            <div class="stat-line">Đơn giá: <strong>{{ formatMoney(currentStudent.ratePerSession) }}/b</strong></div>
+            <div class="stat-line">Buổi học: <strong>{{ totalSessions }} buổi</strong></div>
+            <div class="stat-line">Giờ học: <strong>{{ totalHours }} giờ</strong></div>
+          </div>
+        </div>
+
+        <!-- Sub-card VietQR -->
+        <div class="sub-card qr-sub-card">
+          <div>
+            <span class="sub-card-label blue">TỔNG HỌC PHÍ</span>
+            <div class="total-amount-val">{{ formattedTotalAmount }}</div>
+          </div>
+          
+          <div class="qr-image-wrapper">
+            <img 
+              [src]="vietQrUrl" 
+              alt="VietQR Chuyển Khoản Học Phí" 
+              class="vietqr-img">
+          </div>
+
+          <div class="bank-details-mini">
+            <div>Techcombank: <strong>{{ teacherAccountNum }}</strong></div>
+            <div>CTK: <strong>{{ teacherAccountName }}</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ngày học thực tế -->
+      <div class="study-dates-section">
+        <span class="section-label">Ngày học thực tế:</span>
+        <div class="dates-pill-container">
+          <span *ngFor="let s of currentStudent.sessions" class="date-pill">
+            {{ s.date }}
+          </span>
+          <span *ngIf="currentStudent.sessions.length === 0" class="text-xs text-slate-400">
+            Chưa có ngày học
+          </span>
+        </div>
+      </div>
+
+      <!-- Nhận xét học tập preview -->
+      <div class="ai-feedback-preview">
+        <div class="preview-ai-label">NHẬN XÉT HỌC TẬP</div>
+        <p class="preview-ai-body">
+          {{ currentStudent.aiFeedback }}
+        </p>
+      </div>
+
+      <!-- Trạng thái thanh toán -->
+      <div class="payment-status-wrapper">
+        <div class="status-badge-container">
+          <span *ngIf="!currentStudent.isPaid" class="badge-pending-pay">
+            ● Chờ phụ huynh quét mã chuyển khoản
+          </span>
+          <span *ngIf="currentStudent.isPaid" class="badge-success-pay">
+            ✓ ĐÃ THANH TOÁN THÀNH CÔNG (Techcombank Webhook)
+          </span>
+        </div>
+        <p class="status-desc-text">
+          {{ currentStudent.isPaid ? 'Giao dịch đã được hệ thống khớp mã đối soát và gạch nợ tự động.' : 'Hệ thống sẽ tự động gạch nợ ngay khi tiền vào tài khoản giáo viên.' }}
+        </p>
+      </div>
+
+      <!-- Phụ huynh tương tác 2 chiều -->
+      <div class="parent-quick-actions">
+        <button type="button" (click)="parentAcknowledge()" class="btn-parent-action">
+          👍 Phụ huynh bấm Đã Nhận
+        </button>
+        <button type="button" (click)="parentSendNote()" class="btn-parent-action outline">
+          ✍️ Nhắn tin cho Thầy
+        </button>
+      </div>
+    </div>
+
+    <!-- Nút hành động phía dưới thẻ -->
+    <div class="card-bottom-actions">
+      <div class="btn-pair">
+        <button type="button" (click)="downloadCardAlert()" class="btn-action-primary">
+          <span>📸</span> Tải Thẻ Ảnh PNG
+        </button>
+        <button type="button" (click)="copyMagicLink()" class="btn-action-outline">
+          <span>🔗</span> Copy Link Phụ Huynh
+        </button>
+      </div>
+      <button type="button" (click)="sendZaloNotification()" class="btn-action-zalo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.34 5L2 22l5.24-1.31C8.65 21.49 10.28 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/>
+        </svg>
+        Bắn Thông Báo Qua Zalo Cho Phụ Huynh (Tự Động)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: THÊM BUỔI DẠY MỚI ================= -->
+<div *ngIf="isAddSessionModalOpen" class="modal-backdrop">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">+ Thêm Ca Dạy Mới</h3>
+      <button type="button" class="btn-close-modal" (click)="closeAddSessionModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="modal-label">Ngày học (dd/mm):</label>
+        <input type="text" [(ngModel)]="newSessionDate" class="form-input" placeholder="Ví dụ: 18/08">
+      </div>
+
+      <div class="form-group">
+        <label class="modal-label">Nội dung bài học:</label>
+        <input type="text" [(ngModel)]="newSessionTopic" class="form-input" placeholder="Nhập chuyên đề, bài tập...">
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="modal-label">Hoàn thành BTVN:</label>
+          <select [(ngModel)]="newSessionHw" class="form-select">
+            <option value="100%">100%</option>
+            <option value="85%">85%</option>
+            <option value="70%">70%</option>
+            <option value="50%">50%</option>
+            <option value="0%">Chưa làm</option>
+            <option value="--">Không có BTVN</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="modal-label">Ý thức học:</label>
+          <select [(ngModel)]="newSessionAttitude" class="form-select">
+            <option value="Tốt">Tốt</option>
+            <option value="Chăm chỉ">Chăm chỉ</option>
+            <option value="Cần tập trung">Cần tập trung</option>
+            <option value="Lười học">Lười học</option>
+            <option value="Nói chuyện">Nói chuyện</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-modal-cancel" (click)="closeAddSessionModal()">Hủy</button>
+      <button type="button" class="btn-modal-submit" (click)="submitAddSession()">Lưu & Cập Nhật Học Phí</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: NHẮN TIN CHO THẦY ================= -->
+<div *ngIf="isParentNoteModalOpen" class="modal-backdrop">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">✍️ Phụ Huynh Nhắn Tin Cho Thầy</h3>
+      <button type="button" class="btn-close-modal" (click)="closeParentNoteModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-desc">
+        Lời nhắn của Quý phụ huynh sẽ được lưu trực tiếp vào báo cáo học tập để Thầy theo dõi và hỗ trợ em tốt nhất.
+      </p>
+      <textarea 
+        rows="4" 
+        [(ngModel)]="parentInputMessage" 
+        class="form-textarea" 
+        placeholder="Nhập lời nhắn hoặc dặn dò Thầy..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-modal-cancel" (click)="closeParentNoteModal()">Hủy</button>
+      <button type="button" class="btn-modal-submit" (click)="submitParentNote()">Gửi Lời Nhắn</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FLOATING TOAST NOTIFICATION ================= -->
+<div *ngIf="toastMessage" class="toast-floating" [class]="'toast-' + toastType">
+  <div class="toast-content">
+    <span class="toast-icon">
+      <span *ngIf="toastType === 'success'">✓</span>
+      <span *ngIf="toastType === 'info'">ℹ</span>
+      <span *ngIf="toastType === 'warning'">⚠</span>
+    </span>
+    <span class="toast-text">{{ toastMessage }}</span>
+  </div>
+  <button type="button" class="btn-close-toast" (click)="closeToast()">✕</button>
+</div>
