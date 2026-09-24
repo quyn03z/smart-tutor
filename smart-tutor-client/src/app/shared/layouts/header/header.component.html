@@ -17,8 +17,12 @@
 
     <!-- Header Actions -->
     <div class="header-actions">
-      <a routerLink="/login" class="btn btn-outline">Đăng Nhập</a>
-      <a routerLink="/login" class="btn btn-primary">Dùng Thử Miễn Phí</a>
+      @if (isAuthenticated) {
+        <a routerLink="/report" class="btn btn-primary">Báo Cáo Giáo Viên (Live)</a>
+      } @else {
+        <a routerLink="/login" class="btn btn-outline">Đăng Nhập</a>
+        <a routerLink="/report" class="btn btn-primary">Báo Cáo (Demo Live)</a>
+      }
       
       <!-- Mobile Menu Toggle Button -->
       <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Toggle Navigation">
@@ -47,8 +51,10 @@
       <a href="#testimonials" class="mobile-link" (click)="closeMobileMenu()">Đánh Giá</a>
       <a href="#faq" class="mobile-link" (click)="closeMobileMenu()">Hỏi Đáp</a>
       <div class="mobile-buttons">
-        <a routerLink="/login" class="btn btn-outline btn-block" (click)="closeMobileMenu()">Đăng Nhập</a>
-        <a routerLink="/login" class="btn btn-primary btn-block" (click)="closeMobileMenu()">Dùng Thử Miễn Phí</a>
+        <a routerLink="/report" class="btn btn-primary btn-block" (click)="closeMobileMenu()">Báo Cáo Giáo Viên (Live)</a>
+        @if (!isAuthenticated) {
+          <a routerLink="/login" class="btn btn-outline btn-block" (click)="closeMobileMenu()">Đăng Nhập</a>
+        }
       </div>
     </div>
   }
