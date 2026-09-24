@@ -1,0 +1,220 @@
+<div class="schedule-tab-container">
+  <!-- Toolbar -->
+  <div class="card schedule-toolbar-card">
+    <div class="week-nav-group">
+      <div class="btn-week-group">
+        <button type="button" (click)="prevWeek()" class="btn-week-step">‹ Tuần trước</button>
+        <button type="button" (click)="currentWeek()" class="btn-week-current">Hôm nay</button>
+        <button type="button" (click)="nextWeek()" class="btn-week-step">Tuần sau ›</button>
+      </div>
+      <span class="week-label-title">Tháng 08, 2026 (Tuần 04/08 - 10/08)</span>
+    </div>
+
+    <div class="view-switch-group">
+      <div class="toggle-pills">
+        <button 
+          type="button" 
+          class="btn-pill" 
+          [class.active]="scheduleView === 'list'"
+          (click)="toggleScheduleView('list')">
+          Dạng Danh Sách
+        </button>
+        <button 
+          type="button" 
+          class="btn-pill" 
+          [class.active]="scheduleView === 'grid'"
+          (click)="toggleScheduleView('grid')">
+          Lưới Tuần (Grid)
+        </button>
+      </div>
+      <button type="button" (click)="openAddSessionModal()" class="btn-add-session-main">
+        + Thêm Ca Dạy Mới
+      </button>
+    </div>
+  </div>
+
+  <!-- Schedule Content 1: Agenda List View -->
+  <div *ngIf="scheduleView === 'list'" class="schedule-list-view">
+    <div class="agenda-section">
+      <div class="agenda-date-header">
+        <span class="pulse-blue-dot"></span>
+        <h3 class="agenda-date-title">HÔM NAY - THỨ HAI (04/08/2026)</h3>
+        <span class="agenda-count">• 2 ca dạy</span>
+      </div>
+
+      <!-- Ca 1: 1-1 -->
+      <div class="schedule-card-item border-left-emerald">
+        <div class="card-details">
+          <div class="card-title-row">
+            <span class="time-range">17:30 - 19:30</span>
+            <span class="status-tag-done">● Đã hoàn thành</span>
+            <span class="divider-v">|</span>
+            <span class="student-tag">Duy Anh (Toán Lớp 9)</span>
+            <span class="fee-tag">120.000 đ</span>
+          </div>
+          <p class="topic-desc"><span class="font-semibold text-slate-700">Nội dung:</span> Ôn tập phương pháp Giải bài toán bằng cách lập hệ phương trình.</p>
+        </div>
+        <div class="card-actions">
+          <button type="button" (click)="openAttendanceModal('Duy Anh', '17:30 - 19:30')" class="btn-edit-log">
+            Sửa nhật ký
+          </button>
+        </div>
+      </div>
+
+      <!-- Ca 2: Lớp lớn 12 học sinh -->
+      <div class="schedule-card-item border-left-indigo">
+        <div class="card-details">
+          <div class="card-title-row">
+            <span class="time-range">19:45 - 21:45</span>
+            <span class="status-tag-class">LỚP HỌC (12 HS)</span>
+            <span class="divider-v">|</span>
+            <span class="student-tag indigo">Lớp Toán 9A (Chuyên Đề Vào 10)</span>
+            <span class="fee-tag">80.000 đ/em</span>
+          </div>
+          <p class="topic-desc"><span class="font-semibold text-slate-700">Kế hoạch:</span> Luyện đề tổng hợp Hình học đường tròn.</p>
+        </div>
+        <div class="card-actions">
+          <button type="button" (click)="goToClasses()" class="btn-class-attendance">
+            Điểm danh cả lớp ›
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Content 2: Grid View tương tác -->
+  <div *ngIf="scheduleView === 'grid'" class="card schedule-grid-card">
+    <div class="grid-week-container">
+      <div class="day-header active">Thứ 2 (04/08)</div>
+      <div class="day-header">Thứ 3 (05/08)</div>
+      <div class="day-header">Thứ 4 (06/08)</div>
+      <div class="day-header">Thứ 5 (07/08)</div>
+      <div class="day-header">Thứ 6 (08/08)</div>
+      <div class="day-header">Thứ 7 (09/08)</div>
+      <div class="day-header">Chủ nhật (10/08)</div>
+
+      <!-- Thứ 2 -->
+      <div class="day-column day-active">
+        <div class="session-box green" (click)="openAttendanceModal('Duy Anh', '17:30 - 19:30')">
+          <div class="session-time">17:30 - 19:30</div>
+          <div class="session-who">Duy Anh (Lớp 9)</div>
+          <div class="session-stat">✓ Xong (70% BTVN)</div>
+        </div>
+
+        <div class="session-box indigo" (click)="goToClasses()">
+          <div class="session-time">19:45 - 21:45</div>
+          <div class="session-who">Lớp Toán 9A (12 HS)</div>
+          <div class="session-stat">● Điểm danh cả lớp ›</div>
+        </div>
+
+        <button type="button" (click)="quickAddSession('2026-08-04')" class="btn-quick-add-day">
+          + Thêm ca
+        </button>
+      </div>
+
+      <!-- Các ngày còn lại -->
+      <div class="day-column" (click)="quickAddSession('2026-08-05')">
+        <div class="empty-day-slot">
+          <span class="slot-plus">+ Thêm ca</span>
+          <span class="slot-day-name">Thứ 3 (05/08)</span>
+        </div>
+      </div>
+
+      <div class="day-column" (click)="quickAddSession('2026-08-06')">
+        <div class="empty-day-slot">
+          <span class="slot-plus">+ Thêm ca</span>
+          <span class="slot-day-name">Thứ 4 (06/08)</span>
+        </div>
+      </div>
+
+      <div class="day-column" (click)="quickAddSession('2026-08-07')">
+        <div class="empty-day-slot">
+          <span class="slot-plus">+ Thêm ca</span>
+          <span class="slot-day-name">Thứ 5 (07/08)</span>
+        </div>
+      </div>
+
+      <div class="day-column" (click)="quickAddSession('2026-08-08')">
+        <div class="empty-day-slot">
+          <span class="slot-plus">+ Thêm ca</span>
+          <span class="slot-day-name">Thứ 6 (08/08)</span>
+        </div>
+      </div>
+
+      <div class="day-column" (click)="quickAddSession('2026-08-09')">
+        <div class="empty-day-slot">
+          <span class="slot-plus">+ Thêm ca</span>
+          <span class="slot-day-name">Thứ 7 (09/08)</span>
+        </div>
+      </div>
+
+      <div class="day-column" (click)="quickAddSession('2026-08-10')">
+        <div class="empty-day-slot">
+          <span class="slot-plus">+ Thêm ca</span>
+          <span class="slot-day-name">Chủ nhật (10/08)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: THÊM CA DẠY MỚI -->
+  <div *ngIf="isAddSessionModalOpen" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">+ Thêm Ca Dạy Mới</h3>
+        <button type="button" class="btn-close-modal" (click)="closeAddSessionModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="modal-label">Ngày học (dd/mm):</label>
+          <input type="text" [(ngModel)]="newSessionDate" class="form-input" placeholder="Ví dụ: 18/08">
+        </div>
+
+        <div class="form-group">
+          <label class="modal-label">Nội dung bài học:</label>
+          <input type="text" [(ngModel)]="newSessionTopic" class="form-input" placeholder="Nhập chuyên đề, bài tập...">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="modal-label">Hoàn thành BTVN:</label>
+            <select [(ngModel)]="newSessionHw" class="form-select">
+              <option value="100%">100%</option>
+              <option value="85%">85%</option>
+              <option value="70%">70%</option>
+              <option value="50%">50%</option>
+              <option value="0%">Chưa làm</option>
+              <option value="--">Không có BTVN</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="modal-label">Ý thức học:</label>
+            <select [(ngModel)]="newSessionAttitude" class="form-select">
+              <option value="Tốt">Tốt</option>
+              <option value="Chăm chỉ">Chăm chỉ</option>
+              <option value="Cần tập trung">Cần tập trung</option>
+              <option value="Lười học">Lười học</option>
+              <option value="Nói chuyện">Nói chuyện</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" (click)="closeAddSessionModal()">Hủy</button>
+        <button type="button" class="btn-modal-submit" (click)="submitAddSession()">Lưu Ca Dạy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING TOAST -->
+  <div *ngIf="toastMessage" class="toast-floating" [class]="'toast-' + toastType">
+    <div class="toast-content">
+      <span class="toast-icon">ℹ</span>
+      <span class="toast-text">{{ toastMessage }}</span>
+    </div>
+    <button type="button" class="btn-close-toast" (click)="closeToast()">✕</button>
+  </div>
+</div>
