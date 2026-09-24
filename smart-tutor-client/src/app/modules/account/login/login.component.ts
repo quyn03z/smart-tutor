@@ -50,7 +50,7 @@ export class LoginComponent implements OnInit {
       next: (response) => {
         this.isLoading = false;
         if (response.succeeded) {
-          this.router.navigate(['/home']);
+          this.router.navigate(['/report']);
         } else {
           this.errorMessage = response.message || response.errors?.[0] || 'Đăng nhập không thành công.';
         }
