@@ -299,5 +299,19 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 BankAccountName = user.BankAccountName,
             };
         }
+
+        public async Task<CurentUserRespond> GetCurrentUserAsync()
+        {
+            var userId = _claimService.GetUserId();
+            var user = await  _userRepository.GetByIdAsync(userId);
+
+            return new CurentUserRespond
+            {
+                FullName = user.FullName,
+                BankCode = user.BankCode,
+                BankAccountNumber = user.BankAccountNumber,
+            };
+        }
+
     }
 }
