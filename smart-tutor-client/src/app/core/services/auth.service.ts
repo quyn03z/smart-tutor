@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResult, ForgotPasswordResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordRequest, UserSession } from '../models/auth.models';
+import { ApiResult, CurrentUserResponse, ForgotPasswordResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, ResetPasswordRequest, UserSession } from '../models/auth.models';
 
 const TOKEN_KEY = 'st_access_token';
 const REFRESH_TOKEN_KEY = 'st_refresh_token';
@@ -105,4 +105,15 @@ export class AuthService {
       return null;
     }
   }
+
+getCurrentUser(): Observable<ApiResult<CurrentUserResponse>> {
+  const token = this.getToken();
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${token}`
+  });
+  return this.http.get<ApiResult<CurrentUserResponse>>(`${this.apiUrl}/current-user`, { headers });
+}
+
+
+
 }
