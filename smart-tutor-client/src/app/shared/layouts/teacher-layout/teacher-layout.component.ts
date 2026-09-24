@@ -11,9 +11,9 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrl: './teacher-layout.component.scss'
 })
 export class TeacherLayoutComponent implements OnInit {
-  teacherName: string = 'Thầy Đình Quyền';
-  teacherBank: string = 'Techcombank: 9986678999';
-  teacherInitials: string = 'DQ';
+  teacherName = '';
+  teacherBank = '';
+  teacherInitials = '';
 
   constructor(
     private router: Router,
@@ -21,14 +21,23 @@ export class TeacherLayoutComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
-      if (user?.email) {
-        const prefix = user.email.split('@')[0];
-        if (prefix.toLowerCase().includes('quyen')) {
-          this.teacherName = 'Thầy Đình Quyền';
-        }
+    this.authService.getCurrentUser().subscribe({
+    next: (res) => {
+      if (res?.succeeded && res.result) {
+        this.teacherName = res.result.fullName;
+        this.teacherBank = `${res.result.bankCode}: ${res.result.bankAccountNumber}`;
+        
+        // Lấy 2 chữ cái đầu viết tắt cho Avatar (Ví dụ: Đình Quyền -> DQ)
+        const parts = this.teacherName.trim().split(' ');
+        this.teacherInitials = parts.length > 1 
+          ? (parts[parts.length - 2][0] + parts[parts.length - 1][0]).toUpperCase()
+          : this.teacherName.slice(0, 2).toUpperCase();
       }
-    });
+    },
+    error: (err) => {
+      console.error('Không thể lấy thông tin người dùng hiện tại:', err);
+    }
+  });
   }
 
   logout(): void {
