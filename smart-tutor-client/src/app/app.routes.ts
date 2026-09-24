@@ -6,8 +6,27 @@ import { ResetPasswordComponent } from './modules/account/reset-password/reset-p
 import { MainLayoutComponent } from './shared/layouts/main-layout/main-layout.component';
 import { HomeComponent } from './pages/home/home.component';
 
+import { TeacherLayoutComponent } from './shared/layouts/teacher-layout/teacher-layout.component';
+import { ReportComponent } from './pages/report/report.component';
+import { ClassesComponent } from './pages/classes/classes.component';
+import { ScheduleComponent } from './pages/schedule/schedule.component';
+import { StudentsComponent } from './pages/students/students.component';
+
 export const routes: Routes = [
-  // 1. Landing Page & Các trang dùng Main Layout (Header + Content + Footer)
+  // 1. Phân hệ Giáo viên (Teacher Portal Layout with child routes)
+  {
+    path: '',
+    component: TeacherLayoutComponent,
+    children: [
+      { path: 'report', component: ReportComponent },
+      { path: 'classes', component: ClassesComponent },
+      { path: 'schedule', component: ScheduleComponent },
+      { path: 'students', component: StudentsComponent },
+      { path: 'dashboard', redirectTo: 'report', pathMatch: 'full' }
+    ]
+  },
+
+  // 2. Landing Page & Các trang dùng Main Layout (Header + Content + Footer)
   {
     path: '',
     component: MainLayoutComponent,
@@ -17,12 +36,12 @@ export const routes: Routes = [
     ]
   },
 
-  // 2. Trang Xác thực (Login / Register / Forgot Password / Reset Password)
+  // 3. Trang Xác thực (Login / Register / Forgot Password / Reset Password)
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
 
-  // 3. Fallback route
+  // 4. Fallback route
   { path: '**', redirectTo: '' }
 ];
