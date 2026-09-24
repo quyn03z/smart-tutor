@@ -72,5 +72,9 @@ namespace SmartTutor.API.Controllers
                 .Success(await _userService.RefreshTokenAsync(tokenRequestModel)));
         }
 
+        [HttpGet("current-User")]
+
+
+
     }
 }
