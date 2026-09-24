@@ -26,5 +26,7 @@ namespace SmartTutor.BusinessLogic.Services.Impl
         Task<string> ResetPasswordAsync(ResetPassWordRequestModel request);
 
         Task<LoginResponseModel> RefreshTokenAsync(TokenRequestModel tokenRequestModel);
+
+        Task<CurentUserRespond> GetCurrentUserAsync();
     }
 }
