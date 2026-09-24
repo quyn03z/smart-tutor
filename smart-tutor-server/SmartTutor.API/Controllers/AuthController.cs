@@ -73,7 +73,10 @@ namespace SmartTutor.API.Controllers
         }
 
         [HttpGet("current-User")]
-
+        public async Task<IActionResult> GetCurrentUserAsync()
+        {
+            return Ok(ApiResult<CurentUserRespond>.Success(await _userService.GetCurrentUserAsync()));
+        }
 
 
     }
