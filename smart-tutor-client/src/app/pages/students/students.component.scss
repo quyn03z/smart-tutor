@@ -21,10 +21,15 @@ $emerald-700: #047857;
 $emerald-50: #ecfdf5;
 $emerald-100: #d1fae5;
 
+$indigo-600: #4f46e5;
+$indigo-700: #4338ca;
+$indigo-50: #eef2ff;
+$indigo-100: #e0e7ff;
+
 .students-tab-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .card {
@@ -33,40 +38,62 @@ $emerald-100: #d1fae5;
   border: 1px solid $slate-200;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    border-color: $slate-300;
+  }
 }
 
 .students-header-bar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 
   .students-title {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 800;
     color: $dark-900;
     margin: 0;
   }
 
   .section-subtitle {
-    font-size: 12px;
-    color: $slate-400;
-    margin-top: 2px;
+    font-size: 13px;
+    color: $slate-500;
+    margin-top: 4px;
   }
 
   .btn-add-student {
     background: $primary;
     color: #ffffff;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    padding: 9px 18px;
+    padding: 10px 20px;
     border-radius: 12px;
     border: none;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     transition: all 0.2s ease;
+
+    .plus-icon {
+      font-size: 16px;
+      font-weight: 800;
+    }
 
     &:hover {
       background: $primary-hover;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    &:active {
+      transform: scale(0.98);
     }
   }
 }
@@ -85,6 +112,7 @@ $emerald-100: #d1fae5;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  justify-content: space-between;
 
   .student-card-top {
     display: flex;
@@ -92,129 +120,190 @@ $emerald-100: #d1fae5;
     align-items: flex-start;
 
     .avatar-da {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 12px;
       background: $primary-light;
       color: $primary;
       font-weight: 800;
-      font-size: 14px;
+      font-size: 15px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid rgba(37, 99, 235, 0.2);
     }
 
     .avatar-mk {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 12px;
       background: #f3e8ff;
       color: #7e22ce;
       font-weight: 800;
-      font-size: 14px;
+      font-size: 15px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid rgba(126, 34, 206, 0.2);
     }
 
     .avatar-bt {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 12px;
       background: #fce7f3;
       color: #be185d;
       font-weight: 800;
-      font-size: 14px;
+      font-size: 15px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid rgba(190, 24, 93, 0.2);
     }
 
     .badge-type {
       background: $emerald-50;
       color: $emerald-700;
-      font-size: 10px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      font-size: 11px;
       font-weight: 700;
-      padding: 2px 8px;
+      padding: 3px 10px;
       border-radius: 9999px;
+
+      &.group-badge {
+        background: $indigo-50;
+        color: $indigo-700;
+        border-color: rgba(99, 102, 241, 0.3);
+      }
     }
   }
 
-  .student-card-name {
-    font-size: 14px;
-    font-weight: 800;
-    color: $dark-900;
-    margin: 0;
-  }
+  .student-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 
-  .student-card-sub {
-    font-size: 12px;
-    color: $slate-500;
-    margin-top: 4px;
-  }
+    .student-card-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: $dark-900;
+      margin: 0;
+    }
 
-  .student-card-parent {
-    font-size: 11px;
-    color: $slate-400;
-    margin-top: 4px;
+    .student-card-sub {
+      font-size: 12px;
+      color: $slate-600;
+      line-height: 1.4;
+
+      .text-blue {
+        color: $primary;
+        font-weight: 800;
+      }
+    }
+
+    .student-card-parent {
+      font-size: 11px;
+      color: $slate-500;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+
+      .parent-name {
+        color: $slate-700;
+        font-weight: 600;
+      }
+    }
   }
 
   .student-card-bottom {
-    padding-top: 12px;
+    padding-top: 14px;
     border-top: 1px solid $slate-100;
 
     .btn-view-report-link {
       width: 100%;
-      padding: 8px;
+      padding: 9px 14px;
       background: $primary-light;
       color: $primary;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 12px;
       font-weight: 700;
       border: none;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       transition: all 0.2s ease;
 
       &:hover {
         background: #dbeafe;
+        transform: translateY(-1px);
       }
     }
   }
 }
 
-/* Modals */
+/* ================= MODAL THÊM HỌC SINH ================= */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(6px);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  animation: fadeIn 0.2s ease;
 }
 
 .modal-card {
   width: 100%;
-  max-width: 480px;
+  max-width: 540px;
   background: #ffffff;
   border-radius: 24px;
-  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   overflow: hidden;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
   .modal-header {
-    padding: 18px 24px;
+    padding: 20px 24px;
     border-bottom: 1px solid $slate-200;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: #ffffff;
 
-    .modal-title {
-      font-size: 16px;
-      font-weight: 800;
-      color: $dark-900;
-      margin: 0;
+    .modal-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .modal-icon-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: $primary-light;
+        color: $primary;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .modal-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: $dark-900;
+        margin: 0;
+      }
+
+      .modal-subtitle {
+        font-size: 11px;
+        color: $slate-500;
+        margin: 2px 0 0;
+      }
     }
 
     .btn-close-modal {
@@ -223,8 +312,9 @@ $emerald-100: #d1fae5;
       font-size: 18px;
       color: $slate-400;
       cursor: pointer;
-      padding: 4px;
-      border-radius: 6px;
+      padding: 6px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
 
       &:hover {
         color: $dark-900;
@@ -237,7 +327,45 @@ $emerald-100: #d1fae5;
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
+    max-height: 75vh;
+    overflow-y: auto;
+
+    /* Class Type Toggle */
+    .class-type-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: $slate-100;
+      padding: 4px;
+      border-radius: 12px;
+
+      .type-btn {
+        background: transparent;
+        border: none;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        color: $slate-600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+
+        .type-icon {
+          font-size: 14px;
+        }
+
+        &.active {
+          background: #ffffff;
+          color: $primary;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+      }
+    }
 
     .form-group {
       display: flex;
@@ -247,21 +375,89 @@ $emerald-100: #d1fae5;
       .modal-label {
         font-size: 12px;
         font-weight: 700;
-        color: $dark-700;
+        color: $slate-700;
+
+        &.required::after {
+          content: ' *';
+          color: #ef4444;
+        }
       }
 
-      .form-input {
+      .label-with-hint {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .fee-formatted-preview {
+          font-size: 11px;
+          font-weight: 800;
+          color: $primary;
+          background: $primary-light;
+          padding: 2px 8px;
+          border-radius: 6px;
+        }
+      }
+
+      .form-input,
+      .form-select {
         background: $slate-50;
         border: 1px solid $slate-300;
         border-radius: 12px;
-        padding: 10px 12px;
-        font-size: 12px;
+        padding: 11px 14px;
+        font-size: 13px;
+        color: $dark-900;
         outline: none;
+        transition: all 0.2s ease;
 
         &:focus {
           background: #ffffff;
           border-color: $primary;
           box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        &::placeholder {
+          color: $slate-400;
+        }
+      }
+    }
+
+    /* Quick Fee Pills */
+    .quick-fee-pills {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+
+      .quick-fee-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: $slate-400;
+        text-transform: uppercase;
+      }
+
+      .fee-pill {
+        background: $slate-100;
+        border: 1px solid $slate-200;
+        color: $slate-600;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        &:hover {
+          background: $primary-light;
+          color: $primary;
+          border-color: $primary;
+        }
+
+        &.active {
+          background: $primary-light;
+          color: $primary;
+          border-color: $primary;
+          font-weight: 700;
         }
       }
     }
@@ -279,41 +475,68 @@ $emerald-100: #d1fae5;
     border-top: 1px solid $slate-200;
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 12px;
 
     .btn-modal-cancel {
       background: transparent;
       border: 1px solid $slate-300;
       color: $slate-700;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
-      padding: 9px 16px;
+      padding: 10px 18px;
       border-radius: 10px;
       cursor: pointer;
+      transition: all 0.2s ease;
 
-      &:hover {
+      &:hover:not(:disabled) {
         background: #ffffff;
+        border-color: $slate-400;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
       }
     }
 
     .btn-modal-submit {
       background: $primary;
       color: #ffffff;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
-      padding: 9px 18px;
+      padding: 10px 22px;
       border-radius: 10px;
       border: none;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
 
-      &:hover {
+      &:hover:not(:disabled) {
         background: $primary-hover;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+      }
+
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #ffffff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
       }
     }
   }
 }
 
+/* ================= TOAST FLOATING ================= */
 .toast-floating {
   position: fixed;
   bottom: 24px;
@@ -326,8 +549,8 @@ $emerald-100: #d1fae5;
   align-items: center;
   gap: 12px;
   z-index: 200;
-  max-width: 420px;
-  border-left: 4px solid $emerald-500;
+  max-width: 440px;
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 
   .toast-content {
     display: flex;
@@ -343,15 +566,29 @@ $emerald-100: #d1fae5;
       justify-content: center;
       font-size: 12px;
       font-weight: 800;
-      background: $emerald-100;
-      color: $emerald-700;
     }
 
     .toast-text {
       font-size: 12px;
       font-weight: 600;
       color: $dark-900;
+      line-height: 1.4;
     }
+  }
+
+  &.toast-success {
+    border-left: 4px solid $emerald-500;
+    .toast-icon { background: $emerald-100; color: $emerald-700; }
+  }
+
+  &.toast-warning {
+    border-left: 4px solid #f59e0b;
+    .toast-icon { background: #fef3c7; color: #b45309; }
+  }
+
+  &.toast-info {
+    border-left: 4px solid $primary;
+    .toast-icon { background: $primary-light; color: $primary; }
   }
 
   .btn-close-toast {
@@ -361,5 +598,28 @@ $emerald-100: #d1fae5;
     font-size: 14px;
     cursor: pointer;
     padding: 2px 4px;
+
+    &:hover {
+      color: $dark-900;
+    }
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
