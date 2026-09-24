@@ -1,0 +1,78 @@
+<div class="students-tab-container">
+  <div class="students-header-bar">
+    <div>
+      <h2 class="students-title">Quản lý Học sinh Cá Nhân & Gia sư 1-1</h2>
+      <p class="section-subtitle">Cài đặt đơn giá và lịch học của từng học sinh</p>
+    </div>
+    <button type="button" (click)="openAddStudentModal()" class="btn-add-student">
+      + Thêm Học Sinh Mới
+    </button>
+  </div>
+
+  <div class="students-cards-grid">
+    <div *ngFor="let s of students" class="card student-info-card">
+      <div class="student-card-top">
+        <div [class]="s.avatarClass">{{ s.avatar }}</div>
+        <span class="badge-type">Gia sư 1-1</span>
+      </div>
+      <div>
+        <h3 class="student-card-name">{{ s.name }}</h3>
+        <div class="student-card-sub">{{ s.grade }} • Đơn giá: <strong>{{ s.ratePerSession }}</strong></div>
+        <div class="student-card-parent">Phụ huynh: {{ s.parentPhone }}</div>
+      </div>
+      <div class="student-card-bottom">
+        <button type="button" (click)="viewReport(s.id)" class="btn-view-report-link">
+          Xem Báo Cáo Tháng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: THÊM HỌC SINH MỚI -->
+  <div *ngIf="isAddStudentModalOpen" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">+ Thêm Học Sinh Mới</h3>
+        <button type="button" class="btn-close-modal" (click)="closeAddStudentModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="modal-label">Họ và tên học sinh:</label>
+          <input type="text" [(ngModel)]="newStudentName" class="form-input" placeholder="Ví dụ: Lê Tuấn Minh">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="modal-label">Môn học & Khối lớp:</label>
+            <input type="text" [(ngModel)]="newStudentGrade" class="form-input" placeholder="Ví dụ: Toán Lớp 9">
+          </div>
+
+          <div class="form-group">
+            <label class="modal-label">Đơn giá / buổi (VNĐ):</label>
+            <input type="number" [(ngModel)]="newStudentRate" class="form-input" step="10000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="modal-label">Số điện thoại Phụ huynh:</label>
+          <input type="text" [(ngModel)]="newStudentPhone" class="form-input" placeholder="Ví dụ: 0988.xxx.xxx">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" (click)="closeAddStudentModal()">Hủy</button>
+        <button type="button" class="btn-modal-submit" (click)="submitAddStudent()">Lưu Học Sinh</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING TOAST -->
+  <div *ngIf="toastMessage" class="toast-floating" [class]="'toast-' + toastType">
+    <div class="toast-content">
+      <span class="toast-icon">✓</span>
+      <span class="toast-text">{{ toastMessage }}</span>
+    </div>
+    <button type="button" class="btn-close-toast" (click)="closeToast()">✕</button>
+  </div>
+</div>
