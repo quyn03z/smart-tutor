@@ -72,7 +72,9 @@ namespace SmartTutor.API.Controllers
                 .Success(await _userService.RefreshTokenAsync(tokenRequestModel)));
         }
 
-        [HttpGet("current-User")]
+
+        [Authorize]
+        [HttpGet("current-user")]
         public async Task<IActionResult> GetCurrentUserAsync()
         {
             return Ok(ApiResult<CurentUserRespond>.Success(await _userService.GetCurrentUserAsync()));
