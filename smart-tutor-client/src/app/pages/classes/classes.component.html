@@ -1,0 +1,151 @@
+<div class="classes-tab-container">
+  <!-- Top banner thông tin lớp & Thống kê thu chi -->
+  <div class="card class-banner-card">
+    <div class="class-info-block">
+      <div class="class-header-chips">
+        <h2 class="class-title">Lớp Toán 9A (Chuyên Đề Vào 10)</h2>
+        <span class="chip-indigo">12 Học sinh</span>
+        <span class="chip-emerald">80.000đ / buổi</span>
+      </div>
+      <p class="class-schedule-text">
+        Lịch học cố định: <strong>Thứ 3 & Thứ 5 (18:00 - 20:00)</strong> • Phòng học: Tầng 2 / Trực tiếp
+      </p>
+    </div>
+
+    <div class="class-revenue-block">
+      <div class="revenue-box">
+        <div class="rev-label">Dự kiến thu tháng 8</div>
+        <div class="rev-val">7.680.000 đ</div>
+      </div>
+      <button type="button" (click)="exportBatchReports()" class="btn-batch-export">
+        <span>📦</span> Xuất Phiếu Thu Cả Lớp
+      </button>
+    </div>
+  </div>
+
+  <!-- BẢNG ĐIỂM DANH HÀNG LOẠT (BULK LOGGING CHO 10-20 HS TRONG 30 GIÂY) -->
+  <div class="card bulk-attendance-card">
+    <div class="attendance-top-bar">
+      <div>
+        <h3 class="attendance-title">
+          <span class="dot-live"></span> Điểm Danh Ca Dạy Hôm Nay: Thứ 3 (04/08/2026)
+        </h3>
+        <p class="section-subtitle">Nhập nội dung chung 1 lần, hệ thống tự đồng bộ vào thẻ của từng em</p>
+      </div>
+
+      <!-- Nút hành động nhanh -->
+      <div class="fast-action-group">
+        <button type="button" (click)="setAllAttendance('present')" class="btn-fast-green">
+          ✓ Đánh dấu tất cả có mặt
+        </button>
+        <button type="button" (click)="setAllHW('100%')" class="btn-fast-blue">
+          ✓ BTVN 100% cả lớp
+        </button>
+      </div>
+    </div>
+
+    <!-- Nội dung bài học chung của cả lớp -->
+    <div class="common-lesson-box">
+      <label class="common-label">Nội dung bài học chung ca hôm nay (Áp dụng cho 12 em):</label>
+      <input 
+        type="text" 
+        [(ngModel)]="classLessonTopic"
+        class="form-input" 
+        placeholder="Nhập tên chuyên đề hoặc bài học ca hôm nay...">
+    </div>
+
+    <!-- Danh sách học sinh trong lớp -->
+    <div class="table-responsive">
+      <table class="session-table class-table">
+        <thead>
+          <tr>
+            <th>STT & Học Sinh</th>
+            <th>Chuyên cần</th>
+            <th class="col-center">BTVN</th>
+            <th>Thái độ</th>
+            <th>Ghi chú riêng cho phụ huynh</th>
+            <th class="col-right">Thẻ cá nhân</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of classStudents">
+            <td>
+              <div class="student-cell">
+                <span class="stt-num">{{ s.stt }}</span>
+                <div class="student-mini-avatar">{{ s.avatar }}</div>
+                <strong class="student-mini-name">{{ s.name }}</strong>
+              </div>
+            </td>
+            <td>
+              <div class="attendance-toggle-group">
+                <button 
+                  type="button" 
+                  class="btn-status-chip present" 
+                  [class.selected]="s.status === 'present'"
+                  (click)="s.status = 'present'">
+                  Có mặt
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-status-chip excused" 
+                  [class.selected]="s.status === 'excused'"
+                  (click)="s.status = 'excused'">
+                  Nghỉ phép
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-status-chip unexcused" 
+                  [class.selected]="s.status === 'unexcused'"
+                  (click)="s.status = 'unexcused'">
+                  Vắng
+                </button>
+              </div>
+            </td>
+            <td class="col-center">
+              <select [(ngModel)]="s.homework" class="select-hw-compact">
+                <option value="100%">100%</option>
+                <option value="90%">90%</option>
+                <option value="80%">80%</option>
+                <option value="50%">50%</option>
+                <option value="0%">0%</option>
+                <option value="--">--</option>
+              </select>
+            </td>
+            <td>
+              <input type="text" [(ngModel)]="s.attitude" class="input-attitude-compact">
+            </td>
+            <td>
+              <input type="text" [(ngModel)]="s.note" placeholder="Nhập ghi chú riêng..." class="input-note-compact">
+            </td>
+            <td class="col-right">
+              <button 
+                type="button" 
+                class="btn-view-card-link"
+                (click)="viewStudentCard(s.id)">
+                Xem thẻ ›
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="attendance-footer-bar">
+      <span class="footer-count-text">
+        Đã điểm danh: <strong>{{ classStudents.length - 1 }}/{{ classStudents.length }} có mặt</strong> (1 nghỉ phép)
+      </span>
+      <button type="button" (click)="saveClassAttendance()" class="btn-save-attendance">
+        Lưu Điểm Danh & Tự Động Tính Tiền Lớp Học
+      </button>
+    </div>
+  </div>
+
+  <!-- FLOATING TOAST -->
+  <div *ngIf="toastMessage" class="toast-floating" [class]="'toast-' + toastType">
+    <div class="toast-content">
+      <span class="toast-icon">✓</span>
+      <span class="toast-text">{{ toastMessage }}</span>
+    </div>
+    <button type="button" class="btn-close-toast" (click)="closeToast()">✕</button>
+  </div>
+</div>
