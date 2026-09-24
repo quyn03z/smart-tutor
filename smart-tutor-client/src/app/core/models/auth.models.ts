@@ -46,3 +46,9 @@ export interface UserSession {
   role: string;
   email?: string;
 }
+
+export interface CurrentUserResponse {
+  fullName: string;
+  bankCode: string;
+  bankAccountNumber: string;
+}
