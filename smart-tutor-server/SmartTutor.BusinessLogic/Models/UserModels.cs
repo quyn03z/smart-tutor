@@ -12,6 +12,13 @@ namespace SmartTutor.BusinessLogic.Models
             public int Id { get; set; }
         }
 
+        public class CurentUserRespond
+        {
+            public string FullName { get; set; } = string.Empty;
+            public string BankCode { get; set; } = string.Empty;
+            public string BankAccountNumber { get; set; } = string.Empty;
+        }
+
         public class CreateUserModel
         {
             [Required(ErrorMessage = "Tên nhập là bắt buộc.")]
