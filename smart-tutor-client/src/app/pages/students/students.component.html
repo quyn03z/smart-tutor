@@ -11,8 +11,25 @@
     </button>
   </div>
 
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state card">
+    <div class="spinner-large"></div>
+    <p>Đang tải danh sách học sinh từ cơ sở dữ liệu...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && students.length === 0" class="empty-state card">
+    <div class="empty-icon">👥</div>
+    <h3>Chưa có học sinh nào trong cơ sở dữ liệu</h3>
+    <p>Bắt đầu thêm học sinh để quản lý điểm danh, học phí và xuất báo cáo tự động.</p>
+    <button type="button" (click)="openAddStudentModal()" class="btn-add-student mt-2">
+      <span class="plus-icon">+</span>
+      <span>Thêm Học Sinh Đầu Tiên</span>
+    </button>
+  </div>
+
   <!-- Danh sách thẻ học sinh -->
-  <div class="students-cards-grid">
+  <div *ngIf="!isLoading && students.length > 0" class="students-cards-grid">
     <div *ngFor="let s of students" class="card student-info-card">
       <div class="student-card-top">
         <div [class]="s.avatarClass">{{ s.avatar }}</div>
@@ -22,9 +39,10 @@
       </div>
 
       <div class="student-card-body">
-        <h3 class="student-card-name">{{ s.name }}</h3>
+        <h3 class="student-card-name">{{ s.fullName }}</h3>
         <div class="student-card-sub">
-          <strong>{{ s.className }}</strong> ({{ s.grade }}) • Đơn giá: <strong class="text-blue">{{ s.ratePerSession }}</strong>
+          <div><strong>{{ s.className }}</strong> ({{ s.gradeLevel }})</div>
+          <div>Đơn giá: <strong class="text-blue">{{ s.feePerSession | number:'1.0-0' }}đ/buổi</strong></div>
         </div>
         <div class="student-card-parent">
           <span *ngIf="s.parentName" class="parent-name">{{ s.parentName }} - </span>
