@@ -18,6 +18,20 @@ export interface StudentCardItem {
   parentPhone: string;
 }
 
+export interface DisplayCardItem {
+  id: string;
+  isGroup: boolean;
+  title: string;
+  avatar: string;
+  avatarClass: string;
+  gradeLevel: string;
+  className?: string;
+  feePerSession: number;
+  parentName?: string;
+  parentPhone?: string;
+  students?: StudentCardItem[];
+}
+
 @Component({
   selector: 'app-students',
   standalone: true,
@@ -29,7 +43,11 @@ export class StudentsComponent implements OnInit {
   students: StudentCardItem[] = [];
   isLoading = false;
 
-  // Modal State & Form Model (đồng bộ với RequestStudentModel ở backend)
+  // Modal Chi Tiết Lớp Nhóm
+  selectedGroupClass: DisplayCardItem | null = null;
+  isViewClassModalOpen = false;
+
+  // Modal Thêm Học Sinh & Form Model (đồng bộ với RequestStudentModel ở backend)
   isAddStudentModalOpen = false;
   isSubmitting = false;
 
@@ -66,6 +84,58 @@ export class StudentsComponent implements OnInit {
     this.loadMyStudents();
   }
 
+  // Danh sách thẻ hiển thị thống nhất trên giao diện
+  get displayCards(): DisplayCardItem[] {
+    const cards: DisplayCardItem[] = [];
+    const groupMap = new Map<string, StudentCardItem[]>();
+    const individualList: StudentCardItem[] = [];
+
+    this.students.forEach(s => {
+      if (s.classType === 'Group') {
+        const key = (s.className || 'Lớp Nhóm').trim();
+        if (!groupMap.has(key)) {
+          groupMap.set(key, []);
+        }
+        groupMap.get(key)!.push(s);
+      } else {
+        individualList.push(s);
+      }
+    });
+
+    // Thẻ Lớp nhóm
+    groupMap.forEach((groupStudents, className) => {
+      const first = groupStudents[0];
+      cards.push({
+        id: 'group_' + className,
+        isGroup: true,
+        title: className,
+        avatar: this.getClassInitials(className),
+        avatarClass: 'avatar-mk',
+        gradeLevel: first.gradeLevel || 'Lớp 9',
+        feePerSession: first.feePerSession || 80000,
+        students: groupStudents
+      });
+    });
+
+    // Thẻ Học sinh 1-1
+    individualList.forEach(s => {
+      cards.push({
+        id: s.id,
+        isGroup: false,
+        title: s.fullName,
+        avatar: s.avatar,
+        avatarClass: s.avatarClass,
+        gradeLevel: s.gradeLevel,
+        className: s.className,
+        feePerSession: s.feePerSession,
+        parentName: s.parentName,
+        parentPhone: s.parentPhone
+      });
+    });
+
+    return cards;
+  }
+
   loadMyStudents(): void {
     this.isLoading = true;
     this.studentService.getMyStudents().subscribe({
@@ -73,6 +143,12 @@ export class StudentsComponent implements OnInit {
         this.isLoading = false;
         if (res?.succeeded && res.result) {
           this.students = res.result.map(apiStudent => this.mapBackendStudent(apiStudent));
+          if (this.selectedGroupClass) {
+            const updated = this.displayCards.find(c => c.id === this.selectedGroupClass?.id);
+            if (updated) {
+              this.selectedGroupClass = updated;
+            }
+          }
         } else {
           this.students = [];
         }
@@ -87,18 +163,29 @@ export class StudentsComponent implements OnInit {
   }
 
   viewReport(studentId: string): void {
+    this.closeGroupClassModal();
     this.router.navigate(['/report'], { queryParams: { student: studentId } });
   }
 
-  openAddStudentModal(): void {
+  openGroupClassDetails(item: DisplayCardItem): void {
+    this.selectedGroupClass = item;
+    this.isViewClassModalOpen = true;
+  }
+
+  closeGroupClassModal(): void {
+    this.isViewClassModalOpen = false;
+    this.selectedGroupClass = null;
+  }
+
+  openAddStudentModal(defaultType: 'Individual' | 'Group' = 'Individual'): void {
     this.formData = {
       fullName: '',
-      className: 'Toán Lớp 9',
-      classType: 'Individual',
+      className: defaultType === 'Group' ? 'Lớp Toán Nhóm' : 'Toán Lớp 9',
+      classType: defaultType,
       gradeLevel: 'Lớp 9',
       parentName: '',
       parentPhone: '',
-      feePerSession: 120000
+      feePerSession: defaultType === 'Group' ? 80000 : 120000
     };
     this.isSubmitting = false;
     this.isAddStudentModalOpen = true;
@@ -121,7 +208,11 @@ export class StudentsComponent implements OnInit {
 
   onGradeChange(): void {
     if (this.formData.gradeLevel) {
-      this.formData.className = `Toán ${this.formData.gradeLevel}`;
+      if (this.formData.classType === 'Group') {
+        this.formData.className = `Lớp Toán Nhóm ${this.formData.gradeLevel}`;
+      } else {
+        this.formData.className = `Toán ${this.formData.gradeLevel}`;
+      }
     }
   }
 
@@ -133,7 +224,6 @@ export class StudentsComponent implements OnInit {
 
     this.isSubmitting = true;
 
-    // Chuẩn bị payload chuẩn RequestStudentModel
     const payload: RequestStudentModel = {
       fullName: this.formData.fullName.trim(),
       className: this.formData.className?.trim() || `Môn học ${this.formData.gradeLevel}`,
@@ -141,10 +231,9 @@ export class StudentsComponent implements OnInit {
       gradeLevel: this.formData.gradeLevel || 'Lớp 9',
       parentName: this.formData.parentName?.trim() || '',
       parentPhone: this.formData.parentPhone?.trim() || '',
-      feePerSession: Number(this.formData.feePerSession) || 120000
+      feePerSession: Number(this.formData.feePerSession) || (this.formData.classType === 'Group' ? 80000 : 120000)
     };
 
-    // Gọi API Backend: POST /api/students/create
     this.studentService.createStudent(payload).subscribe({
       next: (res) => {
         this.isSubmitting = false;
@@ -175,10 +264,17 @@ export class StudentsComponent implements OnInit {
       gradeLevel: res.gradeLevel || 'Lớp 9',
       className: res.className || 'Toán',
       classType: res.classType || 'Individual',
-      feePerSession: res.feePerSession ?? 120000,
+      feePerSession: res.feePerSession ?? (res.classType === 'Group' ? 80000 : 120000),
       parentName: res.parentName,
       parentPhone: res.parentPhone || 'Chưa cập nhật'
     };
+  }
+
+  private getClassInitials(name: string): string {
+    if (!name) return 'LN';
+    const words = name.trim().split(' ').filter(w => !!w);
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
   }
 
   private getInitials(name: string): string {

@@ -652,6 +652,26 @@ $indigo-100: #e0e7ff;
   }
 }
 
+.modal-class-details {
+  max-width: 720px;
+
+  .modal-students-body {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .modal-students-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

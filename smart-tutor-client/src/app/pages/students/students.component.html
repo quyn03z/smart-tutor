@@ -14,12 +14,11 @@
   <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-state card">
     <div class="spinner-large"></div>
-    <p>Đang tải danh sách học sinh từ cơ sở dữ liệu...</p>
+    <p>Đang tải danh sách từ cơ sở dữ liệu...</p>
   </div>
 
   <!-- Empty State -->
-  <div *ngIf="!isLoading && students.length === 0" class="empty-state card">
-    <div class="empty-icon">👥</div>
+  <div *ngIf="!isLoading && displayCards.length === 0" class="empty-state card">
     <h3>Chưa có học sinh nào trong cơ sở dữ liệu</h3>
     <p>Bắt đầu thêm học sinh để quản lý điểm danh, học phí và xuất báo cáo tự động.</p>
     <button type="button" (click)="openAddStudentModal()" class="btn-add-student mt-2">
@@ -28,34 +27,132 @@
     </button>
   </div>
 
-  <!-- Danh sách thẻ học sinh -->
-  <div *ngIf="!isLoading && students.length > 0" class="students-cards-grid">
-    <div *ngFor="let s of students" class="card student-info-card">
+  <!-- Danh sách thẻ học sinh & lớp học thống nhất -->
+  <div *ngIf="!isLoading && displayCards.length > 0" class="students-cards-grid">
+    <div *ngFor="let item of displayCards" class="card student-info-card">
       <div class="student-card-top">
-        <div [class]="s.avatarClass">{{ s.avatar }}</div>
-        <span class="badge-type" [class.group-badge]="s.classType === 'Group'">
-          {{ s.classType === 'Group' ? 'Lớp nhóm' : 'Gia sư 1-1' }}
+        <div [class]="item.avatarClass">{{ item.avatar }}</div>
+        <span class="badge-type" [class.group-badge]="item.isGroup">
+          {{ item.isGroup ? 'Lớp nhóm' : 'Gia sư 1-1' }}
         </span>
       </div>
 
       <div class="student-card-body">
-        <h3 class="student-card-name">{{ s.fullName }}</h3>
+        <h3 class="student-card-name">{{ item.title }}</h3>
+        
         <div class="student-card-sub">
-          <div><strong>{{ s.className }}</strong> ({{ s.gradeLevel }})</div>
-          <div>Đơn giá: <strong class="text-blue">{{ s.feePerSession | number:'1.0-0' }}đ/buổi</strong></div>
+          <!-- Nếu là Lớp nhóm -->
+          <div *ngIf="item.isGroup">
+            Khối: <strong>{{ item.gradeLevel }}</strong> • Sĩ số: <strong>{{ item.students?.length }} học sinh</strong>
+          </div>
+          <!-- Nếu là 1-1 -->
+          <div *ngIf="!item.isGroup">
+            <strong>{{ item.className }}</strong> ({{ item.gradeLevel }})
+          </div>
+
+          <div>Đơn giá: <strong class="text-blue">{{ item.feePerSession | number:'1.0-0' }}đ/buổi</strong></div>
         </div>
+
         <div class="student-card-parent">
-          <span *ngIf="s.parentName" class="parent-name">{{ s.parentName }} - </span>
-          <span>SĐT: {{ s.parentPhone }}</span>
+          <ng-container *ngIf="!item.isGroup">
+            <span *ngIf="item.parentName" class="parent-name">{{ item.parentName }} - </span>
+            <span>SĐT: {{ item.parentPhone }}</span>
+          </ng-container>
+          <ng-container *ngIf="item.isGroup">
+            <span>Danh sách lớp ({{ item.students?.length }} học sinh)</span>
+          </ng-container>
         </div>
       </div>
 
       <div class="student-card-bottom">
-        <button type="button" (click)="viewReport(s.id)" class="btn-view-report-link">
+        <!-- Nút 1-1: Xem Báo Cáo Tháng -->
+        <button 
+          *ngIf="!item.isGroup"
+          type="button" 
+          (click)="viewReport(item.id)" 
+          class="btn-view-report-link">
           <span>Xem Báo Cáo Tháng</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
+        </button>
+
+        <!-- Nút Lớp nhóm: Xem Danh Sách Học Sinh -->
+        <button 
+          *ngIf="item.isGroup"
+          type="button" 
+          (click)="openGroupClassDetails(item)" 
+          class="btn-view-report-link">
+          <span>Xem Danh Sách Học Sinh</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: DANH SÁCH HỌC SINH TRONG LỚP NHÓM ================= -->
+  <div *ngIf="isViewClassModalOpen && selectedGroupClass" class="modal-backdrop">
+    <div class="modal-card modal-class-details">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="modal-title">{{ selectedGroupClass.title }}</h3>
+            <p class="modal-subtitle">
+              Khối: <strong>{{ selectedGroupClass.gradeLevel }}</strong> • Đơn giá: <strong class="text-blue">{{ selectedGroupClass.feePerSession | number:'1.0-0' }}đ/buổi</strong> • Sĩ số: <strong>{{ selectedGroupClass.students?.length }} học sinh</strong>
+            </p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" (click)="closeGroupClassModal()" title="Đóng">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body modal-students-body">
+        <div class="modal-students-grid">
+          <div *ngFor="let s of selectedGroupClass.students" class="card student-info-card">
+            <div class="student-card-top">
+              <div [class]="s.avatarClass">{{ s.avatar }}</div>
+              <span class="badge-type group-badge">Lớp nhóm</span>
+            </div>
+
+            <div class="student-card-body">
+              <h3 class="student-card-name">{{ s.fullName }}</h3>
+              <div class="student-card-sub">
+                <div><strong>{{ s.className }}</strong> ({{ s.gradeLevel }})</div>
+                <div>Đơn giá: <strong class="text-blue">{{ s.feePerSession | number:'1.0-0' }}đ/buổi</strong></div>
+              </div>
+              <div class="student-card-parent">
+                <span *ngIf="s.parentName" class="parent-name">{{ s.parentName }} - </span>
+                <span>SĐT: {{ s.parentPhone }}</span>
+              </div>
+            </div>
+
+            <div class="student-card-bottom">
+              <button type="button" (click)="viewReport(s.id)" class="btn-view-report-link">
+                <span>Xem Báo Cáo Tháng</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" (click)="closeGroupClassModal()">
+          Đóng
         </button>
       </div>
     </div>
@@ -131,12 +228,12 @@
           </div>
 
           <div class="form-group">
-            <label class="modal-label">Tên môn / Chuyên đề:</label>
+            <label class="modal-label">Tên lớp / Môn học:</label>
             <input 
               type="text" 
               [(ngModel)]="formData.className" 
               class="form-input" 
-              placeholder="Ví dụ: Toán Lớp 9">
+              placeholder="Ví dụ: Toán Lớp 9 hoặc Toán Luyện thi Đại học">
           </div>
         </div>
 
