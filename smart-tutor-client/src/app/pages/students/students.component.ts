@@ -7,14 +7,13 @@ import { RequestStudentModel, StudentsResponseModel } from '../../core/models/st
 
 export interface StudentCardItem {
   id: string;
-  name: string;
+  fullName: string;
   avatar: string;
   avatarClass: string;
-  grade: string;
+  gradeLevel: string;
   className: string;
-  classType: 'Individual' | 'Group';
-  ratePerSession: string;
-  rawRate: number;
+  classType: string;
+  feePerSession: number;
   parentName?: string;
   parentPhone: string;
 }
@@ -27,47 +26,8 @@ export interface StudentCardItem {
   styleUrl: './students.component.scss'
 })
 export class StudentsComponent implements OnInit {
-  students: StudentCardItem[] = [
-    {
-      id: 'duyanh',
-      name: 'Nguyễn Duy Anh',
-      avatar: 'DA',
-      avatarClass: 'avatar-da',
-      grade: 'Lớp 9',
-      className: 'Toán Lớp 9',
-      classType: 'Individual',
-      ratePerSession: '120.000đ/b',
-      rawRate: 120000,
-      parentName: 'Bác Hùng',
-      parentPhone: '0988.123.xxx'
-    },
-    {
-      id: 'minhkhang',
-      name: 'Trần Minh Khang',
-      avatar: 'MK',
-      avatarClass: 'avatar-mk',
-      grade: 'Lớp 11',
-      className: 'Hình Lớp 11',
-      classType: 'Individual',
-      ratePerSession: '150.000đ/b',
-      rawRate: 150000,
-      parentName: 'Cô Lan',
-      parentPhone: '0912.456.xxx'
-    },
-    {
-      id: 'baotram',
-      name: 'Lê Bảo Trâm',
-      avatar: 'BT',
-      avatarClass: 'avatar-bt',
-      grade: 'Lớp 8',
-      className: 'Toán Lớp 8',
-      classType: 'Individual',
-      ratePerSession: '120.000đ/b',
-      rawRate: 120000,
-      parentName: 'Chị Mai',
-      parentPhone: '0973.999.xxx'
-    }
-  ];
+  students: StudentCardItem[] = [];
+  isLoading = false;
 
   // Modal State & Form Model (đồng bộ với RequestStudentModel ở backend)
   isAddStudentModalOpen = false;
@@ -107,19 +67,21 @@ export class StudentsComponent implements OnInit {
   }
 
   loadMyStudents(): void {
+    this.isLoading = true;
     this.studentService.getMyStudents().subscribe({
       next: (res) => {
-        if (res?.succeeded && res.result && res.result.length > 0) {
-          // Map backend students into local list, avoiding duplicates
-          res.result.forEach(apiStudent => {
-            if (!this.students.some(s => s.id === apiStudent.id.toString())) {
-              this.students.unshift(this.mapBackendStudent(apiStudent));
-            }
-          });
+        this.isLoading = false;
+        if (res?.succeeded && res.result) {
+          this.students = res.result.map(apiStudent => this.mapBackendStudent(apiStudent));
+        } else {
+          this.students = [];
         }
       },
-      error: () => {
-        // Backend not running or token expired; fallback to local mock data seamlessly
+      error: (err) => {
+        this.isLoading = false;
+        this.students = [];
+        console.error('Lỗi khi tải danh sách học sinh:', err);
+        this.showToast('Không thể kết nối đến máy chủ để tải danh sách học sinh', 'warning');
       }
     });
   }
@@ -190,52 +152,30 @@ export class StudentsComponent implements OnInit {
           const newStudent = this.mapBackendStudent(res.result);
           this.students.unshift(newStudent);
           this.closeAddStudentModal();
-          this.showToast(`✓ Đã lưu thành công học sinh ${newStudent.name} vào hệ thống!`, 'success');
+          this.showToast(`✓ Đã lưu thành công học sinh ${newStudent.fullName} vào hệ thống!`, 'success');
         } else {
-          // Fallback if backend responded without result
-          this.addLocalStudent(payload);
+          this.showToast(res?.message || 'Có lỗi xảy ra khi tạo học sinh', 'warning');
         }
       },
-      error: () => {
-        // Fallback local adding to avoid breaking teacher's flow
+      error: (err) => {
         this.isSubmitting = false;
-        this.addLocalStudent(payload);
+        const msg = err?.error?.message || 'Không thể lưu học sinh vào hệ thống. Vui lòng thử lại!';
+        this.showToast(msg, 'warning');
       }
     });
-  }
-
-  private addLocalStudent(payload: RequestStudentModel): void {
-    const initials = this.getInitials(payload.fullName);
-    const newStudent: StudentCardItem = {
-      id: 'hs_' + Date.now(),
-      name: payload.fullName,
-      avatar: initials,
-      avatarClass: this.getRandomAvatarClass(),
-      grade: payload.gradeLevel || 'Lớp 9',
-      className: payload.className || 'Toán',
-      classType: (payload.classType as 'Individual' | 'Group') || 'Individual',
-      ratePerSession: (payload.feePerSession || 120000).toLocaleString('vi-VN') + 'đ/b',
-      rawRate: payload.feePerSession || 120000,
-      parentName: payload.parentName,
-      parentPhone: payload.parentPhone || 'Chưa cập nhật'
-    };
-    this.students.unshift(newStudent);
-    this.closeAddStudentModal();
-    this.showToast(`✓ Đã tạo thành công học sinh ${newStudent.name}!`, 'success');
   }
 
   private mapBackendStudent(res: StudentsResponseModel): StudentCardItem {
     const initials = this.getInitials(res.fullName);
     return {
-      id: res.id.toString(),
-      name: res.fullName,
+      id: res.id ? res.id.toString() : '',
+      fullName: res.fullName || 'Học sinh',
       avatar: initials,
       avatarClass: this.getRandomAvatarClass(),
-      grade: res.gradeLevel || 'Lớp 9',
+      gradeLevel: res.gradeLevel || 'Lớp 9',
       className: res.className || 'Toán',
-      classType: (res.classType as 'Individual' | 'Group') || 'Individual',
-      ratePerSession: (res.feePerSession || 120000).toLocaleString('vi-VN') + 'đ/b',
-      rawRate: res.feePerSession || 120000,
+      classType: res.classType || 'Individual',
+      feePerSession: res.feePerSession ?? 120000,
       parentName: res.parentName,
       parentPhone: res.parentPhone || 'Chưa cập nhật'
     };
