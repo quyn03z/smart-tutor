@@ -64,6 +64,10 @@ export class StudentsComponent implements OnInit {
   // Trạng thái chọn lớp có sẵn hoặc tạo lớp mới
   selectedExistingClassName: string = '';
 
+  // Chính sách học phí: 'default' (theo giá chung của lớp) | 'custom' (tùy chỉnh riêng cho học sinh)
+  feePolicy: 'default' | 'custom' = 'default';
+  classDefaultFee: number = 80000;
+
   formData: RequestStudentModel = {
     fullName: '',
     className: 'Toán Lớp 9',
@@ -223,10 +227,12 @@ export class StudentsComponent implements OnInit {
   openAddStudentModal(defaultType: 'Individual' | 'Group' = 'Individual'): void {
     this.isEditMode = false;
     this.editingStudentId = null;
+    this.feePolicy = 'default';
 
     if (defaultType === 'Group' && this.existingGroupClasses.length > 0) {
       const first = this.existingGroupClasses[0];
       this.selectedExistingClassName = first.className;
+      this.classDefaultFee = first.feePerSession;
       this.formData = {
         fullName: '',
         className: first.className,
@@ -238,6 +244,7 @@ export class StudentsComponent implements OnInit {
       };
     } else {
       this.selectedExistingClassName = defaultType === 'Group' ? '__NEW__' : '';
+      this.classDefaultFee = defaultType === 'Group' ? 80000 : 120000;
       this.formData = {
         fullName: '',
         className: defaultType === 'Group' ? 'Lớp Toán Nhóm 9A' : 'Toán Lớp 9',
@@ -263,9 +270,18 @@ export class StudentsComponent implements OnInit {
 
     if (classType === 'Group') {
       const match = this.existingGroupClasses.find(c => c.className === className);
-      this.selectedExistingClassName = match ? match.className : '__NEW__';
+      if (match) {
+        this.selectedExistingClassName = match.className;
+        this.classDefaultFee = match.feePerSession;
+        this.feePolicy = (student.feePerSession === match.feePerSession) ? 'default' : 'custom';
+      } else {
+        this.selectedExistingClassName = '__NEW__';
+        this.classDefaultFee = student.feePerSession || 80000;
+        this.feePolicy = 'default';
+      }
     } else {
       this.selectedExistingClassName = '';
+      this.feePolicy = 'default';
     }
 
     this.formData = {
@@ -287,9 +303,18 @@ export class StudentsComponent implements OnInit {
     this.isClassDropdownOpen = false;
   }
 
+  // Chuyển đổi chính sách giá: theo giá chung hoặc tùy chỉnh riêng
+  setFeePolicy(policy: 'default' | 'custom'): void {
+    this.feePolicy = policy;
+    if (policy === 'default') {
+      this.formData.feePerSession = this.classDefaultFee;
+    }
+  }
+
   // Chuyển đổi giữa 1-1 và Lớp nhóm
   selectClassType(type: 'Individual' | 'Group'): void {
     this.formData.classType = type;
+    this.feePolicy = 'default';
     if (type === 'Group') {
       if (this.existingGroupClasses.length > 0) {
         const first = this.existingGroupClasses[0];
@@ -331,13 +356,18 @@ export class StudentsComponent implements OnInit {
     this.selectedExistingClassName = cls.className;
     this.formData.className = cls.className;
     this.formData.gradeLevel = cls.gradeLevel;
-    this.formData.feePerSession = cls.feePerSession;
+    this.classDefaultFee = cls.feePerSession;
+    if (this.feePolicy === 'default') {
+      this.formData.feePerSession = cls.feePerSession;
+    }
     this.closeClassDropdown();
   }
 
   // Chọn tạo lớp mới
   selectCreateNewClass(): void {
     this.selectedExistingClassName = '__NEW__';
+    this.feePolicy = 'default';
+    this.classDefaultFee = 80000;
     if (!this.isEditMode) {
       this.formData.className = this.formData.gradeLevel ? `Lớp Toán Nhóm ${this.formData.gradeLevel}` : 'Lớp Toán Nhóm Mới';
       this.formData.feePerSession = 80000;
