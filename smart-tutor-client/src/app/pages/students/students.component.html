@@ -268,8 +268,75 @@
             autofocus>
         </div>
 
-        <!-- Khối lớp & Tên môn học -->
-        <div class="form-row-2">
+        <!-- CHỌN LỚP NHÓM CÓ SẴN (CUSTOM DROPDOWN HIỆN ĐẠI, ĐẸP MẮT) -->
+        <div class="form-group" *ngIf="formData.classType === 'Group'">
+          <label class="modal-label required">Chọn lớp học nhóm:</label>
+
+          <div class="custom-select-container">
+            <!-- Nút bấm mở Dropdown -->
+            <button 
+              type="button" 
+              class="custom-select-trigger" 
+              [class.open]="isClassDropdownOpen"
+              (click)="toggleClassDropdown($event)">
+              <div class="selected-text-group">
+                <span class="selected-main-title" *ngIf="selectedExistingClassName && selectedExistingClassName !== '__NEW__'">
+                  {{ formData.className }}
+                </span>
+                <span class="selected-main-title text-primary-action" *ngIf="selectedExistingClassName === '__NEW__'">
+                  + Tạo một lớp nhóm mới
+                </span>
+                <span class="selected-badge" *ngIf="selectedExistingClassName && selectedExistingClassName !== '__NEW__'">
+                  {{ formData.gradeLevel }} • {{ formData.feePerSession | number:'1.0-0' }}đ/buổi
+                </span>
+              </div>
+              <svg class="chevron-arrow" [class.rotated]="isClassDropdownOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <!-- Menu danh sách lớp xổ xuống -->
+            <div class="custom-select-menu" *ngIf="isClassDropdownOpen">
+              <div class="menu-scroll-container">
+                <div 
+                  *ngFor="let cls of existingGroupClasses" 
+                  class="custom-select-option"
+                  [class.active]="selectedExistingClassName === cls.className"
+                  (click)="selectExistingClass(cls)">
+                  <div class="option-left">
+                    <div class="option-title">{{ cls.className }}</div>
+                    <div class="option-sub">{{ cls.gradeLevel }} • Sĩ số: {{ cls.studentCount }} em • {{ cls.feePerSession | number:'1.0-0' }}đ/buổi</div>
+                  </div>
+                  <div class="option-check" *ngIf="selectedExistingClassName === cls.className">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="menu-divider" *ngIf="existingGroupClasses.length > 0"></div>
+
+                <div 
+                  class="custom-select-option option-create-new"
+                  [class.active]="selectedExistingClassName === '__NEW__'"
+                  (click)="selectCreateNewClass()">
+                  <div class="option-left">
+                    <div class="option-title">+ Tạo một lớp nhóm mới khác...</div>
+                    <div class="option-sub">Tự nhập tên lớp, khối và đơn giá riêng</div>
+                  </div>
+                  <div class="option-check" *ngIf="selectedExistingClassName === '__NEW__'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Khối lớp & Tên môn học (Hiển thị khi là 1-1 hoặc khi chọn Tạo lớp nhóm mới) -->
+        <div class="form-row-2" *ngIf="formData.classType === 'Individual' || selectedExistingClassName === '__NEW__'">
           <div class="form-group">
             <label class="modal-label">Khối lớp:</label>
             <select 
@@ -281,7 +348,7 @@
           </div>
 
           <div class="form-group">
-            <label class="modal-label">Tên lớp / Môn học:</label>
+            <label class="modal-label required">Tên lớp / Môn học:</label>
             <input 
               type="text" 
               [(ngModel)]="formData.className" 
