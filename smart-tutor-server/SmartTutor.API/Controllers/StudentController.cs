@@ -49,7 +49,7 @@ namespace SmartTutor.API.Controllers
         }
 
 
-        [HttpDelete("studentId")]
+        [HttpDelete("{studentId}")]
         public async Task<IActionResult> DeleteStudentAsync(int studentId)
         {
             return Ok(ApiResult<string>

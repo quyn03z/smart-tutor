@@ -1,4 +1,4 @@
-using SmartTutor.BusinessLogic.Exceptions;
+﻿using SmartTutor.BusinessLogic.Exceptions;
 using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
 using SmartTutor.DataAccess.Claims;
@@ -83,7 +83,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
 
             return new StudentsResponseModel
             {
-                Id = createdStudent.Status,
+                Id = createdStudent.Id.ToString(),
                 FullName = createdStudent.FullName,
                 GradeLevel = createdStudent.GradeLevel,
                 ParentName = createdStudent.ParentName,
@@ -114,32 +114,62 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             
             var enrollment = student.ClassEnrollments.FirstOrDefault();
 
-            if(enrollment?.Class != null){
+            if (enrollment?.Class != null)
+            {
                 if (!string.IsNullOrWhiteSpace(requestStudentModel.ClassName))
                     enrollment.Class.ClassName = requestStudentModel.ClassName;
                 if (!string.IsNullOrWhiteSpace(requestStudentModel.ClassType))
                     enrollment.Class.ClassType = requestStudentModel.ClassType;
                 if (requestStudentModel.FeePerSession.HasValue)
-                    enrollment.Class.DefaultFeePerSession = requestStudentModel.FeePerSession.Value;    
+                {
+                    enrollment.Class.DefaultFeePerSession = requestStudentModel.FeePerSession.Value;
+                    enrollment.CustomFee = requestStudentModel.FeePerSession.Value;
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(requestStudentModel.ClassName))
+            {
+                var newClass = new Class
+                {
+                    UserId = userId.Value,
+                    ClassName = requestStudentModel.ClassName,
+                    ClassType = requestStudentModel.ClassType ?? AppEnums.ClassType.Individual.ToString(),
+                    DefaultFeePerSession = requestStudentModel.FeePerSession ?? 0,
+                    CreatedAt = DateTime.UtcNow
+                };
+                var newEnrollment = new ClassEnrollment
+                {
+                    Class = newClass,
+                    CustomFee = requestStudentModel.FeePerSession,
+                    JoinedDate = DateTime.UtcNow,
+                    Status = AppEnums.StudentStatus.Active.ToString()
+                };
+                student.ClassEnrollments.Add(newEnrollment);
+                enrollment = newEnrollment;
             }
 
             // Case 2: Chuyển sang lớp có sẵn từ danh sách
-            if(requestStudentModel.ClassId.HasValue && requestStudentModel.ClassId.Value > 0
-             && enrollment?.ClassId != requestStudentModel.ClassId.Value){
-                    enrollment?.ClassId = requestStudentModel.ClassId.Value;
+            if (requestStudentModel.ClassId.HasValue && requestStudentModel.ClassId.Value > 0
+             && enrollment?.ClassId != requestStudentModel.ClassId.Value)
+            {
+                if (enrollment != null)
+                {
+                    enrollment.ClassId = requestStudentModel.ClassId.Value;
+                    if (requestStudentModel.FeePerSession.HasValue)
+                        enrollment.CustomFee = requestStudentModel.FeePerSession.Value;
+                }
             }
 
             await _studentRepository.UpdateAsync(student);
             return new StudentsResponseModel
             {
-                Id = student.Status,
+                Id = student.Id.ToString(),
                 FullName = student.FullName,
                 GradeLevel = student.GradeLevel,
                 ParentName = student.ParentName,
                 ParentPhone = student.ParentPhone,
                 ClassName = enrollment?.Class?.ClassName,
                 ClassType = enrollment?.Class?.ClassType,
-                FeePerSession = enrollment?.CustomFee
+                FeePerSession = enrollment?.CustomFee ?? enrollment?.Class?.DefaultFeePerSession
             };
 
 
@@ -155,13 +185,14 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 var enrollment = s.ClassEnrollments.FirstOrDefault();
                 return new StudentsResponseModel
                     {
+                        Id = s.Id.ToString(),
                         FullName = s.FullName,
                         ParentName = s.ParentName,
                         ParentPhone = s.ParentPhone,
                         GradeLevel = s.GradeLevel,
-                        ClassName = enrollment.Class.ClassName,
-                        ClassType = enrollment.Class.ClassType,
-                        FeePerSession = enrollment.CustomFee,
+                        ClassName = enrollment?.Class?.ClassName,
+                        ClassType = enrollment?.Class?.ClassType,
+                        FeePerSession = enrollment?.CustomFee,
                 };
             });
             
