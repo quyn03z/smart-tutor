@@ -26,6 +26,7 @@ export interface DisplayCardItem {
   avatarClass: string;
   gradeLevel: string;
   className?: string;
+  classType?: string;
   feePerSession: number;
   parentName?: string;
   parentPhone?: string;
@@ -47,8 +48,10 @@ export class StudentsComponent implements OnInit {
   selectedGroupClass: DisplayCardItem | null = null;
   isViewClassModalOpen = false;
 
-  // Modal Thêm Học Sinh & Form Model (đồng bộ với RequestStudentModel ở backend)
-  isAddStudentModalOpen = false;
+  // Modal Thêm / Sửa Học Sinh
+  isStudentModalOpen = false;
+  isEditMode = false;
+  editingStudentId: number | null = null;
   isSubmitting = false;
 
   formData: RequestStudentModel = {
@@ -60,6 +63,11 @@ export class StudentsComponent implements OnInit {
     parentPhone: '',
     feePerSession: 120000
   };
+
+  // Modal Xóa Học Sinh
+  isDeleteModalOpen = false;
+  studentToDelete: { id: string; name: string } | null = null;
+  isDeleting = false;
 
   // Các mức học phí gợi ý nhanh
   quickFeeOptions = [80000, 100000, 120000, 150000, 200000];
@@ -112,6 +120,7 @@ export class StudentsComponent implements OnInit {
         avatar: this.getClassInitials(className),
         avatarClass: 'avatar-mk',
         gradeLevel: first.gradeLevel || 'Lớp 9',
+        classType: 'Group',
         feePerSession: first.feePerSession || 80000,
         students: groupStudents
       });
@@ -127,6 +136,7 @@ export class StudentsComponent implements OnInit {
         avatarClass: s.avatarClass,
         gradeLevel: s.gradeLevel,
         className: s.className,
+        classType: 'Individual',
         feePerSession: s.feePerSession,
         parentName: s.parentName,
         parentPhone: s.parentPhone
@@ -147,6 +157,8 @@ export class StudentsComponent implements OnInit {
             const updated = this.displayCards.find(c => c.id === this.selectedGroupClass?.id);
             if (updated) {
               this.selectedGroupClass = updated;
+            } else {
+              this.closeGroupClassModal();
             }
           }
         } else {
@@ -177,7 +189,10 @@ export class StudentsComponent implements OnInit {
     this.selectedGroupClass = null;
   }
 
+  // Mở modal Thêm mới
   openAddStudentModal(defaultType: 'Individual' | 'Group' = 'Individual'): void {
+    this.isEditMode = false;
+    this.editingStudentId = null;
     this.formData = {
       fullName: '',
       className: defaultType === 'Group' ? 'Lớp Toán Nhóm' : 'Toán Lớp 9',
@@ -188,11 +203,29 @@ export class StudentsComponent implements OnInit {
       feePerSession: defaultType === 'Group' ? 80000 : 120000
     };
     this.isSubmitting = false;
-    this.isAddStudentModalOpen = true;
+    this.isStudentModalOpen = true;
   }
 
-  closeAddStudentModal(): void {
-    this.isAddStudentModalOpen = false;
+  // Mở modal Chỉnh sửa
+  openEditStudentModal(student: StudentCardItem | DisplayCardItem): void {
+    this.isEditMode = true;
+    this.editingStudentId = Number(student.id);
+    this.formData = {
+      id: Number(student.id),
+      fullName: (student as StudentCardItem).fullName || (student as DisplayCardItem).title || '',
+      className: student.className || '',
+      classType: student.classType || 'Individual',
+      gradeLevel: student.gradeLevel || 'Lớp 9',
+      parentName: student.parentName || '',
+      parentPhone: student.parentPhone || '',
+      feePerSession: student.feePerSession || 120000
+    };
+    this.isSubmitting = false;
+    this.isStudentModalOpen = true;
+  }
+
+  closeStudentModal(): void {
+    this.isStudentModalOpen = false;
   }
 
   selectClassType(type: 'Individual' | 'Group'): void {
@@ -207,7 +240,7 @@ export class StudentsComponent implements OnInit {
   }
 
   onGradeChange(): void {
-    if (this.formData.gradeLevel) {
+    if (this.formData.gradeLevel && !this.isEditMode) {
       if (this.formData.classType === 'Group') {
         this.formData.className = `Lớp Toán Nhóm ${this.formData.gradeLevel}`;
       } else {
@@ -216,8 +249,9 @@ export class StudentsComponent implements OnInit {
     }
   }
 
-  submitAddStudent(): void {
-    if (!this.formData.fullName.trim()) {
+  // Lưu học sinh (Thêm mới hoặc Cập nhật)
+  submitStudentForm(): void {
+    if (!this.formData.fullName?.trim()) {
       this.showToast('Vui lòng nhập họ tên học sinh!', 'warning');
       return;
     }
@@ -225,6 +259,7 @@ export class StudentsComponent implements OnInit {
     this.isSubmitting = true;
 
     const payload: RequestStudentModel = {
+      id: this.editingStudentId || 0,
       fullName: this.formData.fullName.trim(),
       className: this.formData.className?.trim() || `Môn học ${this.formData.gradeLevel}`,
       classType: this.formData.classType || 'Individual',
@@ -234,21 +269,88 @@ export class StudentsComponent implements OnInit {
       feePerSession: Number(this.formData.feePerSession) || (this.formData.classType === 'Group' ? 80000 : 120000)
     };
 
-    this.studentService.createStudent(payload).subscribe({
+    if (this.isEditMode) {
+      this.studentService.editStudent(payload).subscribe({
+        next: (res) => {
+          this.isSubmitting = false;
+          if (res?.succeeded && res.result) {
+            const updated = this.mapBackendStudent(res.result);
+            const idx = this.students.findIndex(s => s.id === updated.id);
+            if (idx !== -1) {
+              this.students[idx] = updated;
+            } else {
+              this.loadMyStudents();
+            }
+            this.closeStudentModal();
+            this.showToast(`Đã cập nhật thành công thông tin học sinh ${updated.fullName}!`, 'success');
+          } else {
+            this.showToast(res?.message || 'Có lỗi khi cập nhật học sinh', 'warning');
+          }
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          const msg = err?.error?.message || 'Không thể lưu thay đổi vào hệ thống. Vui lòng thử lại!';
+          this.showToast(msg, 'warning');
+        }
+      });
+    } else {
+      this.studentService.createStudent(payload).subscribe({
+        next: (res) => {
+          this.isSubmitting = false;
+          if (res?.succeeded && res.result) {
+            const newStudent = this.mapBackendStudent(res.result);
+            this.students.unshift(newStudent);
+            this.closeStudentModal();
+            this.showToast(`✓ Đã lưu thành công học sinh ${newStudent.fullName} vào hệ thống!`, 'success');
+          } else {
+            this.showToast(res?.message || 'Có lỗi xảy ra khi tạo học sinh', 'warning');
+          }
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          const msg = err?.error?.message || 'Không thể lưu học sinh vào hệ thống. Vui lòng thử lại!';
+          this.showToast(msg, 'warning');
+        }
+      });
+    }
+  }
+
+  // Mở modal xác nhận xóa
+  openDeleteModal(student: StudentCardItem | DisplayCardItem): void {
+    const studentName = (student as StudentCardItem).fullName || (student as DisplayCardItem).title || '';
+    this.studentToDelete = {
+      id: student.id,
+      name: studentName
+    };
+    this.isDeleteModalOpen = true;
+  }
+
+  closeDeleteModal(): void {
+    this.isDeleteModalOpen = false;
+    this.studentToDelete = null;
+  }
+
+  // Thực hiện xóa học sinh
+  confirmDeleteStudent(): void {
+    if (!this.studentToDelete) return;
+
+    const studentId = this.studentToDelete.id;
+    this.isDeleting = true;
+
+    this.studentService.deleteStudent(studentId).subscribe({
       next: (res) => {
-        this.isSubmitting = false;
-        if (res?.succeeded && res.result) {
-          const newStudent = this.mapBackendStudent(res.result);
-          this.students.unshift(newStudent);
-          this.closeAddStudentModal();
-          this.showToast(`✓ Đã lưu thành công học sinh ${newStudent.fullName} vào hệ thống!`, 'success');
+        this.isDeleting = false;
+        if (res?.succeeded) {
+          this.students = this.students.filter(s => s.id !== studentId);
+          this.closeDeleteModal();
+          this.showToast('Đã xóa học sinh khỏi danh sách thành công!', 'success');
         } else {
-          this.showToast(res?.message || 'Có lỗi xảy ra khi tạo học sinh', 'warning');
+          this.showToast(res?.message || 'Không thể xóa học sinh', 'warning');
         }
       },
       error: (err) => {
-        this.isSubmitting = false;
-        const msg = err?.error?.message || 'Không thể lưu học sinh vào hệ thống. Vui lòng thử lại!';
+        this.isDeleting = false;
+        const msg = err?.error?.message || 'Có lỗi xảy ra khi xóa học sinh. Vui lòng thử lại!';
         this.showToast(msg, 'warning');
       }
     });
