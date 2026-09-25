@@ -35,4 +35,16 @@ export class StudentService {
       headers: this.getAuthHeaders()
     });
   }
+
+  editStudent(data: RequestStudentModel): Observable<ApiResult<StudentsResponseModel>> {
+    return this.http.put<ApiResult<StudentsResponseModel>>(`${this.apiUrl}/edit`, data, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  deleteStudent(studentId: number | string): Observable<ApiResult<string>> {
+    return this.http.delete<ApiResult<string>>(`${this.apiUrl}/${studentId}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
 }
