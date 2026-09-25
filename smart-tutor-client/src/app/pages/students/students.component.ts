@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -33,6 +33,13 @@ export interface DisplayCardItem {
   students?: StudentCardItem[];
 }
 
+export interface ExistingGroupClass {
+  className: string;
+  gradeLevel: string;
+  feePerSession: number;
+  studentCount: number;
+}
+
 @Component({
   selector: 'app-students',
   standalone: true,
@@ -53,6 +60,9 @@ export class StudentsComponent implements OnInit {
   isEditMode = false;
   editingStudentId: number | null = null;
   isSubmitting = false;
+
+  // Trạng thái chọn lớp có sẵn hoặc tạo lớp mới
+  selectedExistingClassName: string = '';
 
   formData: RequestStudentModel = {
     fullName: '',
@@ -90,6 +100,26 @@ export class StudentsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMyStudents();
+  }
+
+  // Danh sách các lớp nhóm hiện có trong cơ sở dữ liệu
+  get existingGroupClasses(): ExistingGroupClass[] {
+    const map = new Map<string, ExistingGroupClass>();
+    this.students.forEach(s => {
+      if (s.classType === 'Group' && s.className) {
+        const key = s.className.trim();
+        if (!map.has(key)) {
+          map.set(key, {
+            className: key,
+            gradeLevel: s.gradeLevel || 'Lớp 9',
+            feePerSession: s.feePerSession || 80000,
+            studentCount: 0
+          });
+        }
+        map.get(key)!.studentCount++;
+      }
+    });
+    return Array.from(map.values());
   }
 
   // Danh sách thẻ hiển thị thống nhất trên giao diện
@@ -193,15 +223,32 @@ export class StudentsComponent implements OnInit {
   openAddStudentModal(defaultType: 'Individual' | 'Group' = 'Individual'): void {
     this.isEditMode = false;
     this.editingStudentId = null;
-    this.formData = {
-      fullName: '',
-      className: defaultType === 'Group' ? 'Lớp Toán Nhóm' : 'Toán Lớp 9',
-      classType: defaultType,
-      gradeLevel: 'Lớp 9',
-      parentName: '',
-      parentPhone: '',
-      feePerSession: defaultType === 'Group' ? 80000 : 120000
-    };
+
+    if (defaultType === 'Group' && this.existingGroupClasses.length > 0) {
+      const first = this.existingGroupClasses[0];
+      this.selectedExistingClassName = first.className;
+      this.formData = {
+        fullName: '',
+        className: first.className,
+        classType: 'Group',
+        gradeLevel: first.gradeLevel,
+        parentName: '',
+        parentPhone: '',
+        feePerSession: first.feePerSession
+      };
+    } else {
+      this.selectedExistingClassName = defaultType === 'Group' ? '__NEW__' : '';
+      this.formData = {
+        fullName: '',
+        className: defaultType === 'Group' ? 'Lớp Toán Nhóm 9A' : 'Toán Lớp 9',
+        classType: defaultType,
+        gradeLevel: 'Lớp 9',
+        parentName: '',
+        parentPhone: '',
+        feePerSession: defaultType === 'Group' ? 80000 : 120000
+      };
+    }
+
     this.isSubmitting = false;
     this.isStudentModalOpen = true;
   }
@@ -210,11 +257,22 @@ export class StudentsComponent implements OnInit {
   openEditStudentModal(student: StudentCardItem | DisplayCardItem): void {
     this.isEditMode = true;
     this.editingStudentId = Number(student.id);
+    const fullName = (student as StudentCardItem).fullName || (student as DisplayCardItem).title || '';
+    const className = student.className || '';
+    const classType = student.classType || 'Individual';
+
+    if (classType === 'Group') {
+      const match = this.existingGroupClasses.find(c => c.className === className);
+      this.selectedExistingClassName = match ? match.className : '__NEW__';
+    } else {
+      this.selectedExistingClassName = '';
+    }
+
     this.formData = {
       id: Number(student.id),
-      fullName: (student as StudentCardItem).fullName || (student as DisplayCardItem).title || '',
-      className: student.className || '',
-      classType: student.classType || 'Individual',
+      fullName: fullName,
+      className: className,
+      classType: classType,
       gradeLevel: student.gradeLevel || 'Lớp 9',
       parentName: student.parentName || '',
       parentPhone: student.parentPhone || '',
@@ -226,13 +284,65 @@ export class StudentsComponent implements OnInit {
 
   closeStudentModal(): void {
     this.isStudentModalOpen = false;
+    this.isClassDropdownOpen = false;
   }
 
+  // Chuyển đổi giữa 1-1 và Lớp nhóm
   selectClassType(type: 'Individual' | 'Group'): void {
     this.formData.classType = type;
-    if (type === 'Group' && this.formData.feePerSession === 120000) {
+    if (type === 'Group') {
+      if (this.existingGroupClasses.length > 0) {
+        const first = this.existingGroupClasses[0];
+        this.selectExistingClass(first);
+      } else {
+        this.selectCreateNewClass();
+      }
+    } else {
+      this.selectedExistingClassName = '';
+      if (!this.isEditMode) {
+        this.formData.className = `Toán ${this.formData.gradeLevel || 'Lớp 9'}`;
+        this.formData.feePerSession = 120000;
+      }
+    }
+  }
+
+  // Trạng thái mở/đóng custom dropdown
+  isClassDropdownOpen = false;
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.custom-select-container')) {
+      this.isClassDropdownOpen = false;
+    }
+  }
+
+  toggleClassDropdown(event?: Event): void {
+    event?.stopPropagation();
+    this.isClassDropdownOpen = !this.isClassDropdownOpen;
+  }
+
+  closeClassDropdown(): void {
+    this.isClassDropdownOpen = false;
+  }
+
+  // Tích chọn lớp học có sẵn
+  selectExistingClass(cls: ExistingGroupClass): void {
+    this.selectedExistingClassName = cls.className;
+    this.formData.className = cls.className;
+    this.formData.gradeLevel = cls.gradeLevel;
+    this.formData.feePerSession = cls.feePerSession;
+    this.closeClassDropdown();
+  }
+
+  // Chọn tạo lớp mới
+  selectCreateNewClass(): void {
+    this.selectedExistingClassName = '__NEW__';
+    if (!this.isEditMode) {
+      this.formData.className = this.formData.gradeLevel ? `Lớp Toán Nhóm ${this.formData.gradeLevel}` : 'Lớp Toán Nhóm Mới';
       this.formData.feePerSession = 80000;
     }
+    this.closeClassDropdown();
   }
 
   setQuickFee(fee: number): void {
@@ -241,9 +351,9 @@ export class StudentsComponent implements OnInit {
 
   onGradeChange(): void {
     if (this.formData.gradeLevel && !this.isEditMode) {
-      if (this.formData.classType === 'Group') {
+      if (this.formData.classType === 'Group' && this.selectedExistingClassName === '__NEW__') {
         this.formData.className = `Lớp Toán Nhóm ${this.formData.gradeLevel}`;
-      } else {
+      } else if (this.formData.classType !== 'Group') {
         this.formData.className = `Toán ${this.formData.gradeLevel}`;
       }
     }
@@ -253,6 +363,11 @@ export class StudentsComponent implements OnInit {
   submitStudentForm(): void {
     if (!this.formData.fullName?.trim()) {
       this.showToast('Vui lòng nhập họ tên học sinh!', 'warning');
+      return;
+    }
+
+    if (!this.formData.className?.trim()) {
+      this.showToast('Vui lòng chọn hoặc nhập tên lớp học!', 'warning');
       return;
     }
 
@@ -301,7 +416,7 @@ export class StudentsComponent implements OnInit {
             const newStudent = this.mapBackendStudent(res.result);
             this.students.unshift(newStudent);
             this.closeStudentModal();
-            this.showToast(`✓ Đã lưu thành công học sinh ${newStudent.fullName} vào hệ thống!`, 'success');
+            this.showToast(`Đã lưu thành công học sinh ${newStudent.fullName} vào hệ thống!`, 'success');
           } else {
             this.showToast(res?.message || 'Có lỗi xảy ra khi tạo học sinh', 'warning');
           }
