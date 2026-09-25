@@ -357,10 +357,46 @@
           </div>
         </div>
 
-        <!-- Đơn giá học phí / buổi -->
-        <div class="form-group">
+        <!-- CHỌN CÁCH TÍNH TIỀN CHO HỌC SINH NÀY (KHI LÀ LỚP NHÓM) -->
+        <div class="form-group" *ngIf="formData.classType === 'Group' && selectedExistingClassName !== '__NEW__'">
+          <label class="modal-label">Cách tính học phí cho học sinh này:</label>
+          <div class="fee-policy-toggle">
+            <button 
+              type="button" 
+              class="policy-btn"
+              [class.active]="feePolicy === 'default'"
+              (click)="setFeePolicy('default')">
+              <div class="policy-radio">
+                <span class="policy-dot" *ngIf="feePolicy === 'default'"></span>
+              </div>
+              <div class="policy-text">
+                <strong class="policy-title">Theo giá chung của lớp</strong>
+                <span class="policy-sub">{{ classDefaultFee | number:'1.0-0' }}đ/buổi</span>
+              </div>
+            </button>
+
+            <button 
+              type="button" 
+              class="policy-btn"
+              [class.active]="feePolicy === 'custom'"
+              (click)="setFeePolicy('custom')">
+              <div class="policy-radio">
+                <span class="policy-dot" *ngIf="feePolicy === 'custom'"></span>
+              </div>
+              <div class="policy-text">
+                <strong class="policy-title">Tùy chỉnh giá riêng</strong>
+                <span class="policy-sub">Nhập mức giá riêng cho em này</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Đơn giá học phí / buổi (Hiển thị khi là 1-1, hoặc tạo lớp mới, hoặc chọn Tùy chỉnh giá riêng) -->
+        <div class="form-group" *ngIf="formData.classType === 'Individual' || selectedExistingClassName === '__NEW__' || feePolicy === 'custom'">
           <div class="label-with-hint">
-            <label class="modal-label required">Đơn giá học phí / buổi (VNĐ):</label>
+            <label class="modal-label required">
+              {{ (formData.classType === 'Group' && feePolicy === 'custom') ? 'Đơn giá học phí riêng (VNĐ):' : 'Đơn giá học phí / buổi (VNĐ):' }}
+            </label>
             <span class="fee-formatted-preview">{{ (formData.feePerSession || 0).toLocaleString('vi-VN') }} đ / buổi</span>
           </div>
           <input 
