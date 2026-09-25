@@ -98,6 +98,50 @@ $indigo-100: #e0e7ff;
   }
 }
 
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #ffffff;
+
+  .spinner-large {
+    width: 36px;
+    height: 36px;
+    border: 3px solid $slate-200;
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 4px;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: $dark-900;
+    margin: 0;
+  }
+
+  p {
+    font-size: 13px;
+    color: $slate-500;
+    max-width: 400px;
+    margin: 0;
+  }
+
+  .mt-2 {
+    margin-top: 8px;
+  }
+}
+
 .students-cards-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -194,6 +238,9 @@ $indigo-100: #e0e7ff;
       font-size: 12px;
       color: $slate-600;
       line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
 
       .text-blue {
         color: $primary;
