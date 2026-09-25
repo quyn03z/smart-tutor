@@ -519,15 +519,40 @@ export class StudentsComponent implements OnInit {
 
   private getClassInitials(name: string): string {
     if (!name) return 'LN';
-    const words = name.trim().split(' ').filter(w => !!w);
-    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+    // Loại bỏ nội dung trong dấu ngoặc (thường là lịch học, ghi chú: "( T3 - T7 )", "[buổi tối]")
+    let clean = name.replace(/\(.*?\)/g, ' ').replace(/\[.*?\]/g, ' ').replace(/\{.*?\}/g, ' ');
+    // Loại bỏ ký tự đặc biệt, giữ lại chữ cái và số
+    clean = clean.replace(/[^a-zA-Z0-9À-ỹà-ỹ\s]/g, ' ').trim();
+    const words = clean.split(/\s+/).filter(w => !!w);
+    
+    if (words.length === 0) return 'LN';
+    if (words.length === 1) return words[0].slice(0, 3).toUpperCase();
+    
+    // Tìm từ có chứa số (ví dụ: '12A', '9B', '10', '12')
+    const numWord = words.find(w => /\d/.test(w));
+    if (numWord) {
+      if (numWord.length <= 3 && numWord.length >= 2) {
+        return numWord.toUpperCase();
+      }
+      // Ghép chữ cái đầu môn học + số: ví dụ 'Toán 9' -> 'T9', 'Toán 12' -> 'T12'
+      const firstWordChar = words[0][0];
+      if (!/\d/.test(firstWordChar)) {
+        return (firstWordChar + numWord).toUpperCase().slice(0, 3);
+      }
+      return numWord.toUpperCase().slice(0, 3);
+    }
+    
+    // Nếu không có số, lấy chữ cái đầu của 2 từ đầu tiên (ví dụ: 'Toán Luyện thi...' -> 'TL', 'Tiếng Anh...' -> 'TA')
+    return (words[0][0] + words[1][0]).toUpperCase();
   }
 
   private getInitials(name: string): string {
     if (!name) return 'HS';
-    const words = name.trim().split(' ').filter(w => !!w);
+    const clean = name.replace(/[^a-zA-Z0-9À-ỹà-ỹ\s]/g, ' ').trim();
+    const words = clean.split(/\s+/).filter(w => !!w);
+    if (words.length === 0) return 'HS';
     if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    // Lấy 2 chữ cái đầu của 2 từ cuối họ tên (ví dụ: 'Trần Văn Nam' -> 'VN')
     return (words[words.length - 2][0] + words[words.length - 1][0]).toUpperCase();
   }
 
