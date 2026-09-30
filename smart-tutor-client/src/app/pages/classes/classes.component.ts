@@ -45,7 +45,7 @@ export class ClassesComponent implements OnInit {
   selectedClass: GroupClassInfo | null = null;
 
   openHwDropdownStudentId: string | null = null;
-  hwOptions: string[] = ['100%', '90%', '80%', '50%', '0%', '--'];
+  hwOptions: string[] = ['100%', '90%', '80%', '50%', '0%'];
 
   classLessonTopic = 'Chuyên đề: Giải bài toán bằng cách lập hệ phương trình (Dạng năng suất & chuyển động)';
   
