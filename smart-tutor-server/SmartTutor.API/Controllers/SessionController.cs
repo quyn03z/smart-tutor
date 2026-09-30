@@ -79,5 +79,12 @@ namespace SmartTutor.API.Controllers
                 .Success(await _sessionService.SaveClassSessionAttendanceAsync(request)));
         }
 
+        [HttpGet("class-attendance")]
+        public async Task<IActionResult> GetClassSessionAttendanceAsync([FromQuery] int? classId, [FromQuery] string? className, [FromQuery] DateTime? sessionDate)
+        {
+            return Ok(ApiResult<ClassSessionAttendanceDetailModel>
+                .Success(await _sessionService.GetClassSessionAttendanceAsync(classId, className, sessionDate)));
+        }
+
     }
 }

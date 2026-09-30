@@ -133,5 +133,16 @@ namespace SmartTutor.BusinessLogic.Models
             public string Message { get; set; } = string.Empty;
         }
 
+        public class ClassSessionAttendanceDetailModel
+        {
+            public int? SessionId { get; set; }
+            public int? ClassId { get; set; }
+            public string? ClassName { get; set; }
+            public DateTime SessionDate { get; set; }
+            public string? LessonContent { get; set; }
+            public bool HasRecorded { get; set; }
+            public List<StudentAttendanceUpdateItemModel> Attendances { get; set; } = new();
+        }
+
     }
 }
