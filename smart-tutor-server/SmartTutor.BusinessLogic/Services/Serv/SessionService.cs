@@ -149,17 +149,35 @@ namespace SmartTutor.BusinessLogic.Services.Serv
 
             var mySessions = await _sessionRepository.GetMyTeacherSessionsAsync(fromDate, toDate, userId.Value);
 
-            return mySessions.Select(s => new SessionRespondModel
+            return mySessions.Select(s =>
             {
-                Id = s.Id,
-                ClassId = s.ClassId,
-                ClassName = s.Class?.ClassName,
-                SessionDate = s.SessionDate,
-                StartTime = s.StartTime,
-                EndTime = s.EndTime,
-                DurationHours = s.DurationHours,
-                LessonContent = s.LessonContent,
-                Status = s.Status
+                var enrollments = s.Class?.ClassEnrollments?.ToList() ?? new List<ClassEnrollment>();
+                var firstStudent = enrollments.FirstOrDefault()?.Student;
+                var classType = s.Class?.ClassType ?? (enrollments.Count > 1 ? "Group" : "Individual");
+                var feePerSession = s.Class?.DefaultFeePerSession ?? 0;
+                var logs = s.AttendanceLogs?.ToList() ?? new List<AttendanceLog>();
+                var presentCount = logs.Count(l => string.Equals(l.AttendanceStatus, "Present", StringComparison.OrdinalIgnoreCase) || string.Equals(l.AttendanceStatus, "Có mặt", StringComparison.OrdinalIgnoreCase));
+                var hwScores = logs.Select(l => l.HomeworkScore).ToList();
+                int? avgHw = hwScores.Any() ? (int)Math.Round((double)hwScores.Average()) : null;
+
+                return new SessionRespondModel
+                {
+                    Id = s.Id,
+                    ClassId = s.ClassId,
+                    ClassName = s.Class?.ClassName,
+                    ClassType = classType,
+                    FeePerSession = feePerSession,
+                    StudentsCount = enrollments.Count,
+                    StudentName = firstStudent?.FullName,
+                    SessionDate = s.SessionDate,
+                    StartTime = s.StartTime,
+                    EndTime = s.EndTime,
+                    DurationHours = s.DurationHours,
+                    LessonContent = s.LessonContent,
+                    Status = s.Status,
+                    PresentCount = presentCount,
+                    AvgHomeworkScore = avgHw
+                };
             });
         }
 

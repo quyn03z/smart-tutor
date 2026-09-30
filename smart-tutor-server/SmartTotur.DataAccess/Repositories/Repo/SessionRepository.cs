@@ -17,7 +17,10 @@ namespace SmartTutor.DataAccess.Repositories.Repo
         public async Task<IEnumerable<Session>> GetMyTeacherSessionsAsync(DateOnly? fromDate, DateOnly? toDate, int? userId)
         {
             var query = _dbSet.Include(c => c.Class)
+                                    .ThenInclude(c => c!.ClassEnrollments)
+                                        .ThenInclude(ce => ce.Student)
                                 .Include(a => a.AttendanceLogs)
+                                    .ThenInclude(al => al.Student)
                                 .Where(x => x.Class.UserId == userId);
             if(fromDate.HasValue)
             {

@@ -3,11 +3,11 @@
   <div class="card schedule-toolbar-card">
     <div class="week-nav-group">
       <div class="btn-week-group">
-        <button type="button" (click)="prevWeek()" class="btn-week-step">‹ Tuần trước</button>
-        <button type="button" (click)="currentWeek()" class="btn-week-current">Hôm nay</button>
-        <button type="button" (click)="nextWeek()" class="btn-week-step">Tuần sau ›</button>
+        <button type="button" (click)="prevWeek()" class="btn-week-step" title="Tuần trước">‹ Tuần trước</button>
+        <button type="button" (click)="currentWeek()" class="btn-week-current" title="Về tuần hiện tại">Hôm nay</button>
+        <button type="button" (click)="nextWeek()" class="btn-week-step" title="Tuần tiếp theo">Tuần sau ›</button>
       </div>
-      <span class="week-label-title">Tháng 08, 2026 (Tuần 04/08 - 10/08)</span>
+      <span class="week-label-title">{{ weekRangeTitle }}</span>
     </div>
 
     <div class="view-switch-group">
@@ -33,133 +33,147 @@
     </div>
   </div>
 
-  <!-- Schedule Content 1: Agenda List View -->
-  <div *ngIf="scheduleView === 'list'" class="schedule-list-view">
-    <div class="agenda-section">
-      <div class="agenda-date-header">
-        <span class="pulse-blue-dot"></span>
-        <h3 class="agenda-date-title">HÔM NAY - THỨ HAI (04/08/2026)</h3>
-        <span class="agenda-count">• 2 ca dạy</span>
-      </div>
-
-      <!-- Ca 1: 1-1 -->
-      <div class="schedule-card-item border-left-emerald">
-        <div class="card-details">
-          <div class="card-title-row">
-            <span class="time-range">17:30 - 19:30</span>
-            <span class="status-tag-done">● Đã hoàn thành</span>
-            <span class="divider-v">|</span>
-            <span class="student-tag">Duy Anh (Toán Lớp 9)</span>
-            <span class="fee-tag">120.000 đ</span>
-          </div>
-          <p class="topic-desc"><span class="font-semibold text-slate-700">Nội dung:</span> Ôn tập phương pháp Giải bài toán bằng cách lập hệ phương trình.</p>
-        </div>
-        <div class="card-actions">
-          <button type="button" (click)="openAttendanceModal('Duy Anh', '17:30 - 19:30')" class="btn-edit-log">
-            Sửa nhật ký
-          </button>
-        </div>
-      </div>
-
-      <!-- Ca 2: Lớp lớn 12 học sinh -->
-      <div class="schedule-card-item border-left-indigo">
-        <div class="card-details">
-          <div class="card-title-row">
-            <span class="time-range">19:45 - 21:45</span>
-            <span class="status-tag-class">LỚP HỌC (12 HS)</span>
-            <span class="divider-v">|</span>
-            <span class="student-tag indigo">Lớp Toán 9A (Chuyên Đề Vào 10)</span>
-            <span class="fee-tag">80.000 đ/em</span>
-          </div>
-          <p class="topic-desc"><span class="font-semibold text-slate-700">Kế hoạch:</span> Luyện đề tổng hợp Hình học đường tròn.</p>
-        </div>
-        <div class="card-actions">
-          <button type="button" (click)="goToClasses()" class="btn-class-attendance">
-            Điểm danh cả lớp ›
-          </button>
-        </div>
-      </div>
-    </div>
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="schedule-loading-card">
+    <div class="spinner-blue"></div>
+    <span>Đang tải lịch dạy và ca học...</span>
   </div>
 
-  <!-- Schedule Content 2: Grid View tương tác -->
-  <div *ngIf="scheduleView === 'grid'" class="card schedule-grid-card">
+  <!-- ================= SCHEDULE CONTENT 1: AGENDA LIST VIEW ================= -->
+  <div *ngIf="!isLoading && scheduleView === 'list'" class="schedule-list-view">
+    
+    <ng-container *ngFor="let day of daysOfWeek">
+      <!-- Chỉ hiển thị ngày có ca học hoặc ngày hôm nay -->
+      <div class="agenda-section" *ngIf="day.sessions.length > 0 || day.isToday">
+        <div class="agenda-date-header">
+          <span class="pulse-blue-dot" *ngIf="day.isToday"></span>
+          <span class="dot-neutral" *ngIf="!day.isToday"></span>
+          <h3 class="agenda-date-title" [class.text-primary]="day.isToday">{{ day.fullTitle }}</h3>
+          <span class="agenda-count">• {{ day.sessions.length }} ca dạy</span>
+          <button type="button" (click)="quickAddSession(day.dateStr)" class="btn-quick-add-header" title="Thêm ca dạy cho ngày này">
+            + Thêm ca
+          </button>
+        </div>
+
+        <!-- Danh sách ca dạy trong ngày -->
+        <div class="day-sessions-stack" *ngIf="day.sessions.length > 0">
+          <div 
+            *ngFor="let s of day.sessions" 
+            class="schedule-card-item"
+            [ngClass]="s.borderClass">
+            
+            <div class="card-details">
+              <div class="card-title-row">
+                <span class="time-range">{{ s.timeRange }}</span>
+                <span [class]="s.status === 'Completed' ? 'status-tag-done' : 'status-tag-scheduled'">
+                  {{ s.statusTag }}
+                </span>
+                <span class="divider-v">|</span>
+
+                <!-- Badge phân biệt Lớp học / Gia sư 1-1 -->
+                <ng-container *ngIf="s.classType === 'Group'">
+                  <span class="status-tag-class">LỚP HỌC ({{ s.studentsCount }} HS)</span>
+                  <span class="student-tag indigo">{{ s.className }}</span>
+                  <span class="fee-tag">{{ s.feePerSession | number:'1.0-0' }} đ/em</span>
+                </ng-container>
+
+                <ng-container *ngIf="s.classType === 'Individual'">
+                  <span class="status-tag-individual">GIA SƯ 1-1</span>
+                  <span class="student-tag">{{ s.studentName }}</span>
+                  <span class="fee-tag">{{ s.feePerSession | number:'1.0-0' }} đ</span>
+                </ng-container>
+              </div>
+
+              <p class="topic-desc">
+                <span class="font-semibold text-slate-700">Nội dung:</span> {{ s.lessonContent }}
+              </p>
+            </div>
+
+            <div class="card-actions">
+              <!-- Nếu là lớp nhóm: Nút Điểm danh cả lớp dẫn sang /classes -->
+              <button 
+                *ngIf="s.classType === 'Group'" 
+                type="button" 
+                (click)="goToClassAttendance(s)" 
+                class="btn-class-attendance">
+                Điểm danh cả lớp ›
+              </button>
+
+              <!-- Nếu là gia sư 1-1: Nút Sửa nhật ký mở popup điểm danh cá nhân -->
+              <button 
+                *ngIf="s.classType === 'Individual'" 
+                type="button" 
+                (click)="openAttendanceModal(s)" 
+                class="btn-edit-log">
+                {{ s.status === 'Completed' ? 'Sửa nhật ký' : 'Điểm danh ca dạy' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trạng thái trống của ngày hôm nay nếu chưa có ca -->
+        <div *ngIf="day.sessions.length === 0" class="empty-day-notice">
+          <span>Hôm nay chưa có lịch dạy nào được xếp.</span>
+          <button type="button" (click)="quickAddSession(day.dateStr)" class="btn-link-add">
+            + Lên lịch ca dạy ngay
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+  </div>
+
+  <!-- ================= SCHEDULE CONTENT 2: GRID VIEW (LƯỚI TUẦN) ================= -->
+  <div *ngIf="!isLoading && scheduleView === 'grid'" class="card schedule-grid-card">
     <div class="grid-week-container">
-      <div class="day-header active">Thứ 2 (04/08)</div>
-      <div class="day-header">Thứ 3 (05/08)</div>
-      <div class="day-header">Thứ 4 (06/08)</div>
-      <div class="day-header">Thứ 5 (07/08)</div>
-      <div class="day-header">Thứ 6 (08/08)</div>
-      <div class="day-header">Thứ 7 (09/08)</div>
-      <div class="day-header">Chủ nhật (10/08)</div>
-
-      <!-- Thứ 2 -->
-      <div class="day-column day-active">
-        <div class="session-box green" (click)="openAttendanceModal('Duy Anh', '17:30 - 19:30')">
-          <div class="session-time">17:30 - 19:30</div>
-          <div class="session-who">Duy Anh (Lớp 9)</div>
-          <div class="session-stat">✓ Xong (70% BTVN)</div>
+      
+      <!-- Cột thứ tự 7 ngày -->
+      <div *ngFor="let day of daysOfWeek" class="day-grid-wrapper">
+        <div class="day-header" [class.active]="day.isToday">
+          <span class="day-header-title">{{ day.dayName }}</span>
+          <span *ngIf="day.isToday" class="badge-today-mini">Hôm nay</span>
         </div>
 
-        <div class="session-box indigo" (click)="goToClasses()">
-          <div class="session-time">19:45 - 21:45</div>
-          <div class="session-who">Lớp Toán 9A (12 HS)</div>
-          <div class="session-stat">● Điểm danh cả lớp ›</div>
-        </div>
+        <div class="day-column" [class.day-active]="day.isToday">
+          
+          <!-- Các ca học trong ngày -->
+          <div 
+            *ngFor="let s of day.sessions"
+            class="session-box"
+            [ngClass]="s.status === 'Completed' ? 'green' : (s.classType === 'Group' ? 'indigo' : 'blue')"
+            (click)="s.classType === 'Group' ? goToClassAttendance(s) : openAttendanceModal(s)"
+            [title]="s.lessonContent || s.className">
+            
+            <div class="session-time">{{ s.timeRange }}</div>
+            <div class="session-who">
+              {{ s.classType === 'Group' ? s.className + ' (' + s.studentsCount + ' HS)' : s.studentName }}
+            </div>
+            <div class="session-stat">
+              <span *ngIf="s.status === 'Completed'">
+                ✓ Xong {{ s.avgHomeworkScore !== null ? '(' + s.avgHomeworkScore + '% BTVN)' : '' }}
+              </span>
+              <span *ngIf="s.status !== 'Completed'">
+                {{ s.classType === 'Group' ? '● Điểm danh cả lớp ›' : '● Chưa điểm danh' }}
+              </span>
+            </div>
+          </div>
 
-        <button type="button" (click)="quickAddSession('2026-08-04')" class="btn-quick-add-day">
-          + Thêm ca
-        </button>
-      </div>
-
-      <!-- Các ngày còn lại -->
-      <div class="day-column" (click)="quickAddSession('2026-08-05')">
-        <div class="empty-day-slot">
-          <span class="slot-plus">+ Thêm ca</span>
-          <span class="slot-day-name">Thứ 3 (05/08)</span>
-        </div>
-      </div>
-
-      <div class="day-column" (click)="quickAddSession('2026-08-06')">
-        <div class="empty-day-slot">
-          <span class="slot-plus">+ Thêm ca</span>
-          <span class="slot-day-name">Thứ 4 (06/08)</span>
-        </div>
-      </div>
-
-      <div class="day-column" (click)="quickAddSession('2026-08-07')">
-        <div class="empty-day-slot">
-          <span class="slot-plus">+ Thêm ca</span>
-          <span class="slot-day-name">Thứ 5 (07/08)</span>
+          <!-- Nút thêm ca nhanh ở chân cột -->
+          <button 
+            type="button" 
+            (click)="quickAddSession(day.dateStr)" 
+            class="btn-quick-add-day">
+            + Thêm ca
+          </button>
         </div>
       </div>
 
-      <div class="day-column" (click)="quickAddSession('2026-08-08')">
-        <div class="empty-day-slot">
-          <span class="slot-plus">+ Thêm ca</span>
-          <span class="slot-day-name">Thứ 6 (08/08)</span>
-        </div>
-      </div>
-
-      <div class="day-column" (click)="quickAddSession('2026-08-09')">
-        <div class="empty-day-slot">
-          <span class="slot-plus">+ Thêm ca</span>
-          <span class="slot-day-name">Thứ 7 (09/08)</span>
-        </div>
-      </div>
-
-      <div class="day-column" (click)="quickAddSession('2026-08-10')">
-        <div class="empty-day-slot">
-          <span class="slot-plus">+ Thêm ca</span>
-          <span class="slot-day-name">Chủ nhật (10/08)</span>
-        </div>
-      </div>
     </div>
   </div>
 
-  <!-- MODAL: THÊM CA DẠY MỚI -->
-  <div *ngIf="isAddSessionModalOpen" class="modal-backdrop">
-    <div class="modal-card">
+  <!-- ================= MODAL: THÊM CA DẠY MỚI ================= -->
+  <div *ngIf="isAddSessionModalOpen" class="modal-backdrop" (click)="closeAddSessionModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title">+ Thêm Ca Dạy Mới</h3>
         <button type="button" class="btn-close-modal" (click)="closeAddSessionModal()">✕</button>
@@ -167,44 +181,133 @@
 
       <div class="modal-body">
         <div class="form-group">
-          <label class="modal-label">Ngày học (dd/mm):</label>
-          <input type="text" [(ngModel)]="newSessionDate" class="form-input" placeholder="Ví dụ: 18/08">
+          <label class="modal-label">Lớp học / Học sinh phụ trách:</label>
+          <select [(ngModel)]="selectedAddClassId" class="form-select">
+            <option *ngFor="let opt of availableClasses" [value]="opt.classId">
+              {{ opt.displayName }} ({{ opt.feePerSession | number:'1.0-0' }}đ)
+            </option>
+          </select>
         </div>
 
         <div class="form-group">
-          <label class="modal-label">Nội dung bài học:</label>
-          <input type="text" [(ngModel)]="newSessionTopic" class="form-input" placeholder="Nhập chuyên đề, bài tập...">
+          <label class="modal-label">Ngày dạy:</label>
+          <input type="date" [(ngModel)]="newSessionDate" class="form-input">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="modal-label">Giờ bắt đầu:</label>
+            <input type="time" [(ngModel)]="newSessionStartTime" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="modal-label">Giờ kết thúc:</label>
+            <input type="time" [(ngModel)]="newSessionEndTime" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="modal-label">Nội dung / Chuyên đề bài học:</label>
+          <input 
+            type="text" 
+            [(ngModel)]="newSessionTopic" 
+            class="form-input" 
+            placeholder="Ví dụ: Ôn tập phương trình bậc hai, luyện đề thi thử...">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-modal-cancel" (click)="closeAddSessionModal()" [disabled]="isSubmittingSession">
+          Hủy
+        </button>
+        <button type="button" class="btn-modal-submit" (click)="submitAddSession()" [disabled]="isSubmittingSession">
+          <span>{{ isSubmittingSession ? 'Đang lưu...' : 'Lưu Ca Dạy' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: NHẬT KÝ & ĐIỂM DANH CA DẠY 1-1 ================= -->
+  <div *ngIf="isAttendanceModalOpen && activeSession" class="modal-backdrop" (click)="closeAttendanceModal()">
+    <div class="modal-card modal-attendance-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Nhật Ký Ca Dạy: {{ activeSession.studentName }}</h3>
+          <p class="modal-subtitle">{{ activeSession.sessionDate }} • {{ activeSession.timeRange }}</p>
+        </div>
+        <button type="button" class="btn-close-modal" (click)="closeAttendanceModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="modal-label">Nội dung bài học ca dạy:</label>
+          <input type="text" [(ngModel)]="activeLessonTopic" class="form-input" placeholder="Nhập bài giảng hôm nay...">
+        </div>
+
+        <div class="form-group">
+          <label class="modal-label">Chuyên cần:</label>
+          <div class="attendance-toggle-chips">
+            <button 
+              type="button" 
+              class="chip-status present" 
+              [class.active]="activeAttendanceStatus === 'present'"
+              (click)="activeAttendanceStatus = 'present'">
+              Có mặt
+            </button>
+            <button 
+              type="button" 
+              class="chip-status excused" 
+              [class.active]="activeAttendanceStatus === 'excused'"
+              (click)="activeAttendanceStatus = 'excused'">
+              Nghỉ phép
+            </button>
+            <button 
+              type="button" 
+              class="chip-status unexcused" 
+              [class.active]="activeAttendanceStatus === 'unexcused'"
+              (click)="activeAttendanceStatus = 'unexcused'">
+              Vắng
+            </button>
+          </div>
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
             <label class="modal-label">Hoàn thành BTVN:</label>
-            <select [(ngModel)]="newSessionHw" class="form-select">
-              <option value="100%">100%</option>
-              <option value="85%">85%</option>
-              <option value="70%">70%</option>
-              <option value="50%">50%</option>
-              <option value="0%">Chưa làm</option>
-              <option value="--">Không có BTVN</option>
+            <select [(ngModel)]="activeHw" class="form-select">
+              <option *ngFor="let opt of hwOptions" [value]="opt">{{ opt }}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="modal-label">Ý thức học:</label>
-            <select [(ngModel)]="newSessionAttitude" class="form-select">
-              <option value="Tốt">Tốt</option>
-              <option value="Chăm chỉ">Chăm chỉ</option>
-              <option value="Cần tập trung">Cần tập trung</option>
-              <option value="Lười học">Lười học</option>
-              <option value="Nói chuyện">Nói chuyện</option>
+            <label class="modal-label">Ý thức học tập:</label>
+            <select [(ngModel)]="activeAttitude" class="form-select">
+              <option *ngFor="let att of attitudeOptions" [value]="att">{{ att }}</option>
             </select>
           </div>
         </div>
+
+        <div class="form-group">
+          <label class="modal-label">Ghi chú / Nhận xét riêng cho phụ huynh:</label>
+          <textarea 
+            [(ngModel)]="activeNote" 
+            class="form-textarea" 
+            rows="3" 
+            placeholder="Nhập nhận xét về buổi học, điểm cần cải thiện..."></textarea>
+        </div>
       </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn-modal-cancel" (click)="closeAddSessionModal()">Hủy</button>
-        <button type="button" class="btn-modal-submit" (click)="submitAddSession()">Lưu Ca Dạy</button>
+      <div class="modal-footer modal-footer-split">
+        <button type="button" class="btn-delete-session" (click)="deleteActiveSession()" [disabled]="isSavingLog">
+          Xóa ca dạy
+        </button>
+        <div class="footer-right-group">
+          <button type="button" class="btn-modal-cancel" (click)="closeAttendanceModal()" [disabled]="isSavingLog">
+            Hủy
+          </button>
+          <button type="button" class="btn-modal-submit" (click)="saveAttendanceLog()" [disabled]="isSavingLog">
+            <span>{{ isSavingLog ? 'Đang lưu...' : 'Lưu Nhật Ký & Hoàn Thành' }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
