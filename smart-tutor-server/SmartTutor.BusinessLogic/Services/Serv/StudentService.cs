@@ -1,4 +1,4 @@
-﻿using SmartTutor.BusinessLogic.Exceptions;
+using SmartTutor.BusinessLogic.Exceptions;
 using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
 using SmartTutor.DataAccess.Claims;
@@ -15,11 +15,13 @@ namespace SmartTutor.BusinessLogic.Services.Serv
     public class StudentService : IStudentService
     {
         private readonly IStudentRepository _studentRepository;
+        private readonly IClassRepository _classRepository;
         private readonly IClaimService _claimService;
 
-        public StudentService(IStudentRepository studentRepository, IClaimService claimService)
+        public StudentService(IStudentRepository studentRepository, IClassRepository classRepository, IClaimService claimService)
         {
             _studentRepository = studentRepository;
+            _classRepository = classRepository;
             _claimService = claimService;
         }
 
@@ -43,7 +45,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
 
             ClassEnrollment enrollment;
 
-            // Trường hợp A: Chọn lớp có sẵn (ClassId > 0)
+            // Trường hợp A: Chọn lớp có sẵn theo ClassId (ClassId > 0)
             if (createStudentModel.ClassId.HasValue && createStudentModel.ClassId.Value > 0)
             {
                 enrollment = new ClassEnrollment
@@ -55,25 +57,49 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 };
                 student.ClassEnrollments.Add(enrollment);
             }
-
-            // Trường hợp B: Dạy 1-1 (Nhập trực tiếp ClassName và FeePerSession)
+            // Trường hợp B: Nhập thông tin lớp / hình thức học
             else if (!string.IsNullOrWhiteSpace(createStudentModel.ClassName))
             {
-                var newClass = new Class
+                var classType = createStudentModel.ClassType ?? AppEnums.ClassType.Individual.ToString();
+                
+                // Nếu là lớp học nhóm, tìm xem lớp nhóm cùng tên đã tồn tại cho giáo viên này chưa
+                Class? targetClass = null;
+                if (classType == AppEnums.ClassType.Group.ToString())
                 {
-                    UserId = userId.Value,
-                    ClassName = createStudentModel.ClassName,
-                    ClassType = createStudentModel.ClassType ?? AppEnums.ClassType.Individual.ToString(),
-                    DefaultFeePerSession = createStudentModel.FeePerSession ?? 0,
-                    CreatedAt = DateTime.UtcNow
-                };
-                enrollment = new ClassEnrollment
+                    targetClass = await _classRepository.FirstOrDefaultAsync(c =>
+                        c.UserId == userId.Value &&
+                        c.ClassName == createStudentModel.ClassName &&
+                        c.ClassType == AppEnums.ClassType.Group.ToString());
+                }
+
+                if (targetClass != null)
                 {
-                    Class = newClass,
-                    CustomFee = createStudentModel.FeePerSession,
-                    JoinedDate = DateTime.UtcNow,
-                    Status = AppEnums.StudentStatus.Active.ToString()
-                };
+                    enrollment = new ClassEnrollment
+                    {
+                        ClassId = targetClass.Id,
+                        CustomFee = createStudentModel.FeePerSession ?? targetClass.DefaultFeePerSession,
+                        JoinedDate = DateTime.UtcNow,
+                        Status = AppEnums.StudentStatus.Active.ToString()
+                    };
+                }
+                else
+                {
+                    var newClass = new Class
+                    {
+                        UserId = userId.Value,
+                        ClassName = createStudentModel.ClassName,
+                        ClassType = classType,
+                        DefaultFeePerSession = createStudentModel.FeePerSession ?? (classType == AppEnums.ClassType.Group.ToString() ? 80000 : 120000),
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    enrollment = new ClassEnrollment
+                    {
+                        Class = newClass,
+                        CustomFee = createStudentModel.FeePerSession ?? newClass.DefaultFeePerSession,
+                        JoinedDate = DateTime.UtcNow,
+                        Status = AppEnums.StudentStatus.Active.ToString()
+                    };
+                }
                 student.ClassEnrollments.Add(enrollment);
             }
 
@@ -90,10 +116,8 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 ParentPhone = createdStudent.ParentPhone,
                 ClassName = currentEnrollment?.Class?.ClassName,
                 ClassType = currentEnrollment?.Class?.ClassType,
-                FeePerSession = currentEnrollment?.CustomFee
+                FeePerSession = currentEnrollment?.CustomFee ?? currentEnrollment?.Class?.DefaultFeePerSession
             };
-
-
         }
 
         public async Task<StudentsResponseModel> EditStudentAsync(RequestStudentModel requestStudentModel)
@@ -109,37 +133,105 @@ namespace SmartTutor.BusinessLogic.Services.Serv
 
             student.FullName = requestStudentModel.FullName;
             student.ParentPhone = requestStudentModel.ParentPhone;
-            student.ParentName= requestStudentModel.ParentName;
+            student.ParentName = requestStudentModel.ParentName;
             student.GradeLevel = requestStudentModel.GradeLevel;
             
+            var targetClassType = requestStudentModel.ClassType ?? AppEnums.ClassType.Individual.ToString();
+            var targetClassName = requestStudentModel.ClassName?.Trim() ?? string.Empty;
+            var targetFee = requestStudentModel.FeePerSession;
+
             var enrollment = student.ClassEnrollments.FirstOrDefault();
 
-            if (enrollment?.Class != null)
+            if (enrollment != null)
             {
-                if (!string.IsNullOrWhiteSpace(requestStudentModel.ClassName))
-                    enrollment.Class.ClassName = requestStudentModel.ClassName;
-                if (!string.IsNullOrWhiteSpace(requestStudentModel.ClassType))
-                    enrollment.Class.ClassType = requestStudentModel.ClassType;
-                if (requestStudentModel.FeePerSession.HasValue)
+                var currentClass = enrollment.Class;
+
+                // 1. Chuyển sang Gia sư 1-1
+                if (targetClassType == AppEnums.ClassType.Individual.ToString())
                 {
-                    enrollment.Class.DefaultFeePerSession = requestStudentModel.FeePerSession.Value;
-                    enrollment.CustomFee = requestStudentModel.FeePerSession.Value;
+                    if (currentClass != null && currentClass.ClassType == AppEnums.ClassType.Group.ToString())
+                    {
+                        // Tách học sinh khỏi lớp nhóm cũ, tạo lớp 1-1 riêng (không làm thay đổi lớp nhóm cũ của các học sinh khác)
+                        var newIndClass = new Class
+                        {
+                            UserId = userId.Value,
+                            ClassName = !string.IsNullOrWhiteSpace(targetClassName) ? targetClassName : $"Toán {student.GradeLevel}",
+                            ClassType = AppEnums.ClassType.Individual.ToString(),
+                            DefaultFeePerSession = targetFee ?? 120000,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        enrollment.Class = newIndClass;
+                        enrollment.ClassId = 0;
+                        enrollment.CustomFee = targetFee ?? 120000;
+                    }
+                    else if (currentClass != null)
+                    {
+                        // Đang là 1-1, cập nhật thông tin lớp 1-1
+                        if (!string.IsNullOrWhiteSpace(targetClassName))
+                            currentClass.ClassName = targetClassName;
+                        currentClass.ClassType = AppEnums.ClassType.Individual.ToString();
+                        if (targetFee.HasValue)
+                        {
+                            currentClass.DefaultFeePerSession = targetFee.Value;
+                            enrollment.CustomFee = targetFee.Value;
+                        }
+                    }
+                }
+                // 2. Chuyển sang / Ở trong Lớp Nhóm (Group)
+                else if (targetClassType == AppEnums.ClassType.Group.ToString())
+                {
+                    // Nếu đổi sang tên lớp nhóm khác hoặc đang từ 1-1 chuyển sang lớp nhóm
+                    if (currentClass == null || currentClass.ClassType != AppEnums.ClassType.Group.ToString() || currentClass.ClassName != targetClassName)
+                    {
+                        // Tìm xem lớp nhóm đích đã tồn tại chưa
+                        var targetGroupClass = await _classRepository.FirstOrDefaultAsync(c =>
+                            c.UserId == userId.Value &&
+                            c.ClassName == targetClassName &&
+                            c.ClassType == AppEnums.ClassType.Group.ToString());
+
+                        if (targetGroupClass != null)
+                        {
+                            enrollment.Class = targetGroupClass;
+                            enrollment.ClassId = targetGroupClass.Id;
+                            enrollment.CustomFee = targetFee ?? targetGroupClass.DefaultFeePerSession;
+                        }
+                        else
+                        {
+                            var newGroupClass = new Class
+                            {
+                                UserId = userId.Value,
+                                ClassName = targetClassName,
+                                ClassType = AppEnums.ClassType.Group.ToString(),
+                                DefaultFeePerSession = targetFee ?? 80000,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            enrollment.Class = newGroupClass;
+                            enrollment.ClassId = 0;
+                            enrollment.CustomFee = targetFee ?? 80000;
+                        }
+                    }
+                    else
+                    {
+                        // Vẫn ở trong cùng lớp nhóm này -> Chỉ cập nhật giá học phí riêng nếu có
+                        if (targetFee.HasValue)
+                            enrollment.CustomFee = targetFee.Value;
+                    }
                 }
             }
-            else if (!string.IsNullOrWhiteSpace(requestStudentModel.ClassName))
+            else if (!string.IsNullOrWhiteSpace(targetClassName))
             {
                 var newClass = new Class
                 {
                     UserId = userId.Value,
-                    ClassName = requestStudentModel.ClassName,
-                    ClassType = requestStudentModel.ClassType ?? AppEnums.ClassType.Individual.ToString(),
-                    DefaultFeePerSession = requestStudentModel.FeePerSession ?? 0,
+                    ClassName = targetClassName,
+                    ClassType = targetClassType,
+                    DefaultFeePerSession = targetFee ?? (targetClassType == AppEnums.ClassType.Group.ToString() ? 80000 : 120000),
                     CreatedAt = DateTime.UtcNow
                 };
                 var newEnrollment = new ClassEnrollment
                 {
                     Class = newClass,
-                    CustomFee = requestStudentModel.FeePerSession,
+                    CustomFee = targetFee ?? newClass.DefaultFeePerSession,
                     JoinedDate = DateTime.UtcNow,
                     Status = AppEnums.StudentStatus.Active.ToString()
                 };
@@ -147,7 +239,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 enrollment = newEnrollment;
             }
 
-            // Case 2: Chuyển sang lớp có sẵn từ danh sách
+            // Case ClassId nếu có
             if (requestStudentModel.ClassId.HasValue && requestStudentModel.ClassId.Value > 0
              && enrollment?.ClassId != requestStudentModel.ClassId.Value)
             {
@@ -171,8 +263,6 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 ClassType = enrollment?.Class?.ClassType,
                 FeePerSession = enrollment?.CustomFee ?? enrollment?.Class?.DefaultFeePerSession
             };
-
-
         }
 
         public async Task<IEnumerable<StudentsResponseModel>> GetStudentsByCurrentUserAsync()
