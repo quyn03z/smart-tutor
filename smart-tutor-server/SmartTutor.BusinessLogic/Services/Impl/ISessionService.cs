@@ -14,5 +14,6 @@ namespace SmartTutor.BusinessLogic.Services.Impl
         Task<SessionAttendanceDetailResponseModel> GetSessionAttendanceAsync(int sessionId);
         Task<string> SaveBulkAttendanceAsync(int sessionId, BulkAttendanceRequestModel request);
         Task<ClassSessionAttendanceResponseModel> SaveClassSessionAttendanceAsync(ClassSessionAttendanceRequestModel request);
+        Task<ClassSessionAttendanceDetailModel> GetClassSessionAttendanceAsync(int? classId, string? className, DateTime? sessionDate);
     }
 }

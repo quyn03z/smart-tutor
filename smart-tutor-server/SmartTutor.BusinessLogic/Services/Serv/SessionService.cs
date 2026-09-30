@@ -465,5 +465,76 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             };
         }
 
+        public async Task<ClassSessionAttendanceDetailModel> GetClassSessionAttendanceAsync(int? classId, string? className, DateTime? sessionDate)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            Class? @class = null;
+            if (classId.HasValue && classId.Value > 0)
+            {
+                @class = await _classRepository.GetByIdAsync(classId.Value);
+            }
+            if (@class == null && !string.IsNullOrWhiteSpace(className))
+            {
+                @class = await _classRepository.FirstOrDefaultAsync(c =>
+                    c.UserId == userId.Value &&
+                    c.ClassName == className);
+            }
+
+            var targetDate = (sessionDate ?? DateTime.Today).Date;
+
+            if (@class == null || @class.UserId != userId.Value)
+            {
+                return new ClassSessionAttendanceDetailModel
+                {
+                    ClassId = classId,
+                    ClassName = className,
+                    SessionDate = targetDate,
+                    HasRecorded = false,
+                    LessonContent = string.Empty,
+                    Attendances = new List<StudentAttendanceUpdateItemModel>()
+                };
+            }
+
+            var existingSessions = await _sessionRepository.FindAsync(s => s.ClassId == @class.Id && s.SessionDate.Date == targetDate);
+            var session = existingSessions.FirstOrDefault();
+
+            if (session == null)
+            {
+                return new ClassSessionAttendanceDetailModel
+                {
+                    ClassId = @class.Id,
+                    ClassName = @class.ClassName,
+                    SessionDate = targetDate,
+                    HasRecorded = false,
+                    LessonContent = string.Empty,
+                    Attendances = new List<StudentAttendanceUpdateItemModel>()
+                };
+            }
+
+            session = await _sessionRepository.GetSessionWithAttendanceAsync(session.Id);
+            var logs = session?.AttendanceLogs?.ToList() ?? new List<AttendanceLog>();
+
+            return new ClassSessionAttendanceDetailModel
+            {
+                SessionId = session?.Id,
+                ClassId = @class.Id,
+                ClassName = @class.ClassName,
+                SessionDate = session?.SessionDate ?? targetDate,
+                LessonContent = session?.LessonContent ?? string.Empty,
+                HasRecorded = logs.Any(),
+                Attendances = logs.Select(l => new StudentAttendanceUpdateItemModel
+                {
+                    StudentId = l.StudentId,
+                    AttendanceStatus = l.AttendanceStatus,
+                    HomeworkScore = l.HomeworkScore,
+                    Attitude = l.Attitude ?? string.Empty,
+                    IndividualNote = l.IndividualNote
+                }).ToList()
+            };
+        }
+
     }
 }
