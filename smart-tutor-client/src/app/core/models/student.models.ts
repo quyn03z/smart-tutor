@@ -14,6 +14,7 @@ export interface RequestStudentModel {
 export interface StudentsResponseModel {
   id: string;
   fullName: string;
+  classId?: number;
   className?: string;
   classType?: string;
   gradeLevel?: string;
