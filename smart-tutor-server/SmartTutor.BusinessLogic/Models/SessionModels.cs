@@ -106,5 +106,32 @@ namespace SmartTutor.BusinessLogic.Models
             public string? IndividualNote { get; set; }
         }
 
+        // Model điểm danh nhanh ca dạy hôm nay cho cả lớp
+        public class ClassSessionAttendanceRequestModel
+        {
+            public int? ClassId { get; set; }
+            public string? ClassName { get; set; }
+            public DateTime SessionDate { get; set; } = DateTime.UtcNow.Date;
+            public TimeSpan? StartTime { get; set; }
+            public TimeSpan? EndTime { get; set; }
+            public string? LessonContent { get; set; }
+            public List<StudentAttendanceUpdateItemModel> Attendances { get; set; } = new();
+        }
+
+        public class ClassSessionAttendanceResponseModel
+        {
+            public int SessionId { get; set; }
+            public int ClassId { get; set; }
+            public string ClassName { get; set; } = string.Empty;
+            public DateTime SessionDate { get; set; }
+            public int TotalStudents { get; set; }
+            public int PresentCount { get; set; }
+            public int ExcusedCount { get; set; }
+            public int AbsentCount { get; set; }
+            public decimal FeePerSession { get; set; }
+            public decimal TotalFeeCalculated { get; set; }
+            public string Message { get; set; } = string.Empty;
+        }
+
     }
 }

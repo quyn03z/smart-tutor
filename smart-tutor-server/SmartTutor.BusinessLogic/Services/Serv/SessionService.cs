@@ -332,6 +332,138 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             return "Lưu điểm danh cả lớp thành công.";
         }
 
+        public async Task<ClassSessionAttendanceResponseModel> SaveClassSessionAttendanceAsync(ClassSessionAttendanceRequestModel request)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            // 1. Tìm lớp học theo ClassId hoặc ClassName
+            Class? @class = null;
+            if (request.ClassId.HasValue && request.ClassId.Value > 0)
+            {
+                @class = await _classRepository.GetByIdAsync(request.ClassId.Value);
+            }
+            if (@class == null && !string.IsNullOrWhiteSpace(request.ClassName))
+            {
+                @class = await _classRepository.FirstOrDefaultAsync(c =>
+                    c.UserId == userId.Value &&
+                    c.ClassName == request.ClassName);
+            }
+
+            if (@class == null || @class.UserId != userId.Value)
+                throw new NotFoundException("Không tìm thấy lớp học hoặc bạn không có quyền điểm danh cho lớp này.");
+
+            var sessionDate = request.SessionDate.Date;
+
+            // 2. Tìm ca học đã có trong ngày cho lớp này, hoặc tạo mới
+            var existingSessions = await _sessionRepository.FindAsync(s => s.ClassId == @class.Id && s.SessionDate.Date == sessionDate);
+            var session = existingSessions.FirstOrDefault();
+
+            var startTime = request.StartTime ?? new TimeSpan(18, 0, 0);
+            var endTime = request.EndTime ?? new TimeSpan(20, 0, 0);
+            var duration = (decimal)(endTime - startTime).TotalHours;
+            if (duration <= 0) duration = 2;
+
+            if (session == null)
+            {
+                session = new Session
+                {
+                    ClassId = @class.Id,
+                    SessionDate = sessionDate,
+                    StartTime = startTime,
+                    EndTime = endTime,
+                    DurationHours = duration,
+                    LessonContent = request.LessonContent,
+                    Status = AppEnums.SessionStatus.Completed.ToString(),
+                    CreatedAt = DateTime.UtcNow
+                };
+                session = await _sessionRepository.AddAsync(session);
+            }
+            else
+            {
+                session.LessonContent = request.LessonContent;
+                session.Status = AppEnums.SessionStatus.Completed.ToString();
+                session.StartTime = startTime;
+                session.EndTime = endTime;
+                session.DurationHours = duration;
+            }
+
+            // Lấy lại session kèm AttendanceLogs để thực hiện upsert
+            session = await _sessionRepository.GetSessionWithAttendanceAsync(session.Id);
+            if (session == null)
+            {
+                throw new NotFoundException("Lỗi không thể tải ca học sau khi tạo.");
+            }
+
+            // 3. Upsert từng bản ghi điểm danh
+            int presentCount = 0;
+            int excusedCount = 0;
+            int absentCount = 0;
+
+            foreach (var item in request.Attendances)
+            {
+                var normStatus = item.AttendanceStatus?.Trim();
+                if (string.Equals(normStatus, "present", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(normStatus, "Có mặt", StringComparison.OrdinalIgnoreCase))
+                {
+                    normStatus = AppEnums.AttendanceStatus.Present.ToString();
+                    presentCount++;
+                }
+                else if (string.Equals(normStatus, "excused", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(normStatus, "Nghỉ phép", StringComparison.OrdinalIgnoreCase))
+                {
+                    normStatus = AppEnums.AttendanceStatus.Excused.ToString();
+                    excusedCount++;
+                }
+                else
+                {
+                    normStatus = AppEnums.AttendanceStatus.Absent.ToString();
+                    absentCount++;
+                }
+
+                var existingLog = session.AttendanceLogs.FirstOrDefault(a => a.StudentId == item.StudentId);
+                if (existingLog != null)
+                {
+                    existingLog.AttendanceStatus = normStatus;
+                    existingLog.HomeworkScore = item.HomeworkScore;
+                    existingLog.Attitude = item.Attitude;
+                    existingLog.IndividualNote = item.IndividualNote;
+                }
+                else
+                {
+                    session.AttendanceLogs.Add(new AttendanceLog
+                    {
+                        SessionId = session.Id,
+                        StudentId = item.StudentId,
+                        AttendanceStatus = normStatus,
+                        HomeworkScore = item.HomeworkScore,
+                        Attitude = item.Attitude,
+                        IndividualNote = item.IndividualNote,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            await _sessionRepository.UpdateAsync(session);
+
+            var totalFee = presentCount * @class.DefaultFeePerSession;
+
+            return new ClassSessionAttendanceResponseModel
+            {
+                SessionId = session.Id,
+                ClassId = @class.Id,
+                ClassName = @class.ClassName,
+                SessionDate = session.SessionDate,
+                TotalStudents = request.Attendances.Count,
+                PresentCount = presentCount,
+                ExcusedCount = excusedCount,
+                AbsentCount = absentCount,
+                FeePerSession = @class.DefaultFeePerSession,
+                TotalFeeCalculated = totalFee,
+                Message = $"Đã lưu điểm danh ca dạy và ghi nhận {presentCount} học sinh có mặt thành công!"
+            };
+        }
 
     }
 }

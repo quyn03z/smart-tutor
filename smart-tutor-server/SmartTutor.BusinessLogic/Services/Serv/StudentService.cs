@@ -114,6 +114,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 GradeLevel = createdStudent.GradeLevel,
                 ParentName = createdStudent.ParentName,
                 ParentPhone = createdStudent.ParentPhone,
+                ClassId = currentEnrollment?.ClassId ?? currentEnrollment?.Class?.Id,
                 ClassName = currentEnrollment?.Class?.ClassName,
                 ClassType = currentEnrollment?.Class?.ClassType,
                 FeePerSession = currentEnrollment?.CustomFee ?? currentEnrollment?.Class?.DefaultFeePerSession
@@ -259,6 +260,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 GradeLevel = student.GradeLevel,
                 ParentName = student.ParentName,
                 ParentPhone = student.ParentPhone,
+                ClassId = enrollment?.ClassId ?? enrollment?.Class?.Id,
                 ClassName = enrollment?.Class?.ClassName,
                 ClassType = enrollment?.Class?.ClassType,
                 FeePerSession = enrollment?.CustomFee ?? enrollment?.Class?.DefaultFeePerSession
@@ -274,15 +276,16 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             return allsStudents.Select(s => {
                 var enrollment = s.ClassEnrollments.FirstOrDefault();
                 return new StudentsResponseModel
-                    {
-                        Id = s.Id.ToString(),
-                        FullName = s.FullName,
-                        ParentName = s.ParentName,
-                        ParentPhone = s.ParentPhone,
-                        GradeLevel = s.GradeLevel,
-                        ClassName = enrollment?.Class?.ClassName,
-                        ClassType = enrollment?.Class?.ClassType,
-                        FeePerSession = enrollment?.CustomFee,
+                {
+                    Id = s.Id.ToString(),
+                    FullName = s.FullName,
+                    ParentName = s.ParentName,
+                    ParentPhone = s.ParentPhone,
+                    GradeLevel = s.GradeLevel,
+                    ClassId = enrollment?.ClassId ?? enrollment?.Class?.Id,
+                    ClassName = enrollment?.Class?.ClassName,
+                    ClassType = enrollment?.Class?.ClassType,
+                    FeePerSession = enrollment?.CustomFee ?? enrollment?.Class?.DefaultFeePerSession,
                 };
             });
             

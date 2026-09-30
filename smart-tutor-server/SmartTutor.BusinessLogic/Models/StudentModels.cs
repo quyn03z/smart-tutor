@@ -12,13 +12,13 @@ namespace SmartTutor.BusinessLogic.Models
         {
             public string Id { get; set; }
             public string FullName { get; set; } = string.Empty;
+            public int? ClassId { get; set; }
             public string? ClassName { get; set; }
             public string? ClassType { get; set; }
             public string? GradeLevel { get; set; }
             public string? ParentName { get; set; }
             public string? ParentPhone { get; set; }
             public decimal? FeePerSession { get; set; }
-
         }
 
 
