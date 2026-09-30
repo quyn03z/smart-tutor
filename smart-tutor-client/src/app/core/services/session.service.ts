@@ -37,6 +37,16 @@ export interface ClassSessionAttendanceResponse {
   message: string;
 }
 
+export interface ClassSessionAttendanceDetail {
+  sessionId?: number;
+  classId?: number;
+  className?: string;
+  sessionDate: string;
+  lessonContent?: string;
+  hasRecorded: boolean;
+  attendances: StudentAttendanceUpdateItem[];
+}
+
 export interface GenerateReportRequest {
   classId: number;
   reportMonth: string;
@@ -69,6 +79,21 @@ export class SessionService {
       `${this.apiUrl}/class-attendance`,
       data,
       { headers: this.getAuthHeaders() }
+    );
+  }
+
+  getClassAttendance(classId?: number, className?: string, sessionDate?: string): Observable<ApiResult<ClassSessionAttendanceDetail>> {
+    let params: any = {};
+    if (classId) params.classId = classId;
+    if (className) params.className = className;
+    if (sessionDate) params.sessionDate = sessionDate;
+
+    return this.http.get<ApiResult<ClassSessionAttendanceDetail>>(
+      `${this.apiUrl}/class-attendance`,
+      {
+        headers: this.getAuthHeaders(),
+        params: params
+      }
     );
   }
 

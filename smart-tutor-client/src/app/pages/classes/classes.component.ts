@@ -141,8 +141,8 @@ export class ClassesComponent implements OnInit {
                 name: st.fullName,
                 avatar: this.getInitials(st.fullName),
                 avatarClass: this.getRandomAvatarClass(idx),
-                status: 'present',
-                homework: '100%',
+                status: 'unexcused',
+                homework: '0%',
                 attitude: 'Tốt',
                 note: '',
                 feePerSession: st.feePerSession || first.feePerSession || 80000
@@ -174,10 +174,65 @@ export class ClassesComponent implements OnInit {
         return;
       }
     }
+
+    if (this.selectedClass) {
+      const current = this.classes.find(c => c.id === this.selectedClass!.id);
+      if (current) {
+        this.selectClass(current);
+      }
+    }
   }
 
   selectClass(cls: GroupClassInfo): void {
     this.selectedClass = cls;
+    this.fetchClassAttendance(cls);
+  }
+
+  fetchClassAttendance(cls: GroupClassInfo): void {
+    const todayStr = new Date().toISOString().split('T')[0];
+    this.sessionService.getClassAttendance(cls.classId, cls.className, todayStr).subscribe({
+      next: (res) => {
+        if (res?.succeeded && res.result && res.result.hasRecorded && res.result.attendances?.length > 0) {
+          const detail = res.result;
+          if (detail.lessonContent) {
+            this.classLessonTopic = detail.lessonContent;
+          }
+
+          const attMap = new Map<number, any>();
+          detail.attendances.forEach(a => attMap.set(Number(a.studentId), a));
+
+          cls.students.forEach(st => {
+            const log = attMap.get(Number(st.id));
+            if (log) {
+              const normStatus = (log.attendanceStatus || '').toLowerCase();
+              if (normStatus.includes('present') || normStatus.includes('có mặt')) {
+                st.status = 'present';
+              } else if (normStatus.includes('excused') || normStatus.includes('phép')) {
+                st.status = 'excused';
+              } else {
+                st.status = 'unexcused';
+              }
+
+              const score = log.homeworkScore;
+              if (score !== undefined && score !== null) {
+                if (score === 100) st.homework = '100%';
+                else if (score === 90) st.homework = '90%';
+                else if (score === 80) st.homework = '80%';
+                else if (score === 50) st.homework = '50%';
+                else if (score === 0) st.homework = '0%';
+                else st.homework = `${score}%`;
+              }
+
+              if (log.attitude) st.attitude = log.attitude;
+              if (log.individualNote) st.note = log.individualNote;
+            }
+          });
+        }
+      },
+      error: () => {
+        // Giữ trạng thái mặc định (Vắng & 0%) nếu chưa điểm danh
+      }
+    });
   }
 
   backToClassList(): void {
@@ -240,9 +295,11 @@ export class ClassesComponent implements OnInit {
         if (s.status === 'excused') status = 'Excused';
         else if (s.status === 'unexcused') status = 'Absent';
 
-        let hw = 100;
-        if (s.homework === '--') hw = 0;
-        else hw = parseInt(s.homework.replace('%', ''), 10) || 100;
+        let hw = 0;
+        if (s.homework !== '--') {
+          const num = parseInt(s.homework.replace('%', ''), 10);
+          hw = isNaN(num) ? 0 : num;
+        }
 
         return {
           studentId: Number(s.id),
