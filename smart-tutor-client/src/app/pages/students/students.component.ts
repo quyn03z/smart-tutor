@@ -187,16 +187,10 @@ export class StudentsComponent implements OnInit {
         this.isLoading = false;
         if (res?.succeeded && res.result) {
           this.students = res.result.map(apiStudent => this.mapBackendStudent(apiStudent));
-          if (this.selectedGroupClass) {
-            const updated = this.displayCards.find(c => c.id === this.selectedGroupClass?.id);
-            if (updated) {
-              this.selectedGroupClass = updated;
-            } else {
-              this.closeGroupClassModal();
-            }
-          }
+          this.syncSelectedGroupClass();
         } else {
           this.students = [];
+          this.closeGroupClassModal();
         }
       },
       error: (err) => {
@@ -423,9 +417,11 @@ export class StudentsComponent implements OnInit {
             const idx = this.students.findIndex(s => s.id === updated.id);
             if (idx !== -1) {
               this.students[idx] = updated;
+              this.students = [...this.students];
             } else {
               this.loadMyStudents();
             }
+            this.syncSelectedGroupClass();
             this.closeStudentModal();
             this.showToast(`Đã cập nhật thành công thông tin học sinh ${updated.fullName}!`, 'success');
           } else {
@@ -444,7 +440,8 @@ export class StudentsComponent implements OnInit {
           this.isSubmitting = false;
           if (res?.succeeded && res.result) {
             const newStudent = this.mapBackendStudent(res.result);
-            this.students.unshift(newStudent);
+            this.students = [newStudent, ...this.students];
+            this.syncSelectedGroupClass();
             this.closeStudentModal();
             this.showToast(`Đã lưu thành công học sinh ${newStudent.fullName} vào hệ thống!`, 'success');
           } else {
@@ -457,6 +454,18 @@ export class StudentsComponent implements OnInit {
           this.showToast(msg, 'warning');
         }
       });
+    }
+  }
+
+  // Đồng bộ lại dữ liệu chi tiết lớp nhóm nếu đang mở modal xem lớp
+  private syncSelectedGroupClass(): void {
+    if (this.selectedGroupClass) {
+      const updated = this.displayCards.find(c => c.id === this.selectedGroupClass?.id);
+      if (updated && updated.students && updated.students.length > 0) {
+        this.selectedGroupClass = updated;
+      } else {
+        this.closeGroupClassModal();
+      }
     }
   }
 
@@ -487,6 +496,7 @@ export class StudentsComponent implements OnInit {
         this.isDeleting = false;
         if (res?.succeeded) {
           this.students = this.students.filter(s => s.id !== studentId);
+          this.syncSelectedGroupClass();
           this.closeDeleteModal();
           this.showToast('Đã xóa học sinh khỏi danh sách thành công!', 'success');
         } else {
