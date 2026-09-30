@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { StudentService } from '../../core/services/student.service';
+import { SessionService, ClassSessionAttendanceRequest } from '../../core/services/session.service';
 import { StudentsResponseModel } from '../../core/models/student.models';
 
 export interface ClassStudentItem {
@@ -20,6 +21,7 @@ export interface ClassStudentItem {
 
 export interface GroupClassInfo {
   id: string;
+  classId?: number;
   className: string;
   gradeLevel: string;
   feePerSession: number;
@@ -37,8 +39,13 @@ export interface GroupClassInfo {
 })
 export class ClassesComponent implements OnInit {
   isLoading = false;
+  isSavingAttendance = false;
+  isExportingReports = false;
   classes: GroupClassInfo[] = [];
   selectedClass: GroupClassInfo | null = null;
+
+  openHwDropdownStudentId: string | null = null;
+  hwOptions: string[] = ['100%', '90%', '80%', '50%', '0%', '--'];
 
   classLessonTopic = 'Chuyên đề: Giải bài toán bằng cách lập hệ phương trình (Dạng năng suất & chuyển động)';
   
@@ -46,10 +53,45 @@ export class ClassesComponent implements OnInit {
   toastType: 'success' | 'info' | 'warning' = 'success';
   private toastTimer: any = null;
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.custom-hw-dropdown-container')) {
+      this.openHwDropdownStudentId = null;
+    }
+  }
+
+  toggleHwDropdown(studentId: string, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.openHwDropdownStudentId === studentId) {
+      this.openHwDropdownStudentId = null;
+    } else {
+      this.openHwDropdownStudentId = studentId;
+    }
+  }
+
+  selectHomework(student: ClassStudentItem, opt: string, event: MouseEvent): void {
+    event.stopPropagation();
+    student.homework = opt;
+    this.openHwDropdownStudentId = null;
+  }
+
+  getHwClass(rate: string): string {
+    switch (rate) {
+      case '100%': return 'hw-100';
+      case '90%': return 'hw-90';
+      case '80%': return 'hw-80';
+      case '50%': return 'hw-50';
+      case '0%': return 'hw-0';
+      default: return 'hw-none';
+    }
+  }
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private studentService: StudentService
+    private studentService: StudentService,
+    private sessionService: SessionService
   ) {}
 
   ngOnInit(): void {
@@ -87,6 +129,7 @@ export class ClassesComponent implements OnInit {
             const first = students[0];
             classesList.push({
               id: className,
+              classId: first.classId,
               className: className,
               gradeLevel: first.gradeLevel || 'Lớp 9',
               feePerSession: first.feePerSession || 80000,
@@ -120,28 +163,6 @@ export class ClassesComponent implements OnInit {
         this.selectedClass = null;
       }
     });
-  }
-
-  private useDefaultMockClasses(): void {
-    this.classes = [
-      {
-        id: 'lop_toan_9a',
-        className: 'Lớp Toán 9A (Chuyên Đề Vào 10)',
-        gradeLevel: 'Lớp 9',
-        feePerSession: 80000,
-        scheduleText: 'Lịch học cố định: Thứ 3 & Thứ 5 (18:00 – 20:00)',
-        roomText: 'Phòng học: Tầng 2 / Trực tiếp',
-        students: [
-          { stt: 1, id: 'hs1', name: 'Hoàng Yến', avatar: 'HY', avatarClass: 'avatar-hy', status: 'present', homework: '100%', attitude: 'Tập trung, phát biểu nhiều', note: 'Hiểu bài tốt', feePerSession: 80000 },
-          { stt: 2, id: 'hs2', name: 'Đức Anh', avatar: 'ĐA', avatarClass: 'avatar-da', status: 'present', homework: '100%', attitude: 'Tốt', note: 'Có tiến bộ', feePerSession: 80000 },
-          { stt: 3, id: 'hs3', name: 'Minh Quân', avatar: 'MQ', avatarClass: 'avatar-mq', status: 'present', homework: '80%', attitude: 'Khá', note: 'Cần nộp bài đúng hạn', feePerSession: 80000 },
-          { stt: 4, id: 'hs4', name: 'Gia Hưng', avatar: 'GH', avatarClass: 'avatar-gh', status: 'excused', homework: '--', attitude: 'Nghỉ phép', note: 'Phụ huynh xin nghỉ về quê', feePerSession: 80000 },
-          { stt: 5, id: 'hs5', name: 'Thanh Thảo', avatar: 'TT', avatarClass: 'avatar-tt', status: 'present', homework: '100%', attitude: 'Tốt', note: 'Rất chăm chỉ', feePerSession: 80000 },
-          { stt: 6, id: 'hs6', name: 'Khánh Linh', avatar: 'KL', avatarClass: 'avatar-kl', status: 'present', homework: '90%', attitude: 'Tốt', note: 'Nắm chắc kiến thức', feePerSession: 80000 }
-        ]
-      }
-    ];
-    this.checkRouteSelection();
   }
 
   private checkRouteSelection(): void {
@@ -203,13 +224,92 @@ export class ClassesComponent implements OnInit {
 
   saveClassAttendance(): void {
     if (!this.selectedClass) return;
-    const feeStr = this.selectedClass.feePerSession.toLocaleString('vi-VN');
-    this.showToast(`✓ Đã lưu sổ điểm danh ca dạy lớp ${this.selectedClass.className}! Hệ thống tự động tính ${feeStr}đ/buổi cho từng học sinh.`, 'success');
+
+    this.isSavingAttendance = true;
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const payload: ClassSessionAttendanceRequest = {
+      classId: this.selectedClass.classId,
+      className: this.selectedClass.className,
+      sessionDate: todayStr,
+      startTime: '18:00:00',
+      endTime: '20:00:00',
+      lessonContent: this.classLessonTopic,
+      attendances: this.selectedClass.students.map(s => {
+        let status = 'Present';
+        if (s.status === 'excused') status = 'Excused';
+        else if (s.status === 'unexcused') status = 'Absent';
+
+        let hw = 100;
+        if (s.homework === '--') hw = 0;
+        else hw = parseInt(s.homework.replace('%', ''), 10) || 100;
+
+        return {
+          studentId: Number(s.id),
+          attendanceStatus: status,
+          homeworkScore: hw,
+          attitude: s.attitude || 'Tốt',
+          individualNote: s.note || ''
+        };
+      })
+    };
+
+    this.sessionService.saveClassAttendance(payload).subscribe({
+      next: (res) => {
+        this.isSavingAttendance = false;
+        if (res?.succeeded) {
+          const totalFeeStr = (res.result?.totalFeeCalculated ?? (this.presentCount * this.selectedClass!.feePerSession)).toLocaleString('vi-VN');
+          this.showToast(
+            res.result?.message || `✓ Đã lưu sổ điểm danh ca dạy lớp ${this.selectedClass!.className}! Tự động tính ${totalFeeStr}đ học phí cho ${this.presentCount} học sinh có mặt.`,
+            'success'
+          );
+        } else {
+          this.showToast(res?.message || 'Không thể lưu điểm danh. Vui lòng thử lại!', 'warning');
+        }
+      },
+      error: (err) => {
+        this.isSavingAttendance = false;
+        const msg = err?.error?.message || 'Có lỗi xảy ra khi lưu điểm danh ca dạy vào hệ thống.';
+        this.showToast(msg, 'warning');
+      }
+    });
   }
 
   exportBatchReports(): void {
     if (!this.selectedClass) return;
-    this.showToast(`📦 Đang xuất hàng loạt ${this.selectedClass.students.length} phiếu thu PDF kèm mã VietQR cá nhân hóa cho ${this.selectedClass.className}!`, 'success');
+
+    const classId = this.selectedClass.classId;
+    if (!classId) {
+      this.showToast(`Đang xuất phiếu thu PDF kèm mã VietQR cho cả lớp ${this.selectedClass.className}!`, 'success');
+      return;
+    }
+
+    this.isExportingReports = true;
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    this.sessionService.generateMonthlyReports({
+      classId: classId,
+      reportMonth: currentMonth
+    }).subscribe({
+      next: (res) => {
+        this.isExportingReports = false;
+        if (res?.succeeded) {
+          const count = res.result?.length || this.selectedClass!.students.length;
+          this.showToast(`📦 Đã tạo thành công ${count} phiếu thu học phí tháng ${currentMonth} kèm mã VietQR cho ${this.selectedClass!.className}!`, 'success');
+          setTimeout(() => {
+            this.router.navigate(['/report'], { queryParams: { classId: classId, month: currentMonth } });
+          }, 1200);
+        } else {
+          this.showToast(res?.message || 'Có lỗi khi xuất phiếu thu cả lớp', 'warning');
+        }
+      },
+      error: (err) => {
+        this.isExportingReports = false;
+        const msg = err?.error?.message || 'Không thể xuất phiếu thu cả lớp. Vui lòng thử lại sau!';
+        this.showToast(msg, 'warning');
+      }
+    });
   }
 
   viewStudentCard(studentId: string): void {

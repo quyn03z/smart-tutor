@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartTutor.BusinessLogic.Models;
 using SmartTutor.BusinessLogic.Services.Impl;
@@ -8,6 +9,7 @@ using static SmartTutor.BusinessLogic.Models.StudentModels;
 
 namespace SmartTutor.API.Controllers
 {
+    [Authorize]
     [Route("api/class")]
     [ApiController]
     public class ClassController : BaseController
@@ -28,8 +30,9 @@ namespace SmartTutor.API.Controllers
                 .Success(await _classService.CreateClassAsync(classRequestModel)));
         }
 
-        [HttpGet("userId")]
-        public async Task<IActionResult> GetMyClassAsync(int userId)
+        [HttpGet("my-classes")]
+        [HttpGet]
+        public async Task<IActionResult> GetMyClassAsync()
         {
             return Ok(ApiResult<IEnumerable<ClassResponseModel>>
                 .Success(await _classService.GetMyClassAsync()));
