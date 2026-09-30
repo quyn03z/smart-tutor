@@ -43,7 +43,7 @@
   <div *ngIf="!isLoading && scheduleView === 'list'" class="schedule-list-view">
     
     <ng-container *ngFor="let day of daysOfWeek">
-      <!-- Chỉ hiển thị ngày có ca học hoặc ngày hôm nay -->
+      <!-- Hiển thị ngày có ca dạy hoặc ngày hôm nay -->
       <div class="agenda-section" *ngIf="day.sessions.length > 0 || day.isToday">
         <div class="agenda-date-header">
           <span class="pulse-blue-dot" *ngIf="day.isToday"></span>
@@ -90,6 +90,19 @@
             </div>
 
             <div class="card-actions">
+              <!-- Nút Chỉnh sửa thông tin ca dạy -->
+              <button 
+                type="button" 
+                (click)="openEditSessionModal(s, $event)" 
+                class="btn-edit-session-info"
+                title="Chỉnh sửa giờ, ngày, nội dung ca học">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span>Sửa ca</span>
+              </button>
+
               <!-- Nếu là lớp nhóm: Nút Điểm danh cả lớp dẫn sang /classes -->
               <button 
                 *ngIf="s.classType === 'Group'" 
@@ -105,7 +118,7 @@
                 type="button" 
                 (click)="openAttendanceModal(s)" 
                 class="btn-edit-log">
-                {{ s.status === 'Completed' ? 'Sửa nhật ký' : 'Điểm danh ca dạy' }}
+                {{ s.status === 'Completed' ? 'Nhật ký' : 'Điểm danh' }}
               </button>
             </div>
           </div>
@@ -144,7 +157,17 @@
             (click)="s.classType === 'Group' ? goToClassAttendance(s) : openAttendanceModal(s)"
             [title]="s.lessonContent || s.className">
             
-            <div class="session-time">{{ s.timeRange }}</div>
+            <div class="session-box-top">
+              <span class="session-time">{{ s.timeRange }}</span>
+              <button 
+                type="button" 
+                class="btn-grid-edit-icon" 
+                (click)="openEditSessionModal(s, $event)" 
+                title="Sửa ca dạy">
+                ✎
+              </button>
+            </div>
+            
             <div class="session-who">
               {{ s.classType === 'Group' ? s.className + ' (' + s.studentsCount + ' HS)' : s.studentName }}
             </div>
@@ -171,11 +194,13 @@
     </div>
   </div>
 
-  <!-- ================= MODAL: THÊM CA DẠY MỚI ================= -->
+  <!-- ================= MODAL: THÊM / CHỈNH SỬA CA DẠY ================= -->
   <div *ngIf="isAddSessionModalOpen" class="modal-backdrop" (click)="closeAddSessionModal()">
-    <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-card modal-session-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3 class="modal-title">+ Thêm Ca Dạy Mới</h3>
+        <h3 class="modal-title">
+          {{ isEditingSession ? '✏️ Chỉnh Sửa Thông Tin Ca Dạy' : '+ Thêm Ca Dạy Mới' }}
+        </h3>
         <button type="button" class="btn-close-modal" (click)="closeAddSessionModal()">✕</button>
       </div>
 
@@ -190,7 +215,9 @@
         </div>
 
         <div class="form-group">
-          <label class="modal-label">Ngày dạy:</label>
+          <label class="modal-label">
+            Ngày dạy: <span class="text-primary font-bold">({{ getWeekdayNameForDate(newSessionDate) | titlecase }})</span>
+          </label>
           <input type="date" [(ngModel)]="newSessionDate" class="form-input">
         </div>
 
@@ -213,6 +240,51 @@
             class="form-input" 
             placeholder="Ví dụ: Ôn tập phương trình bậc hai, luyện đề thi thử...">
         </div>
+
+        <!-- TÙY CHỌN LẶP LẠI (GOOGLE CALENDAR STYLE RECURRENCE SELECTOR) -->
+        <div class="form-group recurrence-gcal-group">
+          <label class="modal-label">Lặp lại ca dạy:</label>
+          <div class="gcal-select-container">
+            <select [(ngModel)]="selectedRecurrencePattern" class="form-select gcal-recurrence-select">
+              <option *ngFor="let opt of getRecurrenceOptions()" [value]="opt.id">
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Tùy chỉnh khoảng thời gian lặp lại -->
+          <div *ngIf="selectedRecurrencePattern !== 'NONE'" class="recurring-custom-duration-box">
+            <div class="duration-row">
+              <span class="duration-title">Thời gian lặp lại:</span>
+              <select [(ngModel)]="recurringWeeksCount" class="form-select select-duration-weeks">
+                <option *ngFor="let dur of recurringDurationOptions" [value]="dur.value">
+                  {{ dur.label }}
+                </option>
+              </select>
+            </div>
+            
+            <p class="gcal-tip-text">
+              <span *ngIf="selectedRecurrencePattern === 'WEEKLY'">
+                💡 Tự động xếp lịch vào mỗi <strong>{{ getWeekdayNameForDate(newSessionDate) }}</strong> trong <strong>{{ recurringWeeksCount }} tuần</strong> tiếp theo.
+              </span>
+              <span *ngIf="selectedRecurrencePattern === 'DAILY'">
+                💡 Tự động xếp lịch hàng ngày liên tục trong <strong>{{ recurringWeeksCount }} tuần</strong>.
+              </span>
+              <span *ngIf="selectedRecurrencePattern === 'WEEKDAYS'">
+                💡 Tự động xếp lịch vào tất cả các ngày từ <strong>Thứ Hai tới Thứ Sáu</strong> trong <strong>{{ recurringWeeksCount }} tuần</strong>.
+              </span>
+              <span *ngIf="selectedRecurrencePattern === 'MONTHLY_NTH_WEEKDAY' || selectedRecurrencePattern === 'MONTHLY_LAST_WEEKDAY'">
+                💡 Tự động xếp lịch định kỳ hàng tháng trong <strong>{{ recurringWeeksCount }} tháng</strong>.
+              </span>
+              <span *ngIf="selectedRecurrencePattern === 'YEARLY'">
+                💡 Tự động xếp lịch định kỳ hàng năm vào ngày này.
+              </span>
+              <span *ngIf="selectedRecurrencePattern === 'CUSTOM'">
+                💡 Tự động tạo chuỗi ca dạy định kỳ trong <strong>{{ recurringWeeksCount }} tuần</strong>.
+              </span>
+            </p>
+          </div>
+        </div>
       </div>
 
       <div class="modal-footer">
@@ -220,7 +292,10 @@
           Hủy
         </button>
         <button type="button" class="btn-modal-submit" (click)="submitAddSession()" [disabled]="isSubmittingSession">
-          <span>{{ isSubmittingSession ? 'Đang lưu...' : 'Lưu Ca Dạy' }}</span>
+          <span *ngIf="isSubmittingSession">Đang lưu...</span>
+          <span *ngIf="!isSubmittingSession">
+            {{ isEditingSession ? 'Cập Nhật Ca Dạy' : (selectedRecurrencePattern !== 'NONE' ? 'Lưu & Lên Lịch ' + recurringWeeksCount + ' Tuần' : 'Lưu Ca Dạy') }}
+          </span>
         </button>
       </div>
     </div>
@@ -239,7 +314,15 @@
 
       <div class="modal-body">
         <div class="form-group">
-          <label class="modal-label">Nội dung bài học ca dạy:</label>
+          <div class="label-with-action">
+            <label class="modal-label">Nội dung bài học ca dạy:</label>
+            <button 
+              type="button" 
+              class="btn-link-edit-session" 
+              (click)="openEditSessionModal(activeSession)">
+              ✏️ Sửa ngày/giờ ca này
+            </button>
+          </div>
           <input type="text" [(ngModel)]="activeLessonTopic" class="form-input" placeholder="Nhập bài giảng hôm nay...">
         </div>
 
@@ -305,7 +388,7 @@
             Hủy
           </button>
           <button type="button" class="btn-modal-submit" (click)="saveAttendanceLog()" [disabled]="isSavingLog">
-            <span>{{ isSavingLog ? 'Đang lưu...' : 'Lưu Nhật Ký & Hoàn Thành' }}</span>
+            <span>{{ isSavingLog ? 'Đang lưu...' : 'Lưu Nhật Ký & Hoành Thành' }}</span>
           </button>
         </div>
       </div>

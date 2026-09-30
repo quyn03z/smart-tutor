@@ -34,6 +34,12 @@ namespace SmartTutor.BusinessLogic.Models
 
             [StringLength(20, ErrorMessage = "Trạng thái không được vượt quá 20 ký tự.")]
             public string Status { get; set; } = string.Empty;
+
+            public bool IsRecurring { get; set; } = false;
+            public string RecurrencePattern { get; set; } = "NONE"; // NONE, DAILY, WEEKLY, WEEKDAYS, CUSTOM
+            [Range(1, 52, ErrorMessage = "Số lần lặp lại phải từ 1 đến 52.")]
+            public int RecurringWeeks { get; set; } = 1;
+            public int RecurringCount { get; set; } = 4;
         }
 
         public class SessionRespondModel

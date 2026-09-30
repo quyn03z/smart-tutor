@@ -74,6 +74,10 @@ export interface SessionRequest {
   durationHours?: number;
   lessonContent?: string;
   status?: string;
+  isRecurring?: boolean;
+  recurringWeeks?: number;
+  recurrencePattern?: string; // NONE, DAILY, WEEKLY, WEEKDAYS, CUSTOM
+  recurringCount?: number;
 }
 
 export interface StudentAttendanceDetailItem {

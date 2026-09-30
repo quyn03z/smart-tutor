@@ -46,6 +46,11 @@ export interface ClassOptionItem {
   defaultSchedule?: string;
 }
 
+export interface RecurrenceOptionItem {
+  id: string; // 'NONE' | 'DAILY' | 'WEEKLY' | 'WEEKDAYS' | 'CUSTOM'
+  label: string;
+}
+
 @Component({
   selector: 'app-schedule',
   standalone: true,
@@ -62,17 +67,33 @@ export class ScheduleComponent implements OnInit {
   weekRangeTitle = '';
   todaySessionsCount = 0;
 
-  // Options for adding sessions
+  // Options for adding/editing sessions
   availableClasses: ClassOptionItem[] = [];
 
-  // Add session modal
+  // Add / Edit session modal
   isAddSessionModalOpen = false;
+  isEditingSession = false;
+  editingSessionId: number | null = null;
+  editingSessionStatus = 'Scheduled';
+
   selectedAddClassId: number | null = null;
   newSessionDate = ''; // YYYY-MM-DD
   newSessionStartTime = '18:00';
   newSessionEndTime = '20:00';
   newSessionTopic = '';
+  
+  // Google Calendar style Recurrence Pattern
+  selectedRecurrencePattern = 'NONE'; // 'NONE' | 'DAILY' | 'WEEKLY' | 'WEEKDAYS' | 'CUSTOM'
+  recurringWeeksCount = 4; // default 4 weeks
   isSubmittingSession = false;
+
+  recurringDurationOptions = [
+    { label: '2 tuần tới', value: 2 },
+    { label: '4 tuần tới (1 tháng)', value: 4 },
+    { label: '8 tuần tới (2 tháng)', value: 8 },
+    { label: '12 tuần tới (3 tháng)', value: 12 },
+    { label: '16 tuần tới (1 học kỳ)', value: 16 }
+  ];
 
   // Attendance & Edit Log Modal (for 1-1 or quick log)
   isAttendanceModalOpen = false;
@@ -153,7 +174,6 @@ export class ScheduleComponent implements OnInit {
     const fromDate = this.daysOfWeek[0].dateStr;
     const toDate = this.daysOfWeek[6].dateStr;
 
-    // Set title
     const firstDate = this.daysOfWeek[0].date;
     const lastDate = this.daysOfWeek[6].date;
     const mm = String(firstDate.getMonth() + 1).padStart(2, '0');
@@ -286,6 +306,61 @@ export class ScheduleComponent implements OnInit {
     return `${yyyy}-${mm}-${dd}`;
   }
 
+  getWeekdayNameForDate(dateStr: string): string {
+    if (!dateStr) return 'thứ hai';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      const days = ['chủ nhật', 'thứ hai', 'thứ ba', 'thứ tư', 'thứ năm', 'thứ sáu', 'thứ bảy'];
+      return days[d.getDay()];
+    }
+    return 'thứ hai';
+  }
+
+  getRecurrenceOptions(): RecurrenceOptionItem[] {
+    if (!this.newSessionDate) {
+      return [
+        { id: 'NONE', label: 'Không lặp lại' },
+        { id: 'DAILY', label: 'Hàng ngày' },
+        { id: 'WEEKLY', label: 'Hàng tuần' },
+        { id: 'WEEKDAYS', label: 'Mọi ngày trong tuần (từ thứ Hai tới thứ Sáu)' },
+        { id: 'CUSTOM', label: 'Tùy chỉnh...' }
+      ];
+    }
+
+    const parts = this.newSessionDate.split('-');
+    const y = Number(parts[0]);
+    const m = Number(parts[1]) - 1;
+    const d = Number(parts[2]);
+    const dateObj = new Date(y, m, d);
+
+    const days = ['chủ nhật', 'thứ hai', 'thứ ba', 'thứ tư', 'thứ năm', 'thứ sáu', 'thứ bảy'];
+    const weekdayName = days[dateObj.getDay()];
+    const nthOrdinals = ['', 'thứ nhất', 'thứ hai', 'thứ ba', 'thứ tư', 'thứ năm'];
+    const nthIndex = Math.ceil(d / 7);
+    const nthLabel = nthOrdinals[nthIndex] || `thứ ${nthIndex}`;
+
+    const nextWeekSameDay = new Date(y, m, d + 7);
+    const isLast = nextWeekSameDay.getMonth() !== m;
+
+    const options: RecurrenceOptionItem[] = [
+      { id: 'NONE', label: 'Không lặp lại' },
+      { id: 'DAILY', label: 'Hàng ngày' },
+      { id: 'WEEKLY', label: `Hàng tuần vào ${weekdayName}` },
+      { id: 'MONTHLY_NTH_WEEKDAY', label: `Hàng tháng vào ngày ${weekdayName} ${nthLabel}` }
+    ];
+
+    if (isLast) {
+      options.push({ id: 'MONTHLY_LAST_WEEKDAY', label: `Hàng tháng vào ${weekdayName} cuối cùng` });
+    }
+
+    options.push({ id: 'YEARLY', label: `Hàng năm vào ngày ${d} tháng ${m + 1}` });
+    options.push({ id: 'WEEKDAYS', label: 'Mọi ngày trong tuần (từ thứ Hai tới thứ Sáu)' });
+    options.push({ id: 'CUSTOM', label: 'Tùy chỉnh...' });
+
+    return options;
+  }
+
   toggleScheduleView(view: 'list' | 'grid'): void {
     this.scheduleView = view;
   }
@@ -306,18 +381,44 @@ export class ScheduleComponent implements OnInit {
   }
 
   openAddSessionModal(presetDate?: string): void {
+    this.isEditingSession = false;
+    this.editingSessionId = null;
+    this.editingSessionStatus = 'Scheduled';
     this.newSessionDate = presetDate || this.formatDateIso(new Date());
     this.newSessionStartTime = '18:00';
     this.newSessionEndTime = '20:00';
     this.newSessionTopic = '';
+    this.selectedRecurrencePattern = 'NONE';
+    this.recurringWeeksCount = 4;
+
     if (this.availableClasses.length > 0 && !this.selectedAddClassId) {
       this.selectedAddClassId = this.availableClasses[0].classId;
     }
     this.isAddSessionModalOpen = true;
   }
 
+  openEditSessionModal(session: ScheduleSessionItem, event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    if (this.isAttendanceModalOpen) this.closeAttendanceModal();
+
+    this.isEditingSession = true;
+    this.editingSessionId = session.id;
+    this.editingSessionStatus = session.status;
+    this.selectedAddClassId = session.classId;
+    this.newSessionDate = session.sessionDate;
+    this.newSessionStartTime = session.startTime;
+    this.newSessionEndTime = session.endTime;
+    this.newSessionTopic = session.lessonContent || '';
+    this.selectedRecurrencePattern = 'NONE';
+    this.recurringWeeksCount = 4;
+
+    this.isAddSessionModalOpen = true;
+  }
+
   closeAddSessionModal(): void {
     this.isAddSessionModalOpen = false;
+    this.isEditingSession = false;
+    this.editingSessionId = null;
   }
 
   submitAddSession(): void {
@@ -347,34 +448,90 @@ export class ScheduleComponent implements OnInit {
       }
     }
 
-    const payload: SessionRequest = {
-      classId: Number(this.selectedAddClassId),
-      sessionDate: this.newSessionDate,
-      startTime: start,
-      endTime: end,
-      durationHours: duration,
-      lessonContent: this.newSessionTopic.trim(),
-      status: 'Scheduled'
-    };
+    const isRec = this.selectedRecurrencePattern !== 'NONE';
+    const count = isRec ? Number(this.recurringWeeksCount) : 1;
 
     this.isSubmittingSession = true;
-    this.sessionService.createSession(payload).subscribe({
-      next: (res) => {
-        this.isSubmittingSession = false;
-        if (res?.succeeded) {
-          this.closeAddSessionModal();
-          this.showToast('✓ Đã thêm ca dạy mới vào lịch giảng dạy thành công!', 'success');
-          this.loadSchedule();
-        } else {
-          this.showToast(res?.message || 'Có lỗi khi tạo ca dạy', 'warning');
+
+    if (this.isEditingSession && this.editingSessionId) {
+      // Edit existing session
+      const editPayload: SessionRequest = {
+        id: this.editingSessionId,
+        classId: Number(this.selectedAddClassId),
+        sessionDate: this.newSessionDate,
+        startTime: start,
+        endTime: end,
+        durationHours: duration,
+        lessonContent: this.newSessionTopic.trim(),
+        status: this.editingSessionStatus,
+        isRecurring: isRec,
+        recurrencePattern: this.selectedRecurrencePattern,
+        recurringWeeks: count,
+        recurringCount: count
+      };
+
+      this.sessionService.editSession(editPayload).subscribe({
+        next: (res) => {
+          this.isSubmittingSession = false;
+          if (res?.succeeded) {
+            this.closeAddSessionModal();
+            this.showToast('✓ Đã cập nhật thông tin ca dạy thành công!', 'success');
+            this.loadSchedule();
+          } else {
+            this.showToast(res?.message || 'Có lỗi khi cập nhật ca dạy', 'warning');
+          }
+        },
+        error: (err) => {
+          this.isSubmittingSession = false;
+          const msg = err?.error?.message || 'Không thể cập nhật ca dạy. Vui lòng thử lại!';
+          this.showToast(msg, 'warning');
         }
-      },
-      error: (err) => {
-        this.isSubmittingSession = false;
-        const msg = err?.error?.message || 'Không thể tạo ca dạy. Vui lòng thử lại!';
-        this.showToast(msg, 'warning');
-      }
-    });
+      });
+    } else {
+      // Create new session (with recurrence pattern)
+      const isRec = this.selectedRecurrencePattern !== 'NONE';
+      const count = isRec ? Number(this.recurringWeeksCount) : 1;
+
+      const createPayload: SessionRequest = {
+        classId: Number(this.selectedAddClassId),
+        sessionDate: this.newSessionDate,
+        startTime: start,
+        endTime: end,
+        durationHours: duration,
+        lessonContent: this.newSessionTopic.trim(),
+        status: 'Scheduled',
+        isRecurring: isRec,
+        recurrencePattern: this.selectedRecurrencePattern,
+        recurringWeeks: count,
+        recurringCount: count
+      };
+
+      this.sessionService.createSession(createPayload).subscribe({
+        next: (res) => {
+          this.isSubmittingSession = false;
+          if (res?.succeeded) {
+            this.closeAddSessionModal();
+            let msg = '✓ Đã thêm ca dạy mới vào lịch giảng dạy thành công!';
+            if (this.selectedRecurrencePattern === 'WEEKLY') {
+              msg = `✓ Đã tạo chuỗi ca dạy lặp lại vào mỗi ${this.getWeekdayNameForDate(this.newSessionDate)} cho ${count} tuần tiếp theo!`;
+            } else if (this.selectedRecurrencePattern === 'DAILY') {
+              msg = '✓ Đã tạo chuỗi ca dạy lặp lại hàng ngày!';
+            } else if (this.selectedRecurrencePattern === 'WEEKDAYS') {
+              msg = '✓ Đã tạo chuỗi ca dạy cho mọi ngày trong tuần (Thứ 2 - Thứ 6)!';
+            }
+            this.showToast(msg, 'success');
+            this.loadSchedule();
+          } else {
+            this.showToast(res?.message || 'Có lỗi khi tạo ca dạy', 'warning');
+          }
+        },
+        error: (err) => {
+          this.isSubmittingSession = false;
+          const msg = err?.error?.message || 'Không thể tạo ca dạy. Vui lòng thử lại!';
+          this.showToast(msg, 'warning');
+        }
+      });
+    }
   }
 
   quickAddSession(dateStr: string): void {
@@ -429,7 +586,6 @@ export class ScheduleComponent implements OnInit {
     this.isSavingLog = true;
     const session = this.activeSession;
 
-    // Prepare student attendance payload
     let hw = 0;
     if (this.activeHw !== '--') {
       const num = parseInt(this.activeHw.replace('%', ''), 10);
@@ -440,7 +596,6 @@ export class ScheduleComponent implements OnInit {
     if (this.activeAttendanceStatus === 'excused') statusStr = 'Excused';
     else if (this.activeAttendanceStatus === 'unexcused') statusStr = 'Absent';
 
-    // First fetch session students list if needed, or save via bulk attendance
     this.sessionService.getSessionAttendance(session.id).subscribe({
       next: (res) => {
         const studentId = (res?.succeeded && res.result?.students?.[0]?.studentId) ? res.result.students[0].studentId : 1;
@@ -454,7 +609,6 @@ export class ScheduleComponent implements OnInit {
 
         this.sessionService.saveBulkAttendance(session.id, { attendances }).subscribe({
           next: () => {
-            // Also update session lesson content if modified
             const editReq: SessionRequest = {
               id: session.id,
               classId: session.classId,

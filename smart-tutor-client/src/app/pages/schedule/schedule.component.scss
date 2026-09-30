@@ -367,6 +367,27 @@ $rose-100: #fee2e2;
       margin: 6px 0 0;
     }
 
+    .btn-edit-session-info {
+      background: $slate-100;
+      border: 1px solid $slate-200;
+      color: $slate-600;
+      padding: 7px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: $primary-light;
+        color: $primary;
+        border-color: $primary;
+      }
+    }
+
     .btn-edit-log {
       background: $slate-100;
       border: 1px solid $slate-200;
@@ -491,6 +512,29 @@ $rose-100: #fee2e2;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
     }
 
+    .session-box-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+
+      .btn-grid-edit-icon {
+        background: transparent;
+        border: none;
+        color: $slate-400;
+        font-size: 11px;
+        cursor: pointer;
+        padding: 0 3px;
+        border-radius: 4px;
+        line-height: 1;
+
+        &:hover {
+          color: $primary;
+          background: rgba(255, 255, 255, 0.8);
+        }
+      }
+    }
+
     .session-box {
       padding: 10px;
       border-radius: 12px;
@@ -574,6 +618,10 @@ $rose-100: #fee2e2;
   box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 
+  &.modal-session-card {
+    max-width: 500px;
+  }
+
   &.modal-attendance-card {
     max-width: 520px;
   }
@@ -626,6 +674,26 @@ $rose-100: #fee2e2;
       flex-direction: column;
       gap: 6px;
 
+      .label-with-action {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .btn-link-edit-session {
+          background: transparent;
+          border: none;
+          color: $primary;
+          font-size: 11px;
+          font-weight: 700;
+          cursor: pointer;
+          padding: 0;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+
       .modal-label {
         font-size: 12px;
         font-weight: 700;
@@ -660,6 +728,142 @@ $rose-100: #fee2e2;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
+    }
+
+    /* Google Calendar Style Recurrence Group */
+    .recurrence-gcal-group {
+      .gcal-select-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+
+        .gcal-recurrence-select {
+          background: #f8fafc;
+          border: 1.5px solid $slate-300;
+          font-weight: 600;
+          color: $dark-900;
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            border-color: $primary;
+            background: #ffffff;
+          }
+
+          &:focus {
+            background: #ffffff;
+            border-color: $primary;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+          }
+        }
+      }
+
+      .recurring-custom-duration-box {
+        margin-top: 10px;
+        background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        animation: fadeIn 0.2s ease;
+
+        .duration-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+
+          .duration-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: $slate-800;
+          }
+
+          .select-duration-weeks {
+            max-width: 210px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            color: $primary;
+            background: #ffffff;
+            border: 1.5px solid $primary;
+          }
+        }
+
+        .gcal-tip-text {
+          font-size: 11px;
+          color: #1e40af;
+          margin: 0;
+          line-height: 1.45;
+
+          strong {
+            font-weight: 800;
+            color: #1d4ed8;
+          }
+        }
+      }
+    }
+
+    /* Recurring Sessions Panel (Legacy fallback) */
+    .recurring-session-box {
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid $slate-200;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .recurring-checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        user-select: none;
+
+        .form-checkbox {
+          width: 16px;
+          height: 16px;
+          accent-color: $primary;
+          cursor: pointer;
+        }
+
+        .recurring-text-main {
+          font-size: 13px;
+          font-weight: 700;
+          color: $dark-900;
+        }
+      }
+
+      .recurring-options-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-top: 8px;
+        border-top: 1px solid $slate-200;
+        animation: fadeIn 0.2s ease;
+
+        .recurring-desc {
+          font-size: 12px;
+          color: $slate-600;
+        }
+
+        .select-recurring-weeks {
+          background: #ffffff;
+          border: 1.5px solid $primary;
+          font-weight: 700;
+          color: $primary;
+        }
+
+        .recurring-tip {
+          font-size: 11px;
+          color: $slate-500;
+          margin: 0;
+          line-height: 1.4;
+        }
+      }
     }
 
     .attendance-toggle-chips {
@@ -833,3 +1037,9 @@ $rose-100: #fee2e2;
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.85); }
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+

@@ -63,7 +63,16 @@ namespace SmartTutor.BusinessLogic.Services.Serv
 
             var createdSession = await _sessionRepository.AddAsync(session);
 
-            // 4. Trả về kết quả
+            // 4. Nếu có chọn lặp lại theo quy luật (Recurrence Pattern)
+            var pattern = (sessionRequestModel.RecurrencePattern ?? "NONE").ToUpperInvariant();
+            var count = sessionRequestModel.RecurringCount > 0 ? sessionRequestModel.RecurringCount : (sessionRequestModel.RecurringWeeks > 0 ? sessionRequestModel.RecurringWeeks : 4);
+
+            if (pattern != "NONE" || (sessionRequestModel.IsRecurring && count > 1))
+            {
+                await GenerateRecurringSessionsAsync(sessionRequestModel, durationHours, count);
+            }
+
+            // 5. Trả về kết quả
             return new SessionRespondModel
             {
                 Id = createdSession.Id,
@@ -76,6 +85,115 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 LessonContent = createdSession.LessonContent,
                 Status = createdSession.Status
             };
+        }
+
+        private async Task GenerateRecurringSessionsAsync(SessionRequestModel request, decimal durationHours, int count)
+        {
+            var pattern = (request.RecurrencePattern ?? "NONE").ToUpperInvariant();
+            var startDate = request.SessionDate.Date;
+
+            if (pattern == "DAILY")
+            {
+                int limit = Math.Min(count * 7, 30);
+                for (int d = 1; d < limit; d++)
+                {
+                    var nextDate = startDate.AddDays(d);
+                    var recurringSession = new Session
+                    {
+                        ClassId = request.ClassId,
+                        SessionDate = nextDate,
+                        StartTime = request.StartTime,
+                        EndTime = request.EndTime,
+                        DurationHours = durationHours,
+                        LessonContent = request.LessonContent,
+                        Status = AppEnums.SessionStatus.Scheduled.ToString(),
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _sessionRepository.AddAsync(recurringSession);
+                }
+            }
+            else if (pattern == "WEEKDAYS")
+            {
+                int totalDays = count * 7;
+                for (int d = 1; d <= totalDays; d++)
+                {
+                    var nextDate = startDate.AddDays(d);
+                    if (nextDate.DayOfWeek != DayOfWeek.Saturday && nextDate.DayOfWeek != DayOfWeek.Sunday)
+                    {
+                        var recurringSession = new Session
+                        {
+                            ClassId = request.ClassId,
+                            SessionDate = nextDate,
+                            StartTime = request.StartTime,
+                            EndTime = request.EndTime,
+                            DurationHours = durationHours,
+                            LessonContent = request.LessonContent,
+                            Status = AppEnums.SessionStatus.Scheduled.ToString(),
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _sessionRepository.AddAsync(recurringSession);
+                    }
+                }
+            }
+            else if (pattern == "MONTHLY_NTH_WEEKDAY" || pattern == "MONTHLY_LAST_WEEKDAY" || pattern == "MONTHLY")
+            {
+                int months = Math.Min(count, 12);
+                for (int m = 1; m <= months; m++)
+                {
+                    var nextDate = startDate.AddMonths(m);
+                    var recurringSession = new Session
+                    {
+                        ClassId = request.ClassId,
+                        SessionDate = nextDate,
+                        StartTime = request.StartTime,
+                        EndTime = request.EndTime,
+                        DurationHours = durationHours,
+                        LessonContent = request.LessonContent,
+                        Status = AppEnums.SessionStatus.Scheduled.ToString(),
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _sessionRepository.AddAsync(recurringSession);
+                }
+            }
+            else if (pattern == "YEARLY")
+            {
+                for (int y = 1; y <= 2; y++)
+                {
+                    var nextDate = startDate.AddYears(y);
+                    var recurringSession = new Session
+                    {
+                        ClassId = request.ClassId,
+                        SessionDate = nextDate,
+                        StartTime = request.StartTime,
+                        EndTime = request.EndTime,
+                        DurationHours = durationHours,
+                        LessonContent = request.LessonContent,
+                        Status = AppEnums.SessionStatus.Scheduled.ToString(),
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _sessionRepository.AddAsync(recurringSession);
+                }
+            }
+            else // WEEKLY, CUSTOM or default
+            {
+                int weeks = count > 1 ? count : (request.RecurringWeeks > 1 ? request.RecurringWeeks : 4);
+                for (int w = 1; w < weeks; w++)
+                {
+                    var nextDate = startDate.AddDays(w * 7);
+                    var recurringSession = new Session
+                    {
+                        ClassId = request.ClassId,
+                        SessionDate = nextDate,
+                        StartTime = request.StartTime,
+                        EndTime = request.EndTime,
+                        DurationHours = durationHours,
+                        LessonContent = request.LessonContent,
+                        Status = AppEnums.SessionStatus.Scheduled.ToString(),
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _sessionRepository.AddAsync(recurringSession);
+                }
+            }
         }
 
         public async Task<SessionRespondModel> EditSessionsAsync(SessionRequestModel sessionRequestModel)
@@ -126,7 +244,16 @@ namespace SmartTutor.BusinessLogic.Services.Serv
 
             await _sessionRepository.UpdateAsync(session);
 
-            // 6. Trả về kết quả sau khi cập nhật
+            // 6. Nếu có chọn lặp lại trong khi sửa ca học, sinh thêm các ca học trong tương lai
+            var pattern = (sessionRequestModel.RecurrencePattern ?? "NONE").ToUpperInvariant();
+            var count = sessionRequestModel.RecurringCount > 0 ? sessionRequestModel.RecurringCount : (sessionRequestModel.RecurringWeeks > 0 ? sessionRequestModel.RecurringWeeks : 4);
+
+            if (pattern != "NONE" || (sessionRequestModel.IsRecurring && count > 1))
+            {
+                await GenerateRecurringSessionsAsync(sessionRequestModel, session.DurationHours, count);
+            }
+
+            // 7. Trả về kết quả sau khi cập nhật
             return new SessionRespondModel
             {
                 Id = session.Id,
