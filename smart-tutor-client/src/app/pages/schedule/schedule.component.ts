@@ -85,6 +85,7 @@ export class ScheduleComponent implements OnInit {
   // Google Calendar style Recurrence Pattern
   selectedRecurrencePattern = 'NONE'; // 'NONE' | 'DAILY' | 'WEEKLY' | 'WEEKDAYS' | 'CUSTOM'
   recurringWeeksCount = 4; // default 4 weeks
+  removeFutureRecurring = false;
   isSubmittingSession = false;
 
   recurringDurationOptions = [
@@ -318,47 +319,12 @@ export class ScheduleComponent implements OnInit {
   }
 
   getRecurrenceOptions(): RecurrenceOptionItem[] {
-    if (!this.newSessionDate) {
-      return [
-        { id: 'NONE', label: 'Không lặp lại' },
-        { id: 'DAILY', label: 'Hàng ngày' },
-        { id: 'WEEKLY', label: 'Hàng tuần' },
-        { id: 'WEEKDAYS', label: 'Mọi ngày trong tuần (từ thứ Hai tới thứ Sáu)' },
-        { id: 'CUSTOM', label: 'Tùy chỉnh...' }
-      ];
-    }
-
-    const parts = this.newSessionDate.split('-');
-    const y = Number(parts[0]);
-    const m = Number(parts[1]) - 1;
-    const d = Number(parts[2]);
-    const dateObj = new Date(y, m, d);
-
-    const days = ['chủ nhật', 'thứ hai', 'thứ ba', 'thứ tư', 'thứ năm', 'thứ sáu', 'thứ bảy'];
-    const weekdayName = days[dateObj.getDay()];
-    const nthOrdinals = ['', 'thứ nhất', 'thứ hai', 'thứ ba', 'thứ tư', 'thứ năm'];
-    const nthIndex = Math.ceil(d / 7);
-    const nthLabel = nthOrdinals[nthIndex] || `thứ ${nthIndex}`;
-
-    const nextWeekSameDay = new Date(y, m, d + 7);
-    const isLast = nextWeekSameDay.getMonth() !== m;
-
-    const options: RecurrenceOptionItem[] = [
+    const weekday = this.getWeekdayNameForDate(this.newSessionDate);
+    return [
       { id: 'NONE', label: 'Không lặp lại' },
       { id: 'DAILY', label: 'Hàng ngày' },
-      { id: 'WEEKLY', label: `Hàng tuần vào ${weekdayName}` },
-      { id: 'MONTHLY_NTH_WEEKDAY', label: `Hàng tháng vào ngày ${weekdayName} ${nthLabel}` }
+      { id: 'WEEKLY', label: `Hàng tuần vào ${weekday}` }
     ];
-
-    if (isLast) {
-      options.push({ id: 'MONTHLY_LAST_WEEKDAY', label: `Hàng tháng vào ${weekdayName} cuối cùng` });
-    }
-
-    options.push({ id: 'YEARLY', label: `Hàng năm vào ngày ${d} tháng ${m + 1}` });
-    options.push({ id: 'WEEKDAYS', label: 'Mọi ngày trong tuần (từ thứ Hai tới thứ Sáu)' });
-    options.push({ id: 'CUSTOM', label: 'Tùy chỉnh...' });
-
-    return options;
   }
 
   toggleScheduleView(view: 'list' | 'grid'): void {
@@ -411,6 +377,7 @@ export class ScheduleComponent implements OnInit {
     this.newSessionTopic = session.lessonContent || '';
     this.selectedRecurrencePattern = 'NONE';
     this.recurringWeeksCount = 4;
+    this.removeFutureRecurring = false;
 
     this.isAddSessionModalOpen = true;
   }
@@ -419,6 +386,7 @@ export class ScheduleComponent implements OnInit {
     this.isAddSessionModalOpen = false;
     this.isEditingSession = false;
     this.editingSessionId = null;
+    this.removeFutureRecurring = false;
   }
 
   submitAddSession(): void {
@@ -467,7 +435,8 @@ export class ScheduleComponent implements OnInit {
         isRecurring: isRec,
         recurrencePattern: this.selectedRecurrencePattern,
         recurringWeeks: count,
-        recurringCount: count
+        recurringCount: count,
+        removeFutureRecurring: !isRec
       };
 
       this.sessionService.editSession(editPayload).subscribe({
@@ -475,7 +444,15 @@ export class ScheduleComponent implements OnInit {
           this.isSubmittingSession = false;
           if (res?.succeeded) {
             this.closeAddSessionModal();
-            this.showToast('✓ Đã cập nhật thông tin ca dạy thành công!', 'success');
+            let msg = '✓ Đã cập nhật thông tin ca dạy thành công!';
+            if (!isRec) {
+              msg = '✓ Đã cập nhật ca dạy (không lặp lại và xóa các ca lặp tương lai)!';
+            } else if (this.selectedRecurrencePattern === 'WEEKLY') {
+              msg = `✓ Đã cập nhật và lên lịch lặp lại vào mỗi ${this.getWeekdayNameForDate(this.newSessionDate)} cho ${count} tuần tiếp theo!`;
+            } else if (this.selectedRecurrencePattern === 'DAILY') {
+              msg = `✓ Đã cập nhật và lên lịch lặp lại hàng ngày trong ${count} tuần!`;
+            }
+            this.showToast(msg, 'success');
             this.loadSchedule();
           } else {
             this.showToast(res?.message || 'Có lỗi khi cập nhật ca dạy', 'warning');

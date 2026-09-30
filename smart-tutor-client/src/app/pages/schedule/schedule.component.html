@@ -252,7 +252,7 @@
             </select>
           </div>
 
-          <!-- Tùy chỉnh khoảng thời gian lặp lại -->
+          <!-- Tùy chỉnh khoảng thời gian lặp lại khi chọn Hàng ngày hoặc Hàng tuần -->
           <div *ngIf="selectedRecurrencePattern !== 'NONE'" class="recurring-custom-duration-box">
             <div class="duration-row">
               <span class="duration-title">Thời gian lặp lại:</span>
@@ -265,22 +265,10 @@
             
             <p class="gcal-tip-text">
               <span *ngIf="selectedRecurrencePattern === 'WEEKLY'">
-                💡 Tự động xếp lịch vào mỗi <strong>{{ getWeekdayNameForDate(newSessionDate) }}</strong> trong <strong>{{ recurringWeeksCount }} tuần</strong> tiếp theo.
+                💡 Tự động xếp lịch vào mỗi <strong>{{ getWeekdayNameForDate(newSessionDate) | titlecase }}</strong> cho <strong>{{ recurringWeeksCount }} tuần</strong> tiếp theo.
               </span>
               <span *ngIf="selectedRecurrencePattern === 'DAILY'">
                 💡 Tự động xếp lịch hàng ngày liên tục trong <strong>{{ recurringWeeksCount }} tuần</strong>.
-              </span>
-              <span *ngIf="selectedRecurrencePattern === 'WEEKDAYS'">
-                💡 Tự động xếp lịch vào tất cả các ngày từ <strong>Thứ Hai tới Thứ Sáu</strong> trong <strong>{{ recurringWeeksCount }} tuần</strong>.
-              </span>
-              <span *ngIf="selectedRecurrencePattern === 'MONTHLY_NTH_WEEKDAY' || selectedRecurrencePattern === 'MONTHLY_LAST_WEEKDAY'">
-                💡 Tự động xếp lịch định kỳ hàng tháng trong <strong>{{ recurringWeeksCount }} tháng</strong>.
-              </span>
-              <span *ngIf="selectedRecurrencePattern === 'YEARLY'">
-                💡 Tự động xếp lịch định kỳ hàng năm vào ngày này.
-              </span>
-              <span *ngIf="selectedRecurrencePattern === 'CUSTOM'">
-                💡 Tự động tạo chuỗi ca dạy định kỳ trong <strong>{{ recurringWeeksCount }} tuần</strong>.
               </span>
             </p>
           </div>

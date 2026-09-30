@@ -40,6 +40,7 @@ namespace SmartTutor.BusinessLogic.Models
             [Range(1, 52, ErrorMessage = "Số lần lặp lại phải từ 1 đến 52.")]
             public int RecurringWeeks { get; set; } = 1;
             public int RecurringCount { get; set; } = 4;
+            public bool RemoveFutureRecurring { get; set; } = false;
         }
 
         public class SessionRespondModel

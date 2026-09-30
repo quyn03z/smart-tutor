@@ -244,12 +244,38 @@ namespace SmartTutor.BusinessLogic.Services.Serv
 
             await _sessionRepository.UpdateAsync(session);
 
-            // 6. Nếu có chọn lặp lại trong khi sửa ca học, sinh thêm các ca học trong tương lai
+            // 6. Xử lý Lặp lại / Bỏ lặp lại ca học trong tương lai
             var pattern = (sessionRequestModel.RecurrencePattern ?? "NONE").ToUpperInvariant();
             var count = sessionRequestModel.RecurringCount > 0 ? sessionRequestModel.RecurringCount : (sessionRequestModel.RecurringWeeks > 0 ? sessionRequestModel.RecurringWeeks : 4);
 
-            if (pattern != "NONE" || (sessionRequestModel.IsRecurring && count > 1))
+            if (pattern == "NONE" || sessionRequestModel.RemoveFutureRecurring)
             {
+                // Người dùng chọn "Không lặp lại" -> Tự động xóa các ca học định kỳ trong tương lai chưa hoàn thành
+                var futureSessions = await _sessionRepository.FindAsync(s =>
+                    s.ClassId == session.ClassId &&
+                    s.SessionDate > session.SessionDate &&
+                    s.Status == AppEnums.SessionStatus.Scheduled.ToString() &&
+                    s.StartTime == session.StartTime);
+
+                if (futureSessions.Any())
+                {
+                    await _sessionRepository.DeleteRangeAsync(futureSessions);
+                }
+            }
+            else if (pattern != "NONE" || (sessionRequestModel.IsRecurring && count > 1))
+            {
+                // Người dùng chọn lặp lại mới -> Xóa các ca cũ chưa hoàn thành cùng khung giờ để tránh trùng lặp, sau đó sinh ca mới
+                var existingFutureSessions = await _sessionRepository.FindAsync(s =>
+                    s.ClassId == session.ClassId &&
+                    s.SessionDate > session.SessionDate &&
+                    s.Status == AppEnums.SessionStatus.Scheduled.ToString() &&
+                    s.StartTime == session.StartTime);
+
+                if (existingFutureSessions.Any())
+                {
+                    await _sessionRepository.DeleteRangeAsync(existingFutureSessions);
+                }
+
                 await GenerateRecurringSessionsAsync(sessionRequestModel, session.DurationHours, count);
             }
 

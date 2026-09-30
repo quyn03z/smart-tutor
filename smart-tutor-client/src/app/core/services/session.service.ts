@@ -78,6 +78,7 @@ export interface SessionRequest {
   recurringWeeks?: number;
   recurrencePattern?: string; // NONE, DAILY, WEEKLY, WEEKDAYS, CUSTOM
   recurringCount?: number;
+  removeFutureRecurring?: boolean;
 }
 
 export interface StudentAttendanceDetailItem {

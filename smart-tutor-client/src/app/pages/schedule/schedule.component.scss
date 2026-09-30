@@ -3,6 +3,7 @@ $primary-hover: #1d4ed8;
 $primary-light: #eff6ff;
 
 $dark-900: #0f172a;
+$dark-800: #1e293b;
 $dark-700: #334155;
 $slate-900: #0f172a;
 $slate-800: #1e293b;
@@ -32,6 +33,7 @@ $amber-50: #fffbeb;
 $amber-100: #fef3c7;
 
 $rose-500: #ef4444;
+$rose-600: #e11d48;
 $rose-700: #b91c1c;
 $rose-50: #fef2f2;
 $rose-100: #fee2e2;
@@ -704,19 +706,39 @@ $rose-100: #fee2e2;
       .form-select,
       .form-textarea {
         background: $slate-50;
-        border: 1px solid $slate-300;
+        border: 1.5px solid $slate-300;
         border-radius: 12px;
-        padding: 10px 12px;
-        font-size: 12px;
+        padding: 10px 14px;
+        font-size: 12.5px;
+        font-weight: 500;
         color: $dark-900;
         outline: none;
         font-family: inherit;
+        transition: all 0.2s ease;
+
+        &:hover {
+          border-color: $slate-400;
+          background: #ffffff;
+        }
 
         &:focus {
           background: #ffffff;
           border-color: $primary;
           box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
         }
+      }
+
+      .form-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-color: $slate-50;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        background-size: 16px 16px;
+        padding-right: 38px;
+        cursor: pointer;
       }
 
       .form-textarea {
@@ -732,71 +754,133 @@ $rose-100: #fee2e2;
 
     /* Google Calendar Style Recurrence Group */
     .recurrence-gcal-group {
+      margin-top: 4px;
+
+      .modal-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        color: $slate-800;
+        margin-bottom: 6px;
+      }
+
       .gcal-select-container {
         position: relative;
         display: flex;
         align-items: center;
+        width: 100%;
 
         .gcal-recurrence-select {
-          background: #f8fafc;
+          width: 100%;
+          height: 44px;
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-color: #f8fafc;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 14px center;
+          background-size: 16px 16px;
           border: 1.5px solid $slate-300;
+          border-radius: 12px;
+          padding: 10px 42px 10px 14px;
+          font-size: 13px;
           font-weight: 600;
           color: $dark-900;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 
           &:hover {
-            border-color: $primary;
-            background: #ffffff;
+            border-color: $slate-400;
+            background-color: #ffffff;
           }
 
           &:focus {
-            background: #ffffff;
+            background-color: #ffffff;
             border-color: $primary;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15), 0 2px 6px rgba(37, 99, 235, 0.06);
+          }
+
+          option {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 12px;
+            color: $dark-900;
+            background: #ffffff;
           }
         }
       }
 
       .recurring-custom-duration-box {
-        margin-top: 10px;
-        background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%);
-        border: 1px solid #bfdbfe;
-        border-radius: 12px;
-        padding: 12px 14px;
+        margin-top: 12px;
+        background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+        border: 1.5px solid #bfdbfe;
+        border-radius: 14px;
+        padding: 14px 16px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        animation: fadeIn 0.2s ease;
+        gap: 10px;
+        animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 3px 12px rgba(37, 99, 235, 0.05);
 
         .duration-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 10px;
+          gap: 12px;
 
           .duration-title {
-            font-size: 12px;
+            font-size: 12.5px;
             font-weight: 700;
             color: $slate-800;
+            letter-spacing: -0.01em;
           }
 
           .select-duration-weeks {
-            max-width: 210px;
-            padding: 6px 10px;
+            max-width: 220px;
+            height: 38px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: #ffffff;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px 14px;
+            padding: 6px 30px 6px 12px;
             font-size: 12px;
             font-weight: 700;
             color: $primary;
-            background: #ffffff;
-            border: 1.5px solid $primary;
+            border: 1.5px solid #93c5fd;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+              border-color: $primary;
+              background-color: #f8fafc;
+            }
+
+            &:focus {
+              border-color: $primary;
+              box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+            }
           }
         }
 
         .gcal-tip-text {
-          font-size: 11px;
+          font-size: 11.5px;
           color: #1e40af;
+          background: rgba(219, 234, 254, 0.5);
+          border-left: 3px solid #3b82f6;
+          padding: 8px 12px;
+          border-radius: 0 8px 8px 0;
           margin: 0;
-          line-height: 1.45;
+          line-height: 1.5;
 
           strong {
             font-weight: 800;
