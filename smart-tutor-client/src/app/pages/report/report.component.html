@@ -10,54 +10,56 @@
           class="form-select"
           [(ngModel)]="selectedStudentId" 
           (change)="onStudentChange()">
-          <optgroup label="Học sinh Gia sư 1-1">
-            <option value="duyanh">Duy Anh - Toán Lớp 9</option>
-            <option value="minhkhang">Minh Khang - Hình Lớp 11</option>
-            <option value="baotram">Bảo Trâm - Toán Lớp 8</option>
+          <optgroup *ngIf="individualStudents.length > 0" label="Học sinh Gia sư 1-1">
+            <option *ngFor="let s of individualStudents" [value]="s.id">
+              {{ s.fullName }} {{ s.className ? '– ' + s.className : (s.gradeLevel ? '– ' + s.gradeLevel : '') }}
+            </option>
           </optgroup>
-          <optgroup label="Học sinh trong Lớp Nhóm">
-            <option value="lop9a_hs1">Hoàng Yến (Lớp Toán 9A)</option>
-            <option value="lop9a_hs2">Đức Anh (Lớp Toán 9A)</option>
+          <optgroup *ngIf="groupStudents.length > 0" label="Học sinh trong Lớp Nhóm">
+            <option *ngFor="let s of groupStudents" [value]="s.id">
+              {{ s.fullName }} ({{ s.className || 'Lớp Nhóm' }})
+            </option>
           </optgroup>
+          <ng-container *ngIf="students.length === 0">
+            <option [value]="1">Duy Anh - Toán Lớp 9</option>
+          </ng-container>
         </select>
       </div>
       <div class="selector-field w-period">
         <label class="field-label">Kỳ Báo Cáo</label>
-        <select class="form-select" [(ngModel)]="selectedMonth">
-          <option>Tháng 8 / 2026</option>
-          <option>Tháng 7 / 2026</option>
-          <option>Tháng 9 / 2026</option>
+        <select class="form-select" [(ngModel)]="selectedMonthKey" (change)="onMonthChange()">
+          <option *ngFor="let m of availableMonths" [value]="m.key">{{ m.label }}</option>
         </select>
       </div>
     </div>
 
     <!-- TÍNH NĂNG: AUTO BANK SYNC WEBHOOK -->
-    <div class="card webhook-card">
+    <div class="card webhook-card" *ngIf="currentReport">
       <div class="webhook-info">
         <div class="webhook-status-row">
           <span class="status-chip-active">
             <span class="pulse-dot"></span> Webhook Ngân Hàng: Active
           </span>
-          <span class="sub-bank-info">| Techcombank ({{ teacherAccountNum }})</span>
+          <span class="sub-bank-info">| {{ currentReport.teacherBankCode || 'Techcombank' }} ({{ currentReport.teacherBankAccountNumber || '9986678999' }})</span>
         </div>
         <h4 class="webhook-title">Tự động gạch nợ khi Phụ huynh chuyển khoản</h4>
         <p class="webhook-syntax-desc">
           Cú pháp nhận diện: 
-          <strong class="code-badge">{{ currentStudent.transferSyntax }}</strong>
+          <strong class="code-badge">{{ currentReport.transferCode }}</strong>
         </p>
       </div>
       <button 
         type="button" 
         (click)="simulateBankWebhook()" 
         class="btn-simulate-webhook"
-        [class.paid]="currentStudent.isPaid">
+        [class.paid]="isPaid">
         <span>⚡</span>
-        <span>{{ currentStudent.isPaid ? 'Hoàn Tác Tiền Về' : 'Giả Lập Tiền Về' }}</span>
+        <span>{{ isPaid ? 'Hoàn Tác Tiền Về' : 'Giả Lập Tiền Về' }}</span>
       </button>
     </div>
 
     <!-- Bảng nhật ký ca dạy trong tháng -->
-    <div class="card session-log-card">
+    <div class="card session-log-card" *ngIf="currentReport">
       <div class="card-header-flex">
         <div>
           <h3 class="section-title">Nhật ký các ca học trong tháng</h3>
@@ -81,31 +83,31 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of currentStudent.sessions">
-              <td class="col-center font-bold text-slate-700">Buổi {{ item.sessionNumber }}</td>
-              <td class="font-semibold text-blue-700">{{ item.date }}</td>
-              <td class="font-medium text-slate-800">{{ item.topic }}</td>
+            <tr *ngFor="let item of currentReport.sessions; let i = index">
+              <td class="col-center font-bold text-slate-700">Buổi {{ i + 1 }}</td>
+              <td class="font-semibold text-blue-700">{{ formatSessionDate(item.sessionDate) }}</td>
+              <td class="font-medium text-slate-800">{{ item.lessonContent || 'Chuyên đề học tập theo phân phối chương trình' }}</td>
               <td class="col-center">
                 <span 
                   class="hw-badge"
-                  [class.hw-100]="item.homework === '100%'"
-                  [class.hw-mid]="item.homework !== '100%' && item.homework !== '--'">
-                  {{ item.homework }}
+                  [class.hw-100]="item.homeworkScore >= 90"
+                  [class.hw-mid]="item.homeworkScore > 0 && item.homeworkScore < 90">
+                  {{ item.homeworkScore > 0 ? item.homeworkScore + '%' : (item.homeworkScore === 0 ? '--' : item.homeworkScore + '%') }}
                 </span>
               </td>
               <td>
                 <span 
                   class="attitude-badge"
-                  [class.att-good]="item.attitude === 'Tốt' || item.attitude === 'Chăm chỉ'"
+                  [class.att-good]="item.attitude === 'Tốt' || item.attitude === 'Chăm chỉ' || !item.attitude"
                   [class.att-warn]="item.attitude === 'Lười học' || item.attitude === 'Nói chuyện' || item.attitude === 'Cần tập trung'">
-                  {{ item.attitude }}
+                  {{ item.attitude || 'Tốt' }}
                 </span>
               </td>
               <td class="col-right">
                 <button 
                   type="button" 
                   class="btn-delete-session" 
-                  (click)="deleteSession(item.id)" 
+                  (click)="deleteSession(item.sessionId)" 
                   title="Xóa buổi này">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -115,7 +117,7 @@
               </td>
             </tr>
 
-            <tr *ngIf="currentStudent.sessions.length === 0">
+            <tr *ngIf="!currentReport.sessions || currentReport.sessions.length === 0">
               <td colspan="6" class="empty-sessions">
                 Chưa có buổi học nào được ghi nhận trong tháng này. Bấm <strong>+ Thêm buổi dạy</strong> để bắt đầu.
               </td>
@@ -126,7 +128,7 @@
     </div>
 
     <!-- Nhận xét học tập & AI -->
-    <div class="card ai-card">
+    <div class="card ai-card" *ngIf="currentReport">
       <div class="card-header-flex">
         <h3 class="section-title">Đánh giá chung & Lộ trình</h3>
         <button type="button" (click)="triggerAI()" class="btn-ai-generate">
@@ -136,34 +138,35 @@
       <div>
         <textarea 
           rows="3" 
-          [(ngModel)]="currentStudent.aiFeedback"
+          [(ngModel)]="currentReport.teacherComment"
+          (blur)="saveTeacherComment()"
           class="form-textarea" 
           placeholder="Nhập nhận xét sư phạm dành cho học sinh..."></textarea>
       </div>
     </div>
 
     <!-- 2-Way Parent Feedback -->
-    <div class="card parent-feedback-card">
+    <div class="card parent-feedback-card" *ngIf="currentReport">
       <div class="card-header-flex">
         <h3 class="section-title flex-center gap-2">
           <span>💬</span> Phản Hồi Từ Phụ Huynh (2 Chiều)
         </h3>
-        <span class="badge-notif">1 lời nhắn mới</span>
+        <span class="badge-notif" *ngIf="currentReport.parentNote">1 lời nhắn mới</span>
       </div>
       
       <div class="parent-message-box">
         <div class="parent-header-row">
-          <strong class="parent-sender">Phụ huynh ({{ currentStudent.parentPhone }})</strong>
-          <span class="parent-time">{{ currentStudent.parentNoteTime || 'Hôm qua 21:15' }}</span>
+          <strong class="parent-sender">Phụ huynh {{ currentReport.parentName ? currentReport.parentName : (currentReport.parentPhone ? '(' + currentReport.parentPhone + ')' : '') }}</strong>
+          <span class="parent-time">{{ currentReport.parentNoteTime || 'Hôm qua 21:15' }}</span>
         </div>
         <p class="parent-quote">
-          "{{ currentStudent.parentNote || 'Cảm ơn thầy. Dạo này cháu có tập trung làm bài ở nhà hơn, nhờ thầy đôn đốc thêm phần hình học giúp gia đình nhé ạ.' }}"
+          "{{ currentReport.parentNote || 'Cảm ơn thầy. Dạo này cháu có tập trung làm bài ở nhà hơn, nhờ thầy đôn đốc thêm giúp gia đình nhé ạ.' }}"
         </p>
         <div class="parent-tags-row">
-          <span *ngIf="currentStudent.parentAcknowledged" class="tag-ack">
+          <span *ngIf="currentReport.parentAcknowledged" class="tag-ack">
             ✓ Đã xác nhận xem báo cáo
           </span>
-          <span *ngIf="!currentStudent.parentAcknowledged" class="tag-pending-ack">
+          <span *ngIf="!currentReport.parentAcknowledged" class="tag-pending-ack">
             Chưa mở xem báo cáo
           </span>
         </div>
@@ -172,18 +175,18 @@
   </div>
 
   <!-- CỘT PHẢI: Live Preview Thẻ Học Phí -->
-  <div class="report-right-col">
-    <div class="live-card-wrapper" [class.paid-card]="currentStudent.isPaid">
+  <div class="report-right-col" *ngIf="currentReport">
+    <div class="live-card-wrapper" [class.paid-card]="isPaid">
       
       <!-- Teacher header bar -->
       <div class="card-header-meta">
-        <span class="gv-name">GV: {{ teacherName }}</span>
-        <span class="gv-phone">SĐT: 0978.783.058</span>
+        <span class="gv-name">GV: {{ currentReport.teacherName || 'Thầy Đình Quyền' }}</span>
+        <span class="gv-phone">SĐT: {{ currentReport.teacherPhone || '0978.783.058' }}</span>
       </div>
 
       <!-- Title -->
       <div class="card-title-box">
-        <h2 class="card-report-title">HỌC PHÍ {{ selectedMonth | uppercase }}</h2>
+        <h2 class="card-report-title">HỌC PHÍ {{ selectedMonthLabel | uppercase }}</h2>
       </div>
 
       <!-- 2 Cột: Thông tin HS & Tổng tiền VietQR -->
@@ -192,11 +195,11 @@
         <div class="sub-card info-sub-card">
           <div>
             <span class="sub-card-label">THÔNG TIN HỌC SINH</span>
-            <div class="student-name-val">{{ currentStudent.name }}</div>
-            <div class="student-grade-val">{{ currentStudent.grade }} ({{ currentStudent.subject }})</div>
+            <div class="student-name-val">{{ currentReport.studentName }}</div>
+            <div class="student-grade-val">{{ currentReport.gradeLevel || 'Lớp 9' }} ({{ currentReport.subject || currentReport.className || 'Toán' }})</div>
           </div>
           <div class="sub-card-stats">
-            <div class="stat-line">Đơn giá: <strong>{{ formatMoney(currentStudent.ratePerSession) }}/b</strong></div>
+            <div class="stat-line">Đơn giá: <strong>{{ formatMoney(currentReport.ratePerSession) }}/b</strong></div>
             <div class="stat-line">Buổi học: <strong>{{ totalSessions }} buổi</strong></div>
             <div class="stat-line">Giờ học: <strong>{{ totalHours }} giờ</strong></div>
           </div>
@@ -217,8 +220,8 @@
           </div>
 
           <div class="bank-details-mini">
-            <div>Techcombank: <strong>{{ teacherAccountNum }}</strong></div>
-            <div>CTK: <strong>{{ teacherAccountName }}</strong></div>
+            <div>{{ currentReport.teacherBankCode || 'Techcombank' }}: <strong>{{ currentReport.teacherBankAccountNumber || '9986678999' }}</strong></div>
+            <div>CTK: <strong>{{ currentReport.teacherBankAccountName || 'NGUYEN DINH QUYEN' }}</strong></div>
           </div>
         </div>
       </div>
@@ -227,10 +230,10 @@
       <div class="study-dates-section">
         <span class="section-label">Ngày học thực tế:</span>
         <div class="dates-pill-container">
-          <span *ngFor="let s of currentStudent.sessions" class="date-pill">
-            {{ s.date }}
+          <span *ngFor="let s of currentReport.sessions" class="date-pill">
+            {{ formatSessionDate(s.sessionDate) }}
           </span>
-          <span *ngIf="currentStudent.sessions.length === 0" class="text-xs text-slate-400">
+          <span *ngIf="!currentReport.sessions || currentReport.sessions.length === 0" class="text-xs text-slate-400">
             Chưa có ngày học
           </span>
         </div>
@@ -240,22 +243,22 @@
       <div class="ai-feedback-preview">
         <div class="preview-ai-label">NHẬN XÉT HỌC TẬP</div>
         <p class="preview-ai-body">
-          {{ currentStudent.aiFeedback }}
+          {{ currentReport.teacherComment || 'Chưa có nhận xét cho kỳ học này.' }}
         </p>
       </div>
 
       <!-- Trạng thái thanh toán -->
       <div class="payment-status-wrapper">
         <div class="status-badge-container">
-          <span *ngIf="!currentStudent.isPaid" class="badge-pending-pay">
+          <span *ngIf="!isPaid" class="badge-pending-pay">
             ● Chờ phụ huynh quét mã chuyển khoản
           </span>
-          <span *ngIf="currentStudent.isPaid" class="badge-success-pay">
+          <span *ngIf="isPaid" class="badge-success-pay">
             ✓ ĐÃ THANH TOÁN THÀNH CÔNG (Techcombank Webhook)
           </span>
         </div>
         <p class="status-desc-text">
-          {{ currentStudent.isPaid ? 'Giao dịch đã được hệ thống khớp mã đối soát và gạch nợ tự động.' : 'Hệ thống sẽ tự động gạch nợ ngay khi tiền vào tài khoản giáo viên.' }}
+          {{ isPaid ? 'Giao dịch đã được hệ thống khớp mã đối soát và gạch nợ tự động.' : 'Hệ thống sẽ tự động gạch nợ ngay khi tiền vào tài khoản giáo viên.' }}
         </p>
       </div>
 

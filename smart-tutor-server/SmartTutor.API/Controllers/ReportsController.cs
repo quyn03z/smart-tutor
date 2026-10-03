@@ -44,6 +44,17 @@ namespace SmartTutor.API.Controllers
         }
 
 
+        // Lấy hoặc sinh preview phiếu báo cáo tháng theo StudentId và ReportMonth
+        [HttpGet("preview")]
+        public async Task<IActionResult> GetStudentReportPreview(
+            [FromQuery] int studentId,
+            [FromQuery] string reportMonth,
+            [FromQuery] int? classId)
+        {
+            var result = await _repoortService.GetOrCreateStudentReportPreviewAsync(studentId, reportMonth, classId);
+            return Ok(ApiResult<MonthlyReportDetailResponseDto>.Success(result));
+        }
+
         // Lấy chi tiết phiếu báo cáo tháng để Live Preview (kèm danh sách chi tiết các buổi học)
         [HttpGet("{reportId}")]
         public async Task<IActionResult> GetMonthlyReportDetail([FromRoute] int reportId)

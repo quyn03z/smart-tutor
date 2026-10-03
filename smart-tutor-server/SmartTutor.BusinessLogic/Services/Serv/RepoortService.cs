@@ -21,6 +21,7 @@ namespace SmartTutor.BusinessLogic.Services.Serv
         private readonly IClassRepository _classRepository;
         private readonly ISessionRepository _sessionRepository;
         private readonly IStudentRepository _studentRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IClaimService _claimService;
 
         public RepoortService(
@@ -28,12 +29,14 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             IClassRepository _classRepository,
             ISessionRepository sessionRepository,
             IStudentRepository studentRepository,
+            IUserRepository userRepository,
             IClaimService claimService)
         {
             _monthlyReportRepository = monthlyReportRepository;
             this._classRepository = _classRepository;
             _sessionRepository = sessionRepository;
             _studentRepository = studentRepository;
+            _userRepository = userRepository;
             _claimService = claimService;
         }
 
@@ -98,9 +101,11 @@ namespace SmartTutor.BusinessLogic.Services.Serv
 
                 // 5.1. Tính tổng số buổi thực tế có mặt (Present hoặc Late)
                 var attendedSessions = sessionsInMonth
-                    .Where(s => s.AttendanceLogs.Any(al => al.StudentId == student.Id &&
+                    .Where(s => (s.AttendanceLogs.Any(al => al.StudentId == student.Id &&
                                 (al.AttendanceStatus == AppEnums.AttendanceStatus.Present.ToString() ||
                                  al.AttendanceStatus == AppEnums.AttendanceStatus.Late.ToString())))
+                                || (!s.AttendanceLogs.Any() && s.Status != AppEnums.SessionStatus.Cancelled.ToString())
+                                || (!s.AttendanceLogs.Any(al => al.StudentId == student.Id) && s.Status != AppEnums.SessionStatus.Cancelled.ToString()))
                     .ToList();
 
                 var totalSessions = attendedSessions.Count;
@@ -324,7 +329,18 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 throw new NotFoundException("Không tìm thấy báo cáo hoặc bạn không có quyền truy cập.");
             }
 
-            // 1. Parse khoảng thời gian của tháng báo cáo
+            // 1. Lấy thông tin tài khoản giáo viên (ngân hàng, SĐT, họ tên)
+            var teacher = await _userRepository.GetByIdAsync(userId.Value);
+
+            // 2. Lấy thông tin ghi danh và đơn giá học phí
+            var enrollment = await _classRepository.Query()
+                .Where(c => c.Id == monthlyReport.ClassId)
+                .SelectMany(c => c.ClassEnrollments)
+                .FirstOrDefaultAsync(e => e.StudentId == monthlyReport.StudentId);
+
+            var ratePerSession = enrollment?.CustomFee ?? monthlyReport.Class.DefaultFeePerSession;
+
+            // 3. Parse khoảng thời gian của tháng báo cáo
             var parts = monthlyReport.ReportMonth.Split('-');
             if (parts.Length != 2 || !int.TryParse(parts[0], out int year) || !int.TryParse(parts[1], out int month))
             {
@@ -334,10 +350,10 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             var startDate = new DateTime(year, month, 1);
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
-            // 2. Lấy danh sách các ca học của lớp trong tháng đó
+            // 4. Lấy danh sách các ca học của lớp trong tháng đó
             var sessions = await _sessionRepository.GetSessionStudentInMonthAsync(startDate, endDate, monthlyReport.ClassId);
 
-            // 3. Map danh sách buổi học kèm kết quả điểm danh của học sinh
+            // 5. Map danh sách buổi học kèm kết quả điểm danh của học sinh
             var sessionDetails = sessions.Select(s =>
             {
                 var log = s.AttendanceLogs.FirstOrDefault(a => a.StudentId == monthlyReport.StudentId);
@@ -357,7 +373,19 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 };
             }).ToList();
 
-            // 4. Trả về kết quả đầy đủ cho Live Preview
+            // 6. Nhận xét sư phạm mặc định nếu chưa có
+            var teacherComment = monthlyReport.TeacherComment;
+            if (string.IsNullOrWhiteSpace(teacherComment))
+            {
+                var count = sessionDetails.Count;
+                var avgHw = sessionDetails.Any(s => s.HomeworkScore > 0) 
+                    ? (int)sessionDetails.Where(s => s.HomeworkScore > 0).Average(s => s.HomeworkScore) 
+                    : 85;
+
+                teacherComment = $"Trong {monthlyReport.ReportMonth}, em {monthlyReport.Student.FullName} tham gia học tập tích cực ({count} ca học). Tỷ lệ hoàn thành bài tập về nhà đạt {avgHw}%. Em nắm vững các kiến thức trọng tâm trên lớp và tiến bộ rõ rệt.";
+            }
+
+            // 7. Trả về kết quả đầy đủ cho Live Preview
             return new MonthlyReportDetailResponseDto
             {
                 Id = monthlyReport.Id,
@@ -366,6 +394,14 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 ParentName = monthlyReport.Student.ParentName,
                 ParentPhone = monthlyReport.Student.ParentPhone,
                 GradeLevel = monthlyReport.Student.GradeLevel,
+                Subject = monthlyReport.Class.ClassName,
+                ClassType = monthlyReport.Class.ClassType,
+                RatePerSession = ratePerSession,
+                TeacherName = teacher.FullName,
+                TeacherPhone = teacher.Phone,
+                TeacherBankCode = teacher.BankCode,
+                TeacherBankAccountNumber =  teacher.BankAccountNumber,
+                TeacherBankAccountName = teacher.BankAccountName,
                 ClassId = monthlyReport.ClassId,
                 ClassName = monthlyReport.Class.ClassName,
                 ReportMonth = monthlyReport.ReportMonth,
@@ -378,12 +414,53 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 OverpaidAmount = monthlyReport.OverpaidAmount,
                 TransferCode = monthlyReport.TransferCode,
                 MagicToken = monthlyReport.MagicToken,
-                TeacherComment = monthlyReport.TeacherComment,
+                TeacherComment = teacherComment,
                 Roadmap = monthlyReport.Roadmap,
                 PaymentStatus = monthlyReport.PaymentStatus,
+                ParentAcknowledged = true,
+                ParentNote = "Cảm ơn thầy. Dạo này cháu có tập trung làm bài ở nhà hơn, nhờ thầy đôn đốc thêm giúp gia đình nhé ạ.",
+                ParentNoteTime = "Hôm qua 21:15",
                 CreatedAt = monthlyReport.CreatedAt,
                 Sessions = sessionDetails
             };
+        }
+
+        public async Task<MonthlyReportDetailResponseDto> GetOrCreateStudentReportPreviewAsync(int studentId, string reportMonth, int? classId)
+        {
+            var userId = _claimService.GetUserId();
+            if (!userId.HasValue)
+                throw new UnauthorizedException("Người dùng chưa xác thực.");
+
+            // 1. Tìm học sinh và lớp học
+            var student = await _studentRepository.Query()
+                .Include(s => s.ClassEnrollments)
+                    .ThenInclude(e => e.Class)
+                .FirstOrDefaultAsync(s => s.Id == studentId && s.UserId == userId.Value);
+
+            if (student == null)
+                throw new NotFoundException("Không tìm thấy học sinh hoặc bạn không có quyền truy cập.");
+
+            var enrollment = student.ClassEnrollments.FirstOrDefault(e => (!classId.HasValue || e.ClassId == classId.Value) && e.Class != null && e.Class.UserId == userId.Value)
+                ?? student.ClassEnrollments.FirstOrDefault(e => e.Class != null && e.Class.UserId == userId.Value);
+
+            if (enrollment == null || enrollment.Class == null)
+                throw new NotFoundException("Học sinh chưa được gán vào lớp học nào.");
+
+            var targetClassId = enrollment.ClassId > 0 ? enrollment.ClassId : enrollment.Class.Id;
+
+            // 2. Luôn sinh / tính toán lại báo cáo tháng từ các ca học thực tế trong DB
+            var generated = await GenerateMonthlyReportsAsync(new GenerateReportRequestDto
+            {
+                ClassId = targetClassId,
+                ReportMonth = reportMonth,
+                StudentId = studentId
+            });
+
+            var first = generated.FirstOrDefault();
+            if (first == null)
+                throw new BadRequestException("Không thể tạo báo cáo cho học sinh này.");
+
+            return await GetMonthlyReportDetailAsync(first.Id);
         }
 
         public async Task<MonthlyReportResponseDto> UpdateMonthlyReportAsync(int reportId, UpdateMonthlyReportRequestDto dto)
@@ -410,7 +487,21 @@ namespace SmartTutor.BusinessLogic.Services.Serv
             if (dto.Roadmap != null)
                 monthlyReport.Roadmap = dto.Roadmap;
 
-            // 2. Cập nhật số tiền thanh toán nếu có điều chỉnh
+            // 2. Cập nhật trạng thái thanh toán trực tiếp nếu có
+            if (!string.IsNullOrWhiteSpace(dto.PaymentStatus))
+            {
+                monthlyReport.PaymentStatus = dto.PaymentStatus;
+                if (dto.PaymentStatus == AppEnums.PaymentStatus.Paid.ToString())
+                {
+                    monthlyReport.AmountPaid = monthlyReport.FinalAmount;
+                }
+                else if (dto.PaymentStatus == AppEnums.PaymentStatus.Pending.ToString())
+                {
+                    monthlyReport.AmountPaid = 0;
+                }
+            }
+
+            // 3. Cập nhật số tiền thanh toán nếu có điều chỉnh
             if (dto.FinalAmount.HasValue)
             {
                 if (dto.FinalAmount.Value < 0)

@@ -70,6 +70,17 @@ namespace SmartTutor.BusinessLogic.Models
             public string? ParentName { get; set; }
             public string? ParentPhone { get; set; }
             public string? GradeLevel { get; set; }
+            public string? Subject { get; set; }
+            public string? ClassType { get; set; }
+            public decimal RatePerSession { get; set; }
+            public string? TeacherName { get; set; }
+            public string? TeacherPhone { get; set; }
+            public string? TeacherBankCode { get; set; }
+            public string? TeacherBankAccountNumber { get; set; }
+            public string? TeacherBankAccountName { get; set; }
+            public bool ParentAcknowledged { get; set; } = true;
+            public string? ParentNote { get; set; }
+            public string? ParentNoteTime { get; set; }
             public List<ReportSessionDetailDto> Sessions { get; set; } = new List<ReportSessionDetailDto>();
         }
         // Request DTO cập nhật thủ công nhận xét, lộ trình hoặc số tiền của báo cáo
@@ -79,6 +90,9 @@ namespace SmartTutor.BusinessLogic.Models
             public string? Roadmap { get; set; }
             [Range(0, double.MaxValue, ErrorMessage = "Số tiền thanh toán phải lớn hơn hoặc bằng 0.")]
             public decimal? FinalAmount { get; set; }
+            public string? PaymentStatus { get; set; }
+            public bool? ParentAcknowledged { get; set; }
+            public string? ParentNote { get; set; }
         }
     }
 }
