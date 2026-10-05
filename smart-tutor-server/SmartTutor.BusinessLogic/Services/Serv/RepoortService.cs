@@ -553,5 +553,47 @@ namespace SmartTutor.BusinessLogic.Services.Serv
                 CreatedAt = monthlyReport.CreatedAt
             };
         }
+
+        public async Task<(byte[] FileBytes, string FileName, string ContentType)> ExportReportCardImageAsync(int reportId)
+        {
+            var detail = await GetMonthlyReportDetailAsync(reportId);
+            var imageBytes = await ReportCardImageGenerator.GenerateReportCardPngAsync(detail);
+
+            var studentSlug = RemoveDiacritics(detail.StudentName ?? "HocSinh").Replace(" ", "_");
+            var monthSlug = (detail.ReportMonth ?? DateTime.Now.ToString("yyyy-MM")).Replace("-", "_");
+            var fileName = $"HocPhi_{studentSlug}_{monthSlug}.png";
+
+            return (imageBytes, fileName, "image/png");
+        }
+
+        public async Task<(byte[] FileBytes, string FileName, string ContentType)> ExportStudentReportPreviewCardImageAsync(int studentId, string reportMonth, int? classId)
+        {
+            var detail = await GetOrCreateStudentReportPreviewAsync(studentId, reportMonth, classId);
+            var imageBytes = await ReportCardImageGenerator.GenerateReportCardPngAsync(detail);
+
+            var studentSlug = RemoveDiacritics(detail.StudentName ?? "HocSinh").Replace(" ", "_");
+            var monthSlug = (detail.ReportMonth ?? reportMonth).Replace("-", "_");
+            var fileName = $"HocPhi_{studentSlug}_{monthSlug}.png";
+
+            return (imageBytes, fileName, "image/png");
+        }
+
+        private static string RemoveDiacritics(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return "HocSinh";
+            var normalizedString = text.Normalize(System.Text.NormalizationForm.FormD);
+            var stringBuilder = new System.Text.StringBuilder();
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(System.Text.NormalizationForm.FormC).Replace("đ", "d").Replace("Đ", "D");
+        }
     }
 }

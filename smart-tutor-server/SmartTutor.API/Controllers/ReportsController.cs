@@ -76,5 +76,23 @@ namespace SmartTutor.API.Controllers
             return Ok(ApiResult<MonthlyReportResponseDto>.Success(result));
         }
 
+        // Tải thẻ ảnh PNG báo cáo tháng theo ReportId
+        [HttpGet("{reportId}/export-card")]
+        public async Task<IActionResult> ExportReportCard([FromRoute] int reportId)
+        {
+            var (fileBytes, fileName, contentType) = await _repoortService.ExportReportCardImageAsync(reportId);
+            return File(fileBytes, contentType, fileName);
+        }
+
+        // Tải thẻ ảnh PNG báo cáo tháng theo StudentId và ReportMonth (Live Preview)
+        [HttpGet("preview/export-card")]
+        public async Task<IActionResult> ExportPreviewReportCard(
+            [FromQuery] int studentId,
+            [FromQuery] string reportMonth,
+            [FromQuery] int? classId)
+        {
+            var (fileBytes, fileName, contentType) = await _repoortService.ExportStudentReportPreviewCardImageAsync(studentId, reportMonth, classId);
+            return File(fileBytes, contentType, fileName);
+        }
     }
 }

@@ -591,24 +591,27 @@ $amber-100: #fef3c7;
 
       .qr-image-wrapper {
         background: #ffffff;
-        padding: 6px;
-        border-radius: 12px;
+        padding: 8px;
+        border-radius: 14px;
         border: 1px solid #bfdbfe;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         margin: 6px 0;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
 
         .vietqr-img {
-          width: 96px;
-          height: 96px;
+          width: 130px;
+          height: 130px;
           object-fit: contain;
           display: block;
         }
       }
 
       .bank-details-mini {
-        font-size: 9px;
-        color: $slate-500;
-        line-height: 1.3;
+        font-size: 10px;
+        color: $slate-600;
+        line-height: 1.4;
       }
     }
   }

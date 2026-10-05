@@ -73,4 +73,27 @@ export class ReportService {
       headers: this.getAuthHeaders()
     });
   }
+
+  downloadReportCardImage(reportId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${reportId}/export-card`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  downloadPreviewReportCardImage(studentId: number, reportMonth: string, classId?: number): Observable<Blob> {
+    let params = new HttpParams()
+      .set('studentId', studentId.toString())
+      .set('reportMonth', reportMonth);
+
+    if (classId) {
+      params = params.set('classId', classId.toString());
+    }
+
+    return this.http.get(`${this.apiUrl}/preview/export-card`, {
+      headers: this.getAuthHeaders(),
+      params,
+      responseType: 'blob'
+    });
+  }
 }

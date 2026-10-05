@@ -14,5 +14,7 @@ namespace SmartTutor.BusinessLogic.Services.Impl
         Task<MonthlyReportDetailResponseDto> GetMonthlyReportDetailAsync(int reportId);
         Task<MonthlyReportDetailResponseDto> GetOrCreateStudentReportPreviewAsync(int studentId, string reportMonth, int? classId);
         Task<MonthlyReportResponseDto> UpdateMonthlyReportAsync(int reportId, UpdateMonthlyReportRequestDto dto);
+        Task<(byte[] FileBytes, string FileName, string ContentType)> ExportReportCardImageAsync(int reportId);
+        Task<(byte[] FileBytes, string FileName, string ContentType)> ExportStudentReportPreviewCardImageAsync(int studentId, string reportMonth, int? classId);
     }
 }

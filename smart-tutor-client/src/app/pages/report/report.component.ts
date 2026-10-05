@@ -9,8 +9,8 @@ import { StudentsResponseModel } from '../../core/models/student.models';
 import { MonthlyReportDetailResponse, ReportSessionDetail } from '../../core/models/report.models';
 
 export interface MonthOption {
-  key: string;   // e.g. "2026-09"
-  label: string; // e.g. "Tháng 9 / 2026"
+  key: string;   
+  label: string; 
 }
 
 @Component({
@@ -59,6 +59,9 @@ export class ReportComponent implements OnInit {
   // Parent Note Modal
   isParentNoteModalOpen = false;
   parentInputMessage = '';
+
+  // Download state
+  isExportingPng = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -515,7 +518,54 @@ export class ReportComponent implements OnInit {
   }
 
   downloadCardAlert(): void {
-    this.showToast('📸 Đang kết xuất thẻ học phí PNG chất lượng cao chuẩn VietQR (2K)... Tải xuống thành công!', 'success');
+    if (!this.currentReport) {
+      this.showToast('Không tìm thấy dữ liệu báo cáo để tải.', 'warning');
+      return;
+    }
+
+    this.isExportingPng = true;
+    this.showToast('📸 Đang kết xuất thẻ học phí PNG từ hệ thống (chuẩn VietQR 2K)...', 'info');
+    this.cdr.markForCheck();
+
+    const studentSlug = (this.currentReport.studentName || 'HocSinh')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .replace(/[^a-zA-Z0-9]/g, '_');
+    const monthSlug = this.selectedMonthKey.replace('-', '_');
+    const fallbackFileName = `HocPhi_${studentSlug}_${monthSlug}.png`;
+
+    const downloadObs = this.currentReport.id
+      ? this.reportService.downloadReportCardImage(this.currentReport.id)
+      : this.reportService.downloadPreviewReportCardImage(
+          this.currentReport.studentId,
+          this.selectedMonthKey,
+          this.selectedClassId || undefined
+        );
+
+    downloadObs.subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fallbackFileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+
+        this.isExportingPng = false;
+        this.showToast(`✅ Đã tải xuống thành công thẻ học phí PNG: ${fallbackFileName}`, 'success');
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Lỗi khi tải ảnh thẻ học phí từ API:', err);
+        this.isExportingPng = false;
+        this.showToast('❌ Không thể tải ảnh từ máy chủ. Vui lòng kiểm tra lại kết nối mạng!', 'warning');
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   copyMagicLink(): void {
