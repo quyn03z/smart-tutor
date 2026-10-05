@@ -48,6 +48,8 @@ export class ClassesComponent implements OnInit {
   hwOptions: string[] = ['100%', '90%', '80%', '50%', '0%'];
 
   classLessonTopic = 'Chuyên đề: Giải bài toán bằng cách lập hệ phương trình (Dạng năng suất & chuyển động)';
+  currentMonthNum: number = new Date().getMonth() + 1;
+  currentMonthStr: string = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
   
   toastMessage: string | null = null;
   toastType: 'success' | 'info' | 'warning' = 'success';
