@@ -47,7 +47,7 @@ export class ClassesComponent implements OnInit {
   openHwDropdownStudentId: string | null = null;
   hwOptions: string[] = ['100%', '90%', '80%', '50%', '0%'];
 
-  classLessonTopic = 'Chuyên đề: Giải bài toán bằng cách lập hệ phương trình (Dạng năng suất & chuyển động)';
+  classLessonTopic = '';
   currentMonthNum: number = new Date().getMonth() + 1;
   currentMonthStr: string = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
   
@@ -192,43 +192,46 @@ export class ClassesComponent implements OnInit {
 
   fetchClassAttendance(cls: GroupClassInfo): void {
     const todayStr = new Date().toISOString().split('T')[0];
+    this.classLessonTopic = '';
     this.sessionService.getClassAttendance(cls.classId, cls.className, todayStr).subscribe({
       next: (res) => {
-        if (res?.succeeded && res.result && res.result.hasRecorded && res.result.attendances?.length > 0) {
+        if (res?.succeeded && res.result) {
           const detail = res.result;
           if (detail.lessonContent) {
             this.classLessonTopic = detail.lessonContent;
           }
 
-          const attMap = new Map<number, any>();
-          detail.attendances.forEach(a => attMap.set(Number(a.studentId), a));
+          if (detail.hasRecorded && detail.attendances?.length > 0) {
+            const attMap = new Map<number, any>();
+            detail.attendances.forEach(a => attMap.set(Number(a.studentId), a));
 
-          cls.students.forEach(st => {
-            const log = attMap.get(Number(st.id));
-            if (log) {
-              const normStatus = (log.attendanceStatus || '').toLowerCase();
-              if (normStatus.includes('present') || normStatus.includes('có mặt')) {
-                st.status = 'present';
-              } else if (normStatus.includes('excused') || normStatus.includes('phép')) {
-                st.status = 'excused';
-              } else {
-                st.status = 'unexcused';
+            cls.students.forEach(st => {
+              const log = attMap.get(Number(st.id));
+              if (log) {
+                const normStatus = (log.attendanceStatus || '').toLowerCase();
+                if (normStatus.includes('present') || normStatus.includes('có mặt')) {
+                  st.status = 'present';
+                } else if (normStatus.includes('excused') || normStatus.includes('phép')) {
+                  st.status = 'excused';
+                } else {
+                  st.status = 'unexcused';
+                }
+
+                const score = log.homeworkScore;
+                if (score !== undefined && score !== null) {
+                  if (score === 100) st.homework = '100%';
+                  else if (score === 90) st.homework = '90%';
+                  else if (score === 80) st.homework = '80%';
+                  else if (score === 50) st.homework = '50%';
+                  else if (score === 0) st.homework = '0%';
+                  else st.homework = `${score}%`;
+                }
+
+                if (log.attitude) st.attitude = log.attitude;
+                if (log.individualNote) st.note = log.individualNote;
               }
-
-              const score = log.homeworkScore;
-              if (score !== undefined && score !== null) {
-                if (score === 100) st.homework = '100%';
-                else if (score === 90) st.homework = '90%';
-                else if (score === 80) st.homework = '80%';
-                else if (score === 50) st.homework = '50%';
-                else if (score === 0) st.homework = '0%';
-                else st.homework = `${score}%`;
-              }
-
-              if (log.attitude) st.attitude = log.attitude;
-              if (log.individualNote) st.note = log.individualNote;
-            }
-          });
+            });
+          }
         }
       },
       error: () => {

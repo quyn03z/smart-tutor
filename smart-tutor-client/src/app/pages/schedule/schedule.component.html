@@ -103,6 +103,18 @@
                 <span>Sửa ca</span>
               </button>
 
+              <!-- Nút Xóa ca dạy -->
+              <button 
+                type="button" 
+                (click)="deleteSession(s.id, $event)" 
+                class="btn-delete-session-icon"
+                title="Xóa ca dạy">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+
               <!-- Nếu là lớp nhóm: Nút Điểm danh cả lớp dẫn sang /classes -->
               <button 
                 *ngIf="s.classType === 'Group'" 
@@ -159,13 +171,22 @@
             
             <div class="session-box-top">
               <span class="session-time">{{ s.timeRange }}</span>
-              <button 
-                type="button" 
-                class="btn-grid-edit-icon" 
-                (click)="openEditSessionModal(s, $event)" 
-                title="Sửa ca dạy">
-                ✎
-              </button>
+              <div class="session-box-actions">
+                <button 
+                  type="button" 
+                  class="btn-grid-edit-icon" 
+                  (click)="openEditSessionModal(s, $event)" 
+                  title="Sửa ca dạy">
+                  ✎
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-grid-delete-icon" 
+                  (click)="deleteSession(s.id, $event)" 
+                  title="Xóa ca dạy">
+                  ✕
+                </button>
+              </div>
             </div>
             
             <div class="session-who">
@@ -275,16 +296,26 @@
         </div>
       </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn-modal-cancel" (click)="closeAddSessionModal()" [disabled]="isSubmittingSession">
-          Hủy
+      <div class="modal-footer" [class.modal-footer-split]="isEditingSession">
+        <button 
+          *ngIf="isEditingSession" 
+          type="button" 
+          class="btn-delete-session" 
+          (click)="deleteCurrentEditingSession()" 
+          [disabled]="isSubmittingSession">
+          🗑️ Xóa Ca Dạy
         </button>
-        <button type="button" class="btn-modal-submit" (click)="submitAddSession()" [disabled]="isSubmittingSession">
-          <span *ngIf="isSubmittingSession">Đang lưu...</span>
-          <span *ngIf="!isSubmittingSession">
-            {{ isEditingSession ? 'Cập Nhật Ca Dạy' : (selectedRecurrencePattern !== 'NONE' ? 'Lưu & Lên Lịch ' + recurringWeeksCount + ' Tuần' : 'Lưu Ca Dạy') }}
-          </span>
-        </button>
+        <div class="footer-right-group">
+          <button type="button" class="btn-modal-cancel" (click)="closeAddSessionModal()" [disabled]="isSubmittingSession">
+            Hủy
+          </button>
+          <button type="button" class="btn-modal-submit" (click)="submitAddSession()" [disabled]="isSubmittingSession">
+            <span *ngIf="isSubmittingSession">Đang lưu...</span>
+            <span *ngIf="!isSubmittingSession">
+              {{ isEditingSession ? 'Cập Nhật Ca Dạy' : (selectedRecurrencePattern !== 'NONE' ? 'Lưu & Lên Lịch ' + recurringWeeksCount + ' Tuần' : 'Lưu Ca Dạy') }}
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

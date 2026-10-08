@@ -59,7 +59,7 @@ export interface RecurrenceOptionItem {
   styleUrl: './schedule.component.scss'
 })
 export class ScheduleComponent implements OnInit {
-  scheduleView: 'list' | 'grid' = 'list';
+  scheduleView: 'list' | 'grid' = 'grid';
   isLoading = false;
 
   currentWeekOffset = 0;
@@ -505,6 +505,44 @@ export class ScheduleComponent implements OnInit {
         error: (err) => {
           this.isSubmittingSession = false;
           const msg = err?.error?.message || 'Không thể tạo ca dạy. Vui lòng thử lại!';
+          this.showToast(msg, 'warning');
+        }
+      });
+    }
+  }
+
+  deleteSession(sessionId: number, event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (confirm('Bạn có chắc chắn muốn xóa ca dạy này khỏi lịch không?')) {
+      this.sessionService.deleteSession(sessionId).subscribe({
+        next: () => {
+          this.showToast('✓ Đã xóa ca dạy khỏi lịch thành công!', 'success');
+          this.loadSchedule();
+        },
+        error: (err) => {
+          const msg = err?.error?.message || 'Không thể xóa ca dạy. Vui lòng thử lại!';
+          this.showToast(msg, 'warning');
+        }
+      });
+    }
+  }
+
+  deleteCurrentEditingSession(): void {
+    if (!this.editingSessionId) return;
+    if (confirm('Bạn có chắc chắn muốn xóa ca dạy này khỏi lịch không?')) {
+      this.isSubmittingSession = true;
+      this.sessionService.deleteSession(this.editingSessionId).subscribe({
+        next: () => {
+          this.isSubmittingSession = false;
+          this.closeAddSessionModal();
+          this.showToast('✓ Đã xóa ca dạy khỏi lịch thành công!', 'success');
+          this.loadSchedule();
+        },
+        error: (err) => {
+          this.isSubmittingSession = false;
+          const msg = err?.error?.message || 'Không thể xóa ca dạy. Vui lòng thử lại!';
           this.showToast(msg, 'warning');
         }
       });

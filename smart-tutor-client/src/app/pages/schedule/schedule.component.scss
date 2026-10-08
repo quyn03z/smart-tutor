@@ -390,6 +390,25 @@ $rose-100: #fee2e2;
       }
     }
 
+    .btn-delete-session-icon {
+      background: $slate-100;
+      border: 1px solid $slate-200;
+      color: $slate-400;
+      cursor: pointer;
+      padding: 6px 9px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+
+      &:hover {
+        color: #ef4444;
+        border-color: #fca5a5;
+        background: #fee2e2;
+      }
+    }
+
     .btn-edit-log {
       background: $slate-100;
       border: 1px solid $slate-200;
@@ -520,19 +539,43 @@ $rose-100: #fee2e2;
       justify-content: space-between;
       gap: 4px;
 
+      .session-box-actions {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
       .btn-grid-edit-icon {
         background: transparent;
         border: none;
         color: $slate-400;
         font-size: 11px;
         cursor: pointer;
-        padding: 0 3px;
+        padding: 1px 4px;
         border-radius: 4px;
         line-height: 1;
+        transition: all 0.15s ease;
 
         &:hover {
           color: $primary;
-          background: rgba(255, 255, 255, 0.8);
+          background: rgba(255, 255, 255, 0.9);
+        }
+      }
+
+      .btn-grid-delete-icon {
+        background: transparent;
+        border: none;
+        color: $slate-400;
+        font-size: 10px;
+        cursor: pointer;
+        padding: 1px 4px;
+        border-radius: 4px;
+        line-height: 1;
+        transition: all 0.15s ease;
+
+        &:hover {
+          color: #ef4444;
+          background: #fee2e2;
         }
       }
     }
